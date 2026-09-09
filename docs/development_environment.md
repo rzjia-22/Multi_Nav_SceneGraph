@@ -95,6 +95,9 @@ MNS_ACCEPTANCE_DURATION=30 make accept-isaac-sensors
 
 This observer decodes image payloads and checks encodings, metric depth,
 integer semantic IDs, intrinsics, timestamps, rates and TF at the image stamp.
+The normal runtime loads `config/simulation/forest.yaml`; a finite diagnostic
+run can add `--max-steps N` to the simulation entrypoint and must print
+`MNS_ISAAC_RUNTIME_RESULT` before exiting with code zero.
 
 ## DDS and throughput
 

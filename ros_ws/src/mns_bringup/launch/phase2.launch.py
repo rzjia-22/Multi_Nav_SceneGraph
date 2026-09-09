@@ -12,6 +12,7 @@ def generate_launch_description():
         DeclareLaunchArgument("simulation_mode", default_value="external"),
         DeclareLaunchArgument("enable_mapping", default_value="true"),
         DeclareLaunchArgument("run_id", default_value="current"),
+        DeclareLaunchArgument("scene_config", default_value="/workspace/config/simulation/forest.yaml"),
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
                 PathJoinSubstitution([FindPackageShare("mns_bringup"), "launch", "system.launch.py"])
@@ -22,6 +23,7 @@ def generate_launch_description():
                 "simulation_mode": LaunchConfiguration("simulation_mode"),
                 "enable_mapping": LaunchConfiguration("enable_mapping"),
                 "run_id": LaunchConfiguration("run_id"),
+                "scene_config": LaunchConfiguration("scene_config"),
             }.items(),
         ),
     ])

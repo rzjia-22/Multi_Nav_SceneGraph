@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 import re
 
@@ -58,7 +59,9 @@ def _hydra_node(robot, names: RobotNames, hydra_config: str, label_space: str, l
     )
 
 
-def _navigation_nodes(robot, names: RobotNames, navigator: str, mission: dict) -> list:
+def _navigation_nodes(
+    robot, names: RobotNames, navigator: str, mission: dict, obstacles_json: str
+) -> list:
     common = {"robot_id": robot.robot_id, "frame_id": names.odom_frame, "use_sim_time": True}
     if navigator == "coverage":
         return [Node(
@@ -70,6 +73,7 @@ def _navigation_nodes(robot, names: RobotNames, navigator: str, mission: dict) -
                 "bounds": mission["bounds"],
                 "lane_spacing": mission["lane_spacing"],
                 "planner": mission["planner"],
+                "obstacles_json": obstacles_json,
                 "max_linear_speed": 0.5 if robot.kind.value == "uav" else 0.7,
                 "sensor_coverage_enabled": robot.kind.value == "go2",
             }],
@@ -172,6 +176,13 @@ def _launch(context):
     missions = _mission_table(LaunchConfiguration("mission_config").perform(context))
     hydra_config = LaunchConfiguration("hydra_config").perform(context)
     label_space = LaunchConfiguration("label_space").perform(context)
+    scene_config = LaunchConfiguration("scene_config").perform(context)
+    with Path(scene_config).open("r", encoding="utf-8") as stream:
+        scene_spec = yaml.safe_load(stream)
+    obstacles_json = json.dumps([
+        [float(value) for value in item["position"]]
+        for item in scene_spec["trees"]
+    ])
     actions = []
     goal_frames = []
     mission_goals = []
@@ -197,7 +208,7 @@ def _launch(context):
                     "use_sim_time": False,
                 }],
             ))
-        actions.extend(_navigation_nodes(robot, names, navigator, mission))
+        actions.extend(_navigation_nodes(robot, names, navigator, mission, obstacles_json))
         actions.append(Node(
             package="mns_navigation", executable="safety_monitor", namespace=robot.robot_id,
             parameters=[{"use_sim_time": spec.use_sim_time}],
@@ -236,6 +247,7 @@ def generate_launch_description():
         DeclareLaunchArgument("mission_config", default_value="/workspace/config/missions/coverage.yaml"),
         DeclareLaunchArgument("hydra_config", default_value="/workspace/config/hydra/isaac_input.yaml"),
         DeclareLaunchArgument("label_space", default_value="/workspace/config/hydra/isaac_forest_label_space.yaml"),
+        DeclareLaunchArgument("scene_config", default_value="/workspace/config/simulation/forest.yaml"),
         DeclareLaunchArgument("run_root", default_value="/workspace/runs"),
         DeclareLaunchArgument("run_id", default_value="current"),
         OpaqueFunction(function=_launch),

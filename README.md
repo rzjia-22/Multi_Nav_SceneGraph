@@ -97,10 +97,12 @@ make phase1
 make phase2
 ```
 
-The shared Isaac world runs physics at 200 Hz, the Go2 velocity actor at 50 Hz
-and RGB/depth/semantic publication at 10 Hz. Go2 is an articulated Isaac Lab
-asset controlled through the original 48-to-12 locomotion actor. UAVs are
-intentionally kinematic sensor platforms for Phase 2.
+The shared Isaac world runs a deterministic collision-enabled semantic forest,
+physics at 200 Hz, the Go2 velocity actor at 50 Hz and RGB/depth/semantic
+publication at 10 Hz. Go2 is an articulated Isaac Lab asset controlled through
+the original 48-to-12 locomotion actor. UAVs are intentionally kinematic sensor
+platforms for Phase 2. Known-area Coverage consumes the same configured tree
+centres as inflated obstacles; it is not an unknown-environment explorer.
 
 The current development host passes the Level 0–3 runtime path on an RTX 4060
 Laptop GPU: Docker GPU passthrough, Vulkan enumeration and Isaac Lab 2.3.1 GPU
@@ -115,7 +117,7 @@ then in another terminal run `make accept-isaac-sensors`.
 ## Verification and observability
 
 ```bash
-make validate       # repository contracts and 16 pure unit tests
+make validate       # repository contracts and 17 pure unit tests
 make build          # all 8 ROS packages and package tests
 make test-models    # real Diffusion and Go2 checkpoint forward passes
 docker compose config --quiet

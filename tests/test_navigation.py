@@ -1,7 +1,9 @@
 import math
+from pathlib import Path
 
 import numpy as np
 import pytest
+import yaml
 
 from mns_navigation.coverage import Point2D, ProgressTracker, plan_connected_coverage, plan_zigzag
 from mns_navigation.diffusion import DiffusionPlanner, RGBDHistory
@@ -24,6 +26,20 @@ def test_connected_route_avoids_inflated_obstacle():
     path = plan_connected_coverage((0, 4, 0, 2), 0.8, [obstacle], resolution=0.2, clearance=0.45, boundary_margin=0.2)
     assert path.total_length > 0
     assert min(math.hypot(point.x - obstacle.x, point.y - obstacle.y) for point in path.waypoints) >= 0.44
+
+
+def test_phase1_known_map_route_avoids_acceptance_forest():
+    root = Path(__file__).resolve().parents[1]
+    with (root / "config/simulation/forest.yaml").open(encoding="utf-8") as stream:
+        scene = yaml.safe_load(stream)
+    with (root / "config/missions/coverage.yaml").open(encoding="utf-8") as stream:
+        mission = yaml.safe_load(stream)["missions"]["phase1_coverage"]
+    obstacles = [Point2D(*item["position"]) for item in scene["trees"]]
+    path = plan_connected_coverage(
+        mission["bounds"], mission["lane_spacing"], obstacles, clearance=0.7
+    )
+    for waypoint in path.waypoints:
+        assert min(math.hypot(waypoint.x - tree.x, waypoint.y - tree.y) for tree in obstacles) >= 0.69
 
 
 def test_pure_pursuit_turns_then_advances():

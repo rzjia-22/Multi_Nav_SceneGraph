@@ -4,11 +4,12 @@ This is the sole authoritative status document. Last updated 2026-09-09.
 
 ## Current milestone
 
-GPU preflight and the first real Isaac sensor milestone now pass on the current
-host. Frozen Isaac Lab 2.3.1 executes Vulkan rendering and GPU PhysX, and a real
-Go2 scene publishes decoded RGB, metric depth, integer semantics, CameraInfo,
-odom, TF and clock with valid simulation timestamps. The next boundary is the
-articulated RL motion backend, followed by real forest Coverage + Hydra.
+GPU preflight and the deterministic real Isaac forest sensor milestone pass on
+the current host. Frozen Isaac Lab 2.3.1 executes Vulkan rendering and GPU
+PhysX, and a real Go2 view contains ground, tree-trunk and foliage classes in
+decoded RGB, metric depth and integer semantics with timestamped CameraInfo,
+odom, TF and clock. The next boundary is the articulated RL motion backend,
+followed by real forest Coverage + Hydra.
 
 This is still not represented as full Phase 1/2 completion. Diffusion, Nav2,
 UAV aerial reconstruction and the four-robot topology remain synthetic-only
@@ -19,7 +20,7 @@ until their real Isaac runs and saved Hydra artifacts are inspected.
 | Milestone | State | Evidence / boundary |
 | --- | --- | --- |
 | A — version freeze and architecture | complete | pinned images, Hydra graph, ROS packages, contracts and docs |
-| B — Isaac Go2 and sensor bridge | GPU Isaac validated for one kinematic Go2 | 2.3.1 GPU PhysX PASS; real Replicator payloads and timestamped TF inspected |
+| B — Isaac Go2 and sensor bridge | GPU Isaac validated for one kinematic Go2 in forest | 2.3.1 GPU PhysX PASS; RGB/depth/four semantic classes and timestamped TF inspected |
 | C — single Hydra integration | complete in synthetic | real Hydra consumes all four image inputs/TF and publishes non-empty DSG updates |
 | D — Go2 locomotion backend | source and checkpoint smoke complete; physics pending | safe 48-to-12 actor forward pass succeeds |
 | E — Coverage + follower + Hydra | complete in synthetic | live Twist motion, sensor coverage, Hydra and safety run concurrently |
@@ -44,7 +45,8 @@ until their real Isaac runs and saved Hydra artifacts are inspected.
   depth safety, stall recovery, sensor coverage and bounded residual passes.
 - Original audited Diffusion architecture/checkpoint and Go2 actor with
   hash-verified assets and tensor-only safe loading.
-- Shared Isaac runtime with two articulated Go2 instances, two kinematic UAV
+- Shared Isaac runtime with a deterministic collision-enabled semantic forest,
+  two articulated Go2 instances, two kinematic UAV
   platforms, 200/50/10 Hz physics/policy/sensor scheduling and GT semantic
   remapping. Single-Go2 kinematic sensing is GPU-executed; RL and multi-robot
   runtime evidence are still pending.
@@ -58,18 +60,23 @@ until their real Isaac runs and saved Hydra artifacts are inspected.
 
 The latest completed results are:
 
-- `make validate`: repository validation plus 16 pure Python tests passed.
+- `make validate`: repository validation plus 17 pure Python tests passed,
+  including the configured forest's obstacle-aware coverage route.
 - `make gpu-preflight`: RTX 4060 Laptop GPU, 8,188 MiB VRAM, driver
   550.144.03; host and CUDA-container probes pass; graphics capabilities are
   `all`.
 - `make isaac-minimal`: frozen Isaac Lab 2.3.1 used `cuda:0`; a rigid body fell
   from 0.998 m and settled at 0.100 m after 120 steps; exit code 0.
-- Real Isaac single-Go2 sensor acceptance, 30 seconds: 138 registered RGB,
+- Real Isaac single-Go2 forest acceptance, 20 seconds: 128 registered RGB,
   depth, semantic and CameraInfo samples at exactly 10.0 Hz simulation time
-  (4.60 Hz wall throughput), 2,760 odometry samples at 200 Hz simulation time,
+  (6.40 Hz wall throughput), 2,563 odometry samples at 200 Hz simulation time,
   advancing clock, complete TF and transform lookup at the image timestamp.
-  Payloads were RGB8, 32FC1 metres and 16UC1 class IDs; current view contained
-  ground and unknown, so tree/foliage visibility remains a forest-scene task.
+  Payloads were RGB8, 32FC1 metres and 16UC1 class IDs. Finite depth covered
+  57.4% of the image with 1.39/1.95/9.51 m minimum/median/maximum; class counts
+  included unknown 32,729, ground 27,664, tree trunk 16,256 and foliage 151.
+- The same forest runtime completed 5,000 bounded steps, emitted a
+  machine-readable PASS result and exited with code 0. This is real runtime
+  shutdown evidence, not a source-only path.
 - `make build`: all 8 ROS packages built; 9 package tests passed with no
   errors, failures or skips.
 - `make test-models`: real Diffusion checkpoint returned finite `(8,2)` output;
@@ -136,16 +143,9 @@ make phase2
 - NVIDIA's compatibility checker reports this host's 8.59 GB VRAM below its
   10 GB threshold and 16.49 GB RAM below 32 GB. Minimal PhysX and one 320x240
   camera work, but four-camera/Hydra/Diffusion load may be resource-limited.
-- The real sensor scene currently observes ground plus unknown; the procedural
-  scene still needs collision-enabled trunks and visible foliage semantics
-  before it qualifies as forest reconstruction evidence.
 - Articulated Go2 RL control, real Hydra artifacts, real Diffusion/Nav2, UAV
   aerial reconstruction and real 2 Go2 + 2 UAV concurrency are not yet
   validated.
-- Isaac Sim 5.1 graceful `SimulationApp.close()` hangs reproducibly in this
-  headless environment. The no-output Level 3 smoke uses the official
-  `skip_cleanup` path; the long-running sensor process still needs a bounded,
-  verified shutdown path.
 - The complete initial coverage route is long. Sensor-depth ingestion is live
   and residual planning is unit-tested, but a full-duration online mission that
   naturally reaches and executes both residual passes has not been run.
@@ -185,8 +185,8 @@ Exact attribution, changes and model hashes are in
 
 ## Remaining work after the blocker is removed
 
-1. Complete the deterministic collision-enabled forest semantic scene and
-   bounded Isaac shutdown path.
+1. Validate the original Go2 locomotion actor against the articulated robot,
+   including pose stability, forward/turn/stop response and command timeout.
 2. Execute Phase 1 Coverage, Diffusion and Nav2 against the articulated Go2,
    checking joint stability, collisions, rates and concurrent Hydra artifacts.
 3. Execute the 2 Go2 + 2 UAV roster, inspect each independent graph/mesh and

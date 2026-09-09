@@ -56,6 +56,13 @@ Go2 articulations and two Crazyflie-derived kinematic UAV sensor platforms.
 The synthetic node implements the same ROS contract solely for CPU integration
 testing.
 
+The lightweight acceptance forest is defined once in
+`config/simulation/forest.yaml`. The Isaac adapter creates collision-enabled
+trunks plus semantic foliage from it, while known-area connected coverage reads
+the same tree centres as inflated obstacles. This keeps the baseline route and
+the rendered world consistent without turning coverage into exploration or
+coupling navigation code to Isaac APIs.
+
 ## Isaac control and sensing
 
 The planned runtime rates are 200 Hz physics, 50 Hz Go2 actor inference and

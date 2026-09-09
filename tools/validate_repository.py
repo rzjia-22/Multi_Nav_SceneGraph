@@ -68,6 +68,22 @@ def validate_configs() -> None:
         all_frames.extend([names.odom_frame, names.base_frame, names.camera_link_frame, names.optical_frame, names.map_frame])
     if len(all_frames) != len(set(all_frames)):
         fail("Phase 2 frame IDs collide")
+    scene_path = ROOT / "config" / "simulation" / "forest.yaml"
+    with scene_path.open("r", encoding="utf-8") as stream:
+        scene = yaml.safe_load(stream)
+    if min(
+        float(scene["ground_size"]),
+        float(scene["trunk_radius"]),
+        float(scene["trunk_height"]),
+        float(scene["foliage_radius"]),
+    ) <= 0:
+        fail("forest dimensions must be positive")
+    tree_ids = [str(item["id"]) for item in scene["trees"]]
+    if not tree_ids or len(tree_ids) != len(set(tree_ids)):
+        fail("forest tree IDs must be non-empty and unique")
+    for item in scene["trees"]:
+        if len(item.get("position", [])) != 2:
+            fail(f"invalid tree position: {item}")
 
 
 def main() -> int:
@@ -81,4 +97,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

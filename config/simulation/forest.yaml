@@ -1,0 +1,24 @@
+---
+# Deterministic lightweight acceptance forest. Positions are also consumed by
+# known-map connected coverage; trunk radius is included for scene inspection.
+ground_size: 20.0
+trunk_radius: 0.30
+trunk_height: 4.5
+foliage_radius: 1.15
+trees:
+  - {id: tree_01, position: [-2.5, -6.0]}
+  - {id: tree_02, position: [1.5, -5.4]}
+  - {id: tree_03, position: [5.2, -5.0]}
+  - {id: tree_04, position: [-4.3, -3.5]}
+  - {id: tree_05, position: [0.0, -3.2]}
+  - {id: tree_06, position: [3.5, -2.2]}
+  - {id: tree_07, position: [-6.0, 0.0]}
+  - {id: tree_08, position: [-2.0, 0.5]}
+  - {id: tree_09, position: [2.5, 0.2]}
+  - {id: tree_10, position: [6.0, 1.0]}
+  - {id: tree_11, position: [-4.5, 3.2]}
+  - {id: tree_12, position: [0.5, 3.5]}
+  - {id: tree_13, position: [4.5, 4.7]}
+  - {id: tree_14, position: [-6.0, 6.0]}
+  - {id: tree_15, position: [-1.5, 6.0]}
+  - {id: tree_16, position: [3.0, 6.0]}

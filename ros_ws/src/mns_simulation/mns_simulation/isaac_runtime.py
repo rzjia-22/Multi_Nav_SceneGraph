@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 from dataclasses import dataclass
+import json
 import math
 import os
 from pathlib import Path
@@ -22,6 +23,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--scenario", choices=("phase1_go2", "phase2_team"), default="phase1_go2")
     parser.add_argument("--system-config", type=Path)
+    parser.add_argument("--scene-config", type=Path, default=project_root / "config/simulation/forest.yaml")
     parser.add_argument("--go2-backend", choices=("rl", "kinematic"), default="rl")
     parser.add_argument(
         "--go2-checkpoint", type=Path, default=project_root / "models/go2_locomotion.pt"
@@ -31,6 +33,7 @@ def parse_args():
     parser.add_argument("--sensor-rate", type=float, default=10.0)
     parser.add_argument("--physics-rate", type=float, default=200.0)
     parser.add_argument("--policy-rate", type=float, default=50.0)
+    parser.add_argument("--max-steps", type=int, default=0, help="0 runs until the app is stopped")
     AppLauncher.add_app_launcher_args(parser)
     return parser.parse_args()
 
@@ -54,7 +57,7 @@ def main() -> int:
     import omni.usd
     import torch
     import yaml
-    from pxr import Gf, Semantics, UsdGeom
+    from pxr import Gf, Semantics, UsdGeom, UsdPhysics
     import isaacsim.core.utils.prims as prim_utils
     import rclpy
     from geometry_msgs.msg import Twist
@@ -71,6 +74,8 @@ def main() -> int:
         raise ValueError("Isaac sensor runtime requires --enable_cameras")
     if min(ARGS.sensor_rate, ARGS.physics_rate, ARGS.policy_rate) <= 0:
         raise ValueError("physics, policy, and sensor rates must be positive")
+    if ARGS.max_steps < 0:
+        raise ValueError("max_steps cannot be negative")
     sensor_interval = round(ARGS.physics_rate / ARGS.sensor_rate)
     policy_interval = round(ARGS.physics_rate / ARGS.policy_rate)
     if not math.isclose(sensor_interval * ARGS.sensor_rate, ARGS.physics_rate) or not math.isclose(
@@ -84,6 +89,8 @@ def main() -> int:
     )
     with config_path.open("r", encoding="utf-8") as stream:
         robot_items = yaml.safe_load(stream)["robots"]
+    with ARGS.scene_config.open("r", encoding="utf-8") as stream:
+        scene_spec = yaml.safe_load(stream)
     if not robot_items:
         raise ValueError("system configuration has no robots")
     go2_items = [item for item in robot_items if item["kind"] == "go2"]
@@ -97,7 +104,11 @@ def main() -> int:
         device=ARGS.device,
     ))
     simulation.set_camera_view([18.0, 18.0, 14.0], [0.0, 0.0, 0.0])
-    sim_utils.GroundPlaneCfg().func("/World/Ground", sim_utils.GroundPlaneCfg())
+    ground_size = float(scene_spec["ground_size"])
+    ground_cfg = sim_utils.GroundPlaneCfg(
+        size=(ground_size, ground_size), color=(0.16, 0.24, 0.10)
+    )
+    ground_cfg.func("/World/Ground", ground_cfg)
     light_cfg = sim_utils.DomeLightCfg(intensity=2500.0)
     light_cfg.func("/World/Light", light_cfg)
     stage = omni.usd.get_context().get_stage()
@@ -109,13 +120,40 @@ def main() -> int:
         semantic.CreateSemanticDataAttr().Set(label)
 
     add_semantics("/World/Ground", "ground")
-    for index, (x, y) in enumerate(((-2.5, -1.0), (2.0, 2.5), (4.5, -3.0), (-4.0, 4.0))):
-        path = f"/World/Obstacles/Tree_{index}"
-        cylinder = UsdGeom.Cylinder.Define(stage, path)
-        cylinder.CreateRadiusAttr(0.35)
-        cylinder.CreateHeightAttr(5.0)
-        cylinder.AddTranslateOp().Set(Gf.Vec3d(x, y, 2.5))
-        add_semantics(path, "tree_trunk")
+    trunk_radius = float(scene_spec["trunk_radius"])
+    trunk_height = float(scene_spec["trunk_height"])
+    foliage_radius = float(scene_spec["foliage_radius"])
+    trees = scene_spec["trees"]
+    if min(ground_size, trunk_radius, trunk_height, foliage_radius) <= 0:
+        raise ValueError("forest dimensions must be positive")
+    if not trees:
+        raise ValueError("forest scene must contain at least one tree")
+    UsdGeom.Xform.Define(stage, "/World/Forest")
+    tree_ids = set()
+    for item in trees:
+        tree_id = str(item["id"])
+        if tree_id in tree_ids:
+            raise ValueError(f"duplicate forest tree id: {tree_id}")
+        tree_ids.add(tree_id)
+        position = item["position"]
+        if len(position) != 2:
+            raise ValueError(f"tree {tree_id} position must be [x, y]")
+        x, y = (float(value) for value in position)
+        trunk_path = f"/World/Forest/{tree_id}/Trunk"
+        trunk = UsdGeom.Cylinder.Define(stage, trunk_path)
+        trunk.CreateAxisAttr("Z")
+        trunk.CreateRadiusAttr(trunk_radius)
+        trunk.CreateHeightAttr(trunk_height)
+        trunk.CreateDisplayColorAttr([(0.30, 0.12, 0.04)])
+        trunk.AddTranslateOp().Set(Gf.Vec3d(x, y, trunk_height / 2.0))
+        UsdPhysics.CollisionAPI.Apply(trunk.GetPrim())
+        add_semantics(trunk_path, "tree_trunk")
+        foliage_path = f"/World/Forest/{tree_id}/Foliage"
+        foliage = UsdGeom.Sphere.Define(stage, foliage_path)
+        foliage.CreateRadiusAttr(foliage_radius)
+        foliage.CreateDisplayColorAttr([(0.08, 0.38, 0.06)])
+        foliage.AddTranslateOp().Set(Gf.Vec3d(x, y, trunk_height - 0.35))
+        add_semantics(foliage_path, "foliage")
 
     def spawn_articulation_group(name: str, count: int, template, disable_gravity: bool):
         if count == 0:
@@ -262,8 +300,23 @@ def main() -> int:
     if policy is not None:
         policy.reset(go2.data)
 
+    print(
+        "MNS_ISAAC_RUNTIME_READY="
+        + json.dumps(
+            {
+                "device": str(simulation.device),
+                "go2_backend": ARGS.go2_backend,
+                "robots": [endpoint.item["id"] for endpoint in endpoints],
+                "trees": len(trees),
+            },
+            sort_keys=True,
+        ),
+        flush=True,
+    )
+
     physics_dt = 1.0 / ARGS.physics_rate
     frame = 0
+    exit_reason = "app_closed"
     try:
         while APP.is_running():
             for endpoint in endpoints:
@@ -350,12 +403,28 @@ def main() -> int:
                 for endpoint in endpoints:
                     endpoint.publish_images(sim_time)
             frame += 1
+            if ARGS.max_steps and frame >= ARGS.max_steps:
+                exit_reason = "max_steps"
+                break
+    except KeyboardInterrupt:
+        exit_reason = "keyboard_interrupt"
     finally:
         if rclpy.ok():
             for endpoint in endpoints:
                 endpoint.node.destroy_node()
         rclpy.try_shutdown()
-        APP.close()
+        print(
+            "MNS_ISAAC_RUNTIME_RESULT="
+            + json.dumps(
+                {"status": "PASS", "exit_reason": exit_reason, "steps": frame},
+                sort_keys=True,
+            ),
+            flush=True,
+        )
+        # Sensor data has already crossed DDS and Hydra is a separate process.
+        # Isaac 5.1 graceful close hangs on this headless host; use its official
+        # immediate framework-release path after ROS resources are destroyed.
+        APP.close(wait_for_replicator=False, skip_cleanup=True)
     return 0
 
 
