@@ -1,0 +1,9 @@
+data_params:
+  tranform:
+    resize:
+      w_h: [128, 96]
+    norm:
+      mean: [0.485, 0.456, 0.406, 0.3]
+      std: [0.229, 0.224, 0.225, 0.2]
+  time_horizon: 5
+

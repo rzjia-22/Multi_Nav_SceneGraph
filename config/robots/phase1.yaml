@@ -1,0 +1,12 @@
+use_sim_time: true
+run_root: runs
+robots:
+  - id: go2_1
+    kind: go2
+    spawn: [-6.0, -6.0, 0.45, 0.0]
+    navigator: coverage
+    mission: phase1_coverage
+    mapping_enabled: true
+    motion_backend: isaac_rl
+    hydra_robot_id: 0
+

@@ -1,0 +1,7 @@
+build:
+  symlink-install: true
+  cmake-args:
+    - -DCMAKE_BUILD_TYPE=Release
+test-result:
+  verbose: true
+

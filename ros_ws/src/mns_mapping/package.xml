@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>mns_mapping</name>
+  <version>0.1.0</version>
+  <description>Hydra mapping backend adapter and metrics.</description>
+  <maintainer email="maintainers@example.com">Multi Nav SceneGraph maintainers</maintainer>
+  <license>BSD-3-Clause</license>
+  <buildtool_depend>ament_python</buildtool_depend>
+  <depend>rclpy</depend>
+  <depend>sensor_msgs</depend>
+  <depend>hydra_msgs</depend>
+  <depend>mns_interfaces</depend>
+  <export><build_type>ament_python</build_type></export>
+</package>
+

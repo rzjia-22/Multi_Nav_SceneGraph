@@ -1,0 +1,92 @@
+name: multi-nav-scenegraph
+
+x-ros-environment: &ros-environment
+  ROS_DOMAIN_ID: ${ROS_DOMAIN_ID:-42}
+  RMW_IMPLEMENTATION: rmw_cyclonedds_cpp
+  CYCLONEDDS_URI: file:///workspace/config/system/cyclonedds.xml
+  MNS_RUN_ROOT: /workspace/runs
+
+services:
+  robotics-dev:
+    build:
+      context: .
+      dockerfile: containers/robotics/Dockerfile
+    image: multi-nav-scenegraph/robotics:jazzy-hydra-8f3b7e3
+    network_mode: host
+    ipc: host
+    environment: *ros-environment
+    volumes:
+      - .:/workspace:rw
+    working_dir: /workspace/ros_ws
+    command: bash
+    stdin_open: true
+    tty: true
+
+  robotics-phase1:
+    extends: robotics-dev
+    profiles: [robotics]
+    command: >-
+      ros2 launch mns_bringup phase1.launch.py
+      navigator:=${MNS_NAVIGATOR:-configured}
+      run_id:=${MNS_RUN_ID:-current}
+
+  robotics-phase2:
+    extends: robotics-dev
+    profiles: [robotics]
+    command: >-
+      ros2 launch mns_bringup phase2.launch.py
+      navigator:=${MNS_NAVIGATOR:-configured}
+      run_id:=${MNS_RUN_ID:-current}
+
+  robotics-ml-dev:
+    extends: robotics-dev
+    profiles: [ml]
+    build:
+      context: .
+      dockerfile: containers/robotics-ml/Dockerfile
+    image: multi-nav-scenegraph/robotics-ml:jazzy-torch-2.7.1
+
+  robotics-phase1-diffusion:
+    extends: robotics-ml-dev
+    profiles: [ml]
+    command: >-
+      ros2 launch mns_bringup phase1.launch.py
+      navigator:=diffusion
+      run_id:=${MNS_RUN_ID:-diffusion}
+
+  simulation:
+    profiles: [simulation]
+    build:
+      context: .
+      dockerfile: containers/simulation/Dockerfile
+    image: multi-nav-scenegraph/simulation:isaac-lab-2.3.1
+    network_mode: host
+    ipc: host
+    environment:
+      <<: *ros-environment
+      ACCEPT_EULA: Y
+      PRIVACY_CONSENT: Y
+      ROS_DISTRO: jazzy
+      LD_LIBRARY_PATH: /isaac-sim/exts/isaacsim.ros2.bridge/jazzy/lib
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    volumes:
+      - .:/workspace:rw
+      - isaac-kit-cache:/isaac-sim/kit/cache:rw
+      - isaac-ov-cache:/root/.cache/ov:rw
+      - isaac-compute-cache:/root/.nv/ComputeCache:rw
+    working_dir: /workspace
+    command: >-
+      /workspace/containers/simulation/entrypoint.sh
+      --scenario ${MNS_SCENARIO:-phase1_go2}
+      --headless
+
+volumes:
+  isaac-kit-cache:
+  isaac-ov-cache:
+  isaac-compute-cache:

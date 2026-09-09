@@ -1,0 +1,18 @@
+---
+# IDs published by mns_simulation. Keep background/unknown at zero.
+total_semantic_labels: 8
+dynamic_labels: []
+invalid_labels: [0]
+object_labels: [2, 3, 4, 5, 6, 7]
+surface_places_labels: [1]
+ground_labels: [1]
+label_names:
+  - {label: 0, name: unknown}
+  - {label: 1, name: ground}
+  - {label: 2, name: tree_trunk}
+  - {label: 3, name: foliage}
+  - {label: 4, name: rock}
+  - {label: 5, name: building}
+  - {label: 6, name: robot}
+  - {label: 7, name: other_object}
+

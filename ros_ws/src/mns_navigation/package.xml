@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>mns_navigation</name>
+  <version>0.1.0</version>
+  <description>Coverage, diffusion, Nav2, following, and local safety.</description>
+  <maintainer email="maintainers@example.com">Multi Nav SceneGraph maintainers</maintainer>
+  <license>BSD-3-Clause</license>
+  <buildtool_depend>ament_python</buildtool_depend>
+  <depend>action_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>tf2_ros</depend>
+  <depend>rclpy</depend>
+  <depend>mns_interfaces</depend>
+  <exec_depend>cv_bridge</exec_depend>
+  <exec_depend>depth_image_proc</exec_depend>
+  <exec_depend>nav2_msgs</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-yaml</exec_depend>
+  <export><build_type>ament_python</build_type></export>
+</package>

@@ -1,0 +1,64 @@
+# ForestNavigation migration notes
+
+The complete upstream tree was inventoried and relevant implementation files
+were read at revision `0b29c399754f510499bfe9cc9d592cba215a7161`.
+Responsibilities were moved into stable packages instead of copying the old
+`scripts/` hierarchy or experiment wrappers.
+
+## Migrated behavior
+
+| Upstream responsibility | New home | Material change |
+| --- | --- | --- |
+| Go2 Isaac asset and velocity actor | `mns_simulation.isaac_runtime`, `go2_policy` | shared Isaac world; strict safe loader; 48-value observation to 12 joint offsets; Twist boundary |
+| RGB-D history and goal-conditioned diffusion | `mns_navigation.diffusion`, `diffusion_node` | original `navdiffusion` model package retained in optional image; ROS adapter publishes path then follows it |
+| Pure Pursuit | `mns_navigation.path_follower` | ROS-independent implementation shared by route-producing navigators |
+| Zigzag coverage | `mns_navigation.coverage` | immutable `CoveragePath` and stable route API |
+| Connected Coverage and A* connector | `mns_navigation.coverage` | obstacle-inflated reachable component; no Isaac imports or hard-coded scene path |
+| Sensor Coverage | `mns_navigation.sensor_coverage` | timestamped depth rays transformed by ROS TF into a reachable free-space grid |
+| Residual Coverage | `mns_navigation.sensor_coverage`, `coverage_node` | connected residual components become bounded A* route passes after initial route completion |
+| Mapped obstacle avoidance | `mns_navigation.safety` | separate high-priority Twist source behind the arbiter |
+| Stall recovery | `mns_navigation.safety` | bounded command-response state machine, independent of locomotion |
+| Nav2 configuration and goal handoff | `config/nav2`, `nav2_adapter` | Jazzy lifecycle/action API, fully namespaced frames and commands |
+| Single UAV collector | `mns_simulation` | kinematic aerial sensor abstraction with live RGB-D/semantic ROS topics; no bag prerequisite |
+| Go2 + UAV and two-team runners | `mns_bringup`, `mns_multi_robot` | YAML roster and one shared simulation instead of experiment-specific entry scripts |
+| Two-team partition | `mns_multi_robot.partition` | deterministic general quadrant primitive used by configuration, not a coupled runner |
+
+The source files that retain adapted coverage/partition behavior include the
+audited revision in their module header. The exact upstream `navdiffusion`
+Python package is copied only from a locally verified checkout into the ML
+image because checkpoint compatibility depends on that model definition.
+
+## Checkpoint handling
+
+The two required Git LFS assets are fetched selectively and remain outside
+version control:
+
+| Stable project path | Upstream file | SHA-256 |
+| --- | --- | --- |
+| `models/navdiffusion.ckpt` | `forest_nav/results/epoch=252-step=12903.ckpt` | `023d7b637a3ba2bea6ad918bb45add055ccd57581d09ccf4ed1f1ce56280dfde` |
+| `models/go2_locomotion.pt` | `logs/rsl_rl/unitree_go2_rough/2025-11-03_01-41-16/model_5998.pt` | `f06f93d6606c4cb64a03e2a137db398d52c75b8467268a28cf97bac4faa7086f` |
+
+Both files have been acquired and verified in the current workspace. The
+Diffusion model loads its strict state dictionary with `weights_only=True` and
+produces eight 2-D waypoints. The Go2 adapter reconstructs the actor-only MLP
+from tensor keys, validates the `48 → 512 → 256 → 128 → 12` layout and never
+loads arbitrary checkpoint Python objects. No retraining or conversion occurs.
+
+## Intentionally excluded
+
+The following are intentionally absent: ROS 1 handoff and bag conversion, ROS
+1 validation, 1000 m reliability runs, static reconstruction benchmarks,
+training entry points, bundled RSL-RL source, duplicate generated forest
+assets, renderer/review tools, backup/final scripts, legacy experiment wrappers
+and conflicting environment freeze files.
+
+No multi-robot global DSG, Hydra-Multi, inter-robot loop closure, relative
+localization, fusion or entity reconciliation code was migrated.
+
+## Licensing
+
+The upstream README identifies ForestNavigation as BSD-3-Clause, but the
+audited revision lacks its referenced repository-root license file. The
+project therefore keeps explicit attribution and revision records, copies only
+the checkpoint-compatible model package into an optional image, and does not
+vendor the upstream RSL-RL tree. See `THIRD_PARTY_NOTICES.md`.

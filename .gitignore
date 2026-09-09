@@ -1,0 +1,33 @@
+# ROS 2 / Python build products
+build/
+install/
+log/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.coverage
+
+# Runtime artifacts and large model files
+runs/
+bags/
+models/
+*.bag
+*.db3
+*.mcap
+*.ckpt
+*.pt
+*.pth
+*.onnx
+
+# Isaac / NVIDIA caches
+.isaac-cache/
+.nv/
+.cache/
+
+# Local configuration
+.env
+.env.local
+.vscode/
+.idea/
+

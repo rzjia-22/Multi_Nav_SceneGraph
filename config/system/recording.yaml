@@ -1,0 +1,17 @@
+storage_id: mcap
+topics:
+  - /clock
+  - /tf
+  - /tf_static
+per_robot:
+  - camera/color/image_raw
+  - camera/color/camera_info
+  - camera/depth/image_rect
+  - camera/semantic/image_raw
+  - odom
+  - mission/path
+  - mission/status
+  - cmd_vel_safe
+  - hydra/backend/dsg
+  - hydra/pipeline_status
+

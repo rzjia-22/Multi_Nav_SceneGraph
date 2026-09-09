@@ -1,0 +1,26 @@
+missions:
+  phase1_coverage:
+    bounds: [-7.5, 7.5, -7.5, 7.5]
+    lane_spacing: 1.5
+    planner: connected
+    goal: [-4.5, -6.0, 0.0]
+  southwest_coverage:
+    bounds: [-7.5, -0.5, -7.5, -0.5]
+    lane_spacing: 1.2
+    planner: connected
+    goal: [-4.0, -4.0, 0.0]
+  southeast_coverage:
+    bounds: [0.5, 7.5, -7.5, -0.5]
+    lane_spacing: 1.2
+    planner: connected
+    goal: [4.0, -4.0, 3.141592653589793]
+  northwest_aerial:
+    bounds: [-7.5, -0.5, 0.5, 7.5]
+    lane_spacing: 2.0
+    planner: zigzag
+    goal: [-4.0, 4.0, 0.0]
+  northeast_aerial:
+    bounds: [0.5, 7.5, 0.5, 7.5]
+    lane_spacing: 2.0
+    planner: zigzag
+    goal: [4.0, 4.0, 3.141592653589793]

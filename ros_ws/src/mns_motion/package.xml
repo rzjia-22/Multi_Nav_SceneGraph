@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>mns_motion</name>
+  <version>0.1.0</version>
+  <description>Generic motion command interface and arbitration.</description>
+  <maintainer email="maintainers@example.com">Multi Nav SceneGraph maintainers</maintainer>
+  <license>BSD-3-Clause</license>
+  <buildtool_depend>ament_python</buildtool_depend>
+  <depend>geometry_msgs</depend>
+  <depend>rclpy</depend>
+  <export><build_type>ament_python</build_type></export>
+</package>
+

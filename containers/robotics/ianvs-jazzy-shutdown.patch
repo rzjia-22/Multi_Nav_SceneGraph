@@ -1,0 +1,53 @@
+diff --git a/ianvs/src/spin_functions.cpp b/ianvs/src/spin_functions.cpp
+index 24cb9f4..3881d2a 100644
+--- a/ianvs/src/spin_functions.cpp
++++ b/ianvs/src/spin_functions.cpp
+@@ -34,8 +34,9 @@
+  * -------------------------------------------------------------------------- */
+ #include "ianvs/spin_functions.h"
+ 
++#include <chrono>
+ #include <rclcpp/executors.hpp>
+-#include <rclcpp/rate.hpp>
++#include <thread>
+ 
+ namespace ianvs {
+ 
+@@ -76,7 +77,6 @@ void spinWhileClockPresent(NodeHandle nh, rclcpp::Executor* executor) {
+ void spinWhileClockPresent(NodeHandle nh, rclcpp::Executor* executor) {
+   ShutdownMonitor functor(nh);
+ 
+-  rclcpp::WallRate r(50);
+   auto base = nh.node().get<rclcpp::node_interfaces::NodeBaseInterface>();
+ 
+   RCLCPP_INFO(nh.logger(), "Waiting for bag to start");
+@@ -84,12 +84,12 @@ void spinWhileClockPresent(NodeHandle nh, rclcpp::Executor* executor) {
+   while (rclcpp::ok() && !haveClock(nh)) {
+     spin_some(base, executor);
+-    r.sleep();
++    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+   }
+ 
+   RCLCPP_INFO(nh.logger(), "Running...");
+   while (rclcpp::ok() && haveClock(nh) && !functor.should_exit) {
+     spin_some(base, executor);
+-    r.sleep();
++    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+   }
+ 
+   if (rclcpp::ok()) {
+@@ -106,13 +106,12 @@ void spinUntilExitRequested(NodeHandle nh, rclcpp::Executor* executor) {
+ void spinUntilExitRequested(NodeHandle nh, rclcpp::Executor* executor) {
+   ShutdownMonitor functor(nh);
+ 
+-  rclcpp::WallRate r(50);
+   auto base = nh.node().get<rclcpp::node_interfaces::NodeBaseInterface>();
+ 
+   RCLCPP_INFO(nh.logger(), "Running...");
+   while (rclcpp::ok() && !functor.should_exit) {
+     spin_some(base, executor);
+-    r.sleep();
++    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+   }
+ 
+   if (rclcpp::ok()) {
