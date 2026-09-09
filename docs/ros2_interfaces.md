@@ -11,6 +11,7 @@ TF frame IDs are not scoped by ROS namespaces.
 | `camera/color/image_raw` | `sensor_msgs/Image` | yes | `rgb8`, registered camera |
 | `camera/color/camera_info` | `sensor_msgs/CameraInfo` | yes | calibrated and stamped in optical frame |
 | `camera/depth/image_rect` | `sensor_msgs/Image` | yes | `32FC1` metres; `16UC1` mm is adapter-compatible |
+| `camera/depth/camera_info` | `sensor_msgs/CameraInfo` | yes | registered depth calibration; identical intrinsics and stamp to color CameraInfo |
 | `camera/semantic/image_raw` | `sensor_msgs/Image` | yes | one-channel integer class IDs, not RGB colors |
 | `odom` | `nav_msgs/Odometry` | yes | parent `ROBOT_ID/odom`, child `ROBOT_ID/base_link` |
 | `/tf`, `/tf_static` | `tf2_msgs/TFMessage` | yes | pose resolvable at each image timestamp |
@@ -37,6 +38,11 @@ source does not change the topic contract.
 | `cmd_vel/navigation` | `geometry_msgs/Twist` | selected navigator → command arbiter |
 | `cmd_vel/safety` | `geometry_msgs/Twist` | safety/recovery → command arbiter |
 | `cmd_vel_safe` | `geometry_msgs/Twist` | command arbiter → robot motion backend |
+
+Nav2 additionally derives `camera/depth/points` (`sensor_msgs/PointCloud2`)
+from registered depth plus `camera/depth/camera_info`. Local and global costmap
+plugins receive the absolute per-robot topic; leaving it relative would resolve
+incorrectly below the nested costmap node namespace.
 
 Only one navigator is instantiated per robot. The arbiter chooses a fresh
 safety command before a fresh navigation command and emits zero when both are
@@ -65,6 +71,9 @@ configured expected rate; it is not an internal Hydra queue counter. Likewise,
 DSG publication rate is throughput and `latency_ms` is not yet a per-frame
 mapping completion measurement. The wording is intentional so later detailed
 latency instrumentation can be added without changing the message type.
+The runtime acceptance observer separately reports sensor rate from simulation
+timestamps and wall-clock throughput, including their ratio, so a slow host is
+distinguished from missing/dropped simulated frames.
 
 Hydra writes graph, mesh, trajectory and timing artifacts below
 `runs/<run-id>/<robot>/hydra`. Each process receives a distinct numeric

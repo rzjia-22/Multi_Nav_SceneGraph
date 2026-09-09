@@ -82,10 +82,17 @@ ground-truth semantic labels.
 Semantic metadata are remapped to the checked-in eight-class Hydra label space.
 Each camera is calibrated with `CameraInfo`, stamped with simulation time and
 connected to its robot base by prefixed TF.
+For multi-robot operation, one batched Camera sensor is created per robot kind
+using an Isaac prim-path expression, then each indexed output is published by
+its own ROS node. This avoids duplicate children on instanceable USD clones
+without sharing ROS namespaces or mapping state.
 
 UAV motion is intentionally kinematic in Phase 2: `cmd_vel_safe` updates the
 pose while the platform publishes the same odom, TF and camera contract as
-Go2. Full flight dynamics are outside the current scope.
+Go2. Its nadir camera is attached to Crazyflie's moving `body` link. The current
+planar depth-safety node is Go2-only because a downward mapping image is not a
+valid forward collision measurement. Full flight dynamics and UAV-specific
+collision sensing are outside the current scope.
 
 ## Multi-robot isolation
 

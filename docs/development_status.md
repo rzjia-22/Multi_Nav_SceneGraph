@@ -4,222 +4,189 @@ This is the sole authoritative status document. Last updated 2026-09-09.
 
 ## Current milestone
 
-GPU preflight and the deterministic real Isaac forest sensor milestone pass on
-the current host. Frozen Isaac Lab 2.3.1 executes Vulkan rendering and GPU
-PhysX, and a real Go2 view contains ground, tree-trunk and foliage classes plus
-unknown/background in decoded RGB, metric depth and integer semantics with timestamped
-CameraInfo, odom, TF and clock. The articulated Go2 gate now passes through the
-public ROS Twist boundary with cameras active: stand, forward, moving turn,
-explicit stop and command-timeout behavior are physically exercised. A render
-timestep bug that previously bypassed policy updates was found and fixed.
+Phase 1 and the functional Phase 2 acceptance now pass with real Isaac Sim /
+Isaac Lab forest data on the current NVIDIA host. This is no longer a
+synthetic-only integration: articulated Go2 locomotion, kinematic UAV motion,
+registered RGB/depth/semantic sensing, ROS 2 navigation and independent online
+Hydra pipelines ran concurrently and saved inspectable DSG, mesh, trajectory
+and timing artifacts.
 
-This is still not represented as full Phase 1/2 completion. Diffusion, Nav2,
-UAV aerial reconstruction and the four-robot topology remain synthetic-only
-until their real Isaac runs and saved Hydra artifacts are inspected.
+The four-robot run is resource-limited rather than wall-clock real-time on this
+RTX 4060 Laptop / 16 GB RAM machine. All four cameras remain exactly 10 Hz in
+simulation time, but wall throughput is about 2.4 Hz (RTF about 0.24). This is
+reported as a performance warning, not hidden as a functional failure.
 
 ## Milestone state
 
-| Milestone | State | Evidence / boundary |
+| Milestone | State | Real runtime evidence |
 | --- | --- | --- |
-| A — version freeze and architecture | complete | pinned images, Hydra graph, ROS packages, contracts and docs |
-| B — Isaac Go2 and sensor bridge | GPU Isaac validated for one Go2 in forest | 2.3.1 GPU PhysX PASS; RGB/depth/four semantic classes and timestamped TF inspected |
-| C — single Hydra integration | complete in synthetic | real Hydra consumes all four image inputs/TF and publishes non-empty DSG updates |
-| D — Go2 locomotion backend | GPU Isaac validated | exact upstream joint/observation contract; ROS stand/forward/moving-turn/stop/deadman gate passes with camera rendering active |
-| E — Coverage + follower + Hydra | complete in synthetic | live Twist motion, sensor coverage, Hydra and safety run concurrently |
-| F — Diffusion | complete in synthetic | original checkpoint generates `(8,2)` paths at about 2 Hz and drives the common follower |
-| G — Nav2 | complete in synthetic | namespaced lifecycle stack accepts and completes the configured goal |
-| H — Phase 1 acceptance | synthetic pass; Isaac sensors and motion pass; navigation/Hydra pending | real Go2 sensor and articulated-motion observers have zero failures |
-| I — UAV migration | source complete; synthetic pass; Isaac imagery pending | UAV namespace, kinematic motion and mapping isolation verified |
-| J — 2 Go2 + 2 UAV | synthetic pass; Isaac pending | four navigation and four Hydra instances run simultaneously without TF collisions |
-| K — cleanup and handoff | complete except GPU evidence | authoritative docs, unified commands, ignored outputs and repeatable observers |
+| A — version freeze and architecture | complete | pinned images, source graph, packages, contracts and docs |
+| B — Isaac Go2 and sensor bridge | GPU Isaac validated | articulated Go2 plus RGB/depth/semantic/CameraInfo/odom/TF/clock |
+| C — single Hydra integration | GPU Isaac validated | direct live input, non-empty DSG/mesh/trajectory and clean save |
+| D — Go2 locomotion backend | GPU Isaac validated | ROS Twist → 48-value observation → actor → 12 joint targets at 50/200 Hz |
+| E — Coverage + follower + Hydra | GPU Isaac validated | obstacle-aware route, stable movement and concurrent mapping |
+| F — Diffusion + Hydra | GPU Isaac validated | five real RGB-D frames, GPU inference, follower motion and completed goal |
+| G — Nav2 + Hydra | GPU Isaac validated | live Isaac depth point cloud/costmaps, action success and mapping |
+| H — Phase 1 acceptance | PASS | all three replaceable navigators validated against real Isaac sensors and RL motion |
+| I — UAV migration | GPU Isaac validated | 42 m aerial coverage, correct nadir RGB-D/semantics and meaningful Hydra reconstruction |
+| J — 2 Go2 + 2 UAV | PASS, resource-limited RTF | one world, four isolated namespaces/TF trees/Hydra outputs; no estimated input gaps |
+| K — cleanup and handoff | complete | unified commands, artifact inspector, ignored outputs and updated authority docs |
 
 ## Implemented capabilities
 
-- Eight ROS 2 packages with configuration-driven Phase 1 and Phase 2 launch.
-- One standard per-robot sensor contract: RGB, metric depth, integer semantic,
-  CameraInfo, odometry, TF and shared simulation clock.
-- Stable prefixed frames and namespaces for `go2_1`, `go2_2`, `uav_1`, `uav_2`.
-- One independent Hydra process, map frame, numeric robot ID, DSG topic and run
-  directory for every mapping-enabled robot.
-- Replaceable Coverage, Diffusion and Nav2 navigators behind the same mission,
-  Twist and motion-arbiter interfaces.
-- Connected and zigzag route planning, A* connectors, pure pursuit, mapped
-  depth safety, stall recovery, sensor coverage and bounded residual passes.
-- Original audited Diffusion architecture/checkpoint and Go2 actor with
-  hash-verified assets and tensor-only safe loading.
-- Shared Isaac runtime with a deterministic collision-enabled semantic forest,
-  two articulated Go2 instances, two kinematic UAV
-  platforms, 200/50/10 Hz physics/policy/sensor scheduling and GT semantic
-  remapping. Single-Go2 sensing and articulated RL motion are GPU-executed;
-  real mapping/navigation concurrency and multi-robot evidence are pending.
-- Machine-readable runtime acceptance for decoded sensor payloads, simulation
-  and wall rates, image-time TF, motion, TF,
-  mission state, DSG updates, mapping state and input timestamp gaps.
-- Optional MCAP topic policy and isolated ignored runtime output directories;
-  bags are not part of the online mapping path.
+- Eight ROS 2 packages and one configuration-driven launch generator for both
+  single- and multi-robot rosters.
+- Per-robot registered RGB, metric depth, integer semantics, color/depth
+  CameraInfo, odometry and globally unique TF, plus one shared simulation clock.
+- Replaceable Coverage, Diffusion and Nav2 strategies behind the same mission,
+  Twist, safety and motion-backend boundaries.
+- Original audited NavDiffusion and Go2 actor checkpoints with hash verification
+  and tensor-only loading; neither model was retrained.
+- A deterministic collision-enabled semantic forest with ground, trunks and
+  foliage. Known-area Coverage uses the same configured tree centres for its
+  obstacle-aware A* connectors.
+- Real Go2 actor execution at 50 Hz over 200 Hz GPU PhysX. Render selection is
+  10 Hz without changing the one-tick physics/render timestep.
+- Batched Isaac Lab cameras for multiple instanceable Go2/Crazyflie assets,
+  while every ROS publisher, navigator and Hydra process remains per robot.
+- Nadir UAV cameras attached to the moving Crazyflie body link. The planar
+  forward-depth safety node is intentionally Go2-only; the nadir mapping camera
+  is not misused as an aerial collision sensor.
+- Independent Hydra robot IDs, map frames, DSG topics and output directories.
+  There is no global DSG, fusion, loop closure or entity reconciliation.
+- Machine-readable observers distinguish simulation-time sensor frequency from
+  wall throughput and check decoded payloads, image-time TF, motion, mission
+  state, DSG throughput and estimated timestamp gaps.
+- `tools/inspect_hydra_artifacts.py` summarizes finalized graphs, semantic mesh
+  geometry and trajectories without creating a GUI or committing large runs.
 
 ## Tests and runtime evidence
 
-The latest completed results are:
-
-- `make validate`: repository validation plus 17 pure Python tests passed,
-  including the configured forest's obstacle-aware coverage route.
-- `make gpu-preflight`: RTX 4060 Laptop GPU, 8,188 MiB VRAM, driver
-  550.144.03; host and CUDA-container probes pass; graphics capabilities are
-  `all`.
-- `make isaac-minimal`: frozen Isaac Lab 2.3.1 used `cuda:0`; a rigid body fell
-  from 0.998 m and settled at 0.100 m after 120 steps; exit code 0.
-- Real Isaac single-Go2 forest acceptance after the managed-camera migration,
-  15 seconds: 141 registered RGB, depth, semantic and CameraInfo samples at
-  exactly 10.0 Hz simulation time (9.40 Hz wall throughput), 2,809 odometry
-  samples at 200 Hz simulation time, advancing clock, complete TF and transform
-  lookup at the image timestamp. Payloads were RGB8, 32FC1 metres and 16UC1
-  class IDs. Finite positive depth covered 67.3% of the image with
-  1.38/2.90/14.64 m minimum/median/maximum; class counts included unknown
-  25,086, ground 31,382, tree trunk 15,926 and foliage 4,406. Robot prims are
-  assigned the stable `robot` class, though the forward self-mounted camera
-  does not see its own body in this sample.
-- The same forest runtime completed 5,000 bounded steps, emitted a
-  machine-readable PASS result and exited with code 0. This is real runtime
-  shutdown evidence, not a source-only path.
-- The exact low-speed command profile was run for 3,000 policy steps (60 s)
-  inside ForestNavigation's original Go2 Gym environment: zero terminations,
-  minimum base height 0.282 m, maximum tilt 0.096 rad, 2.315 m forward travel,
-  1.028 rad yaw response and 0.001 m/s final speed.
-- The project ROS motion boundary was exercised with real articulated physics
-  and the same checkpoint. With RGB-D/semantic rendering active, its 15 s gate
-  travelled 2.397 m, turned 0.985 rad, retained base height above 0.248 m and
-  stayed below 0.318/0.237 rad pitch/roll; explicit stop was 0.016 m/s and the
-  0.3 s deadman settled to 0.044 m/s. A separate sensorless 60 s isolation run
-  also passed, with base height above 0.251 m and tilt below 0.356 rad.
-- The prior turning failures were caused by configuring a 100 ms rendering
-  timestep and then calling `step(render=True)` from a 5 ms control loop. Each
-  render advanced multiple physics substeps without intervening actor updates.
-  Rendering is now selected at 10 Hz while its timestep remains one 5 ms
-  physics tick; the actor still runs on every fourth tick.
-- `make build`: all 8 ROS packages built; 10 package tests passed with no
+- `make build`: all 8 ROS packages built; 10 package tests passed, with zero
   errors, failures or skips.
-- `make test-models`: real Diffusion checkpoint returned finite `(8,2)` output;
-  real Go2 actor returned finite `(2,12)` output on CPU.
-- Robotics image rebuilt from the pinned source graph; ML image rebuilt and
-  `pip check` reported no broken requirements.
-- Phase 1 Coverage + Sensor Coverage + Hydra, 8-second observer: RGB/depth/
-  semantic/CameraInfo each 80 frames, depth 9.997 Hz, odom 401 frames, eight
-  backend DSG updates, 5.58 m synthetic displacement, mapping `running`, no TF
-  gaps, estimated input drops 0.
-- Phase 1 Diffusion + Hydra: five-frame RGB-D history ready, path publication
-  about 2 Hz, robot advanced from x=-6.0 to about -4.67 toward its goal; Hydra
-  received 819 RGB frames, published at about 1 Hz and reported zero gaps.
-- Phase 1 Nav2: lifecycle stack reached the configured goal and reported
-  `complete`; final x was about -4.835 for goal x=-4.5, inside the configured
-  0.35 m tolerance.
-- Final Phase 2, 10-second observer: each robot delivered 100–101 RGB/depth/
-  semantic/CameraInfo frames at 9.99–10.09 Hz, 486–490 odometry frames, 6–7
-  backend DSG updates and 4.78–5.37 m synthetic displacement. All four had
-  complete prefixed TF, running independent missions/mapping and zero estimated
-  input gaps.
-- Four-Hydra shutdown regression: all 25 processes exited cleanly, four Hydra
-  instances saved trajectories/timing data in about 1.1 seconds, launch exit
-  code 0. No invalid-context abort or launch SIGTERM remained.
+- `make validate`: repository validation and 17 pure Python tests passed.
+- `make gpu-preflight`, `make isaac-compatibility`, `make isaac-minimal`: RTX
+  4060 Laptop GPU, 8,188 MiB VRAM, driver 550.144.03, CUDA container and Vulkan
+  pass; frozen Isaac Lab 2.3.1 GPU PhysX steps and shuts down cleanly.
+- Real Go2 sensor gate: 10 Hz simulation-time RGB8, 32FC1 metric depth, 16UC1
+  labels and CameraInfo; 200 Hz odom; valid timestamped TF and clock.
+- Real articulated motion gate with cameras: 2.397 m forward, 0.985 rad turn,
+  stable upright base, explicit stop and 0.3 s command deadman pass.
+- Coverage + Hydra observer (20 s wall): 114 registered image sets, 2,269 odom,
+  11 backend DSG updates, 3.265 m displacement, 249 mapping inputs, no estimated
+  gaps and complete TF. Final graph had 269 nodes/308 edges; mesh had 49,557
+  vertices with ground, tree-trunk and foliage structure.
+- Diffusion + Hydra: history 5/5, 14 GPU plans (last measured 58.7 ms), real
+  follower/actor motion to the configured goal, mission `complete`; a concurrent
+  15 s observer saw 95 image sets, 1,885 odom, 9 DSG updates and no gaps.
+- Nav2 + Hydra: launch-time action rejection is retried until lifecycle active;
+  the accepted goal succeeded after real articulated motion. Isaac depth is
+  converted to a 320-wide point cloud at about 6.3 wall Hz in the single-robot
+  run, and both local/global costmaps subscribe to the absolute namespaced
+  point-cloud topic. Final Hydra graph/mesh/trajectory saved on exit.
+- Single UAV sensor gate: 10 Hz simulation-time images, correct 5.92 m ground
+  depth from 6 m altitude, and a sample containing ground 38,885, trunk 2,367
+  and foliage 35,548 pixels. A 20 s observer recorded 2.79 m displacement, 15
+  DSG updates and no gaps during the longer mission.
+- Final single-UAV artifacts: 89.6 s trajectory over the configured 42 m route;
+  177 DSG nodes/281 edges and 27,990 mesh vertices. Ground median z is 0 m,
+  trunk median 1.05 m and foliage median 4.25 m; aerial forest structure is
+  meaningful rather than merely a non-empty DSG.
+- Final Phase 2 sensor gate: all four robots passed encodings, intrinsics,
+  timestamped TF and exact 10 Hz simulated image / 200 Hz odom rates. The
+  15-second system observer passed for all four robots with concurrent motion,
+  four running Hydra pipelines, four backend DSG streams and zero estimated
+  timestamp gaps.
+- Final Phase 2 resources: about 4.5 GB VRAM; Isaac about 3.0 GB RAM / 169% CPU;
+  robotics about 6.4 GB RAM / 902% CPU. Wall image throughput was 2.4 Hz for
+  each robot (RTF 0.24), identifying CPU/RAM concurrency as the practical host
+  bottleneck rather than namespace, TF, DDS or GPU-memory corruption.
+- All Phase 2 processes exited code 0. Four finalized outputs contained
+  respectively 386/158/149/152 DSG nodes and 68,972/31,016/26,901/25,463 mesh
+  vertices for `go2_1`, `go2_2`, `uav_1`, `uav_2`.
 
-Synthetic RGB-D is deliberately simple. These results prove ROS wiring,
-concurrency, namespace isolation and online graph updates, not forest
-reconstruction quality.
+Runtime artifacts live under ignored `runs/` directories. Summarize one with:
+
+```bash
+MNS_HYDRA_DIR=runs/<run-id>/<robot>/hydra make inspect-hydra
+```
 
 ## Run commands
 
-```bash
-make robotics-image
-make build
-make phase1-synthetic             # terminal 1
-make accept-phase1                # terminal 2
-make phase2-synthetic             # terminal 1
-make accept-phase2                # terminal 2
-```
-
-Navigator override examples:
-
-```bash
-MNS_NAVIGATOR=coverage make phase1-synthetic
-MNS_NAVIGATOR=nav2 make phase1-synthetic
-make models
-make robotics-ml-image
-make phase1-synthetic-diffusion
-```
-
-Real Isaac staged entry points:
+Run bringup and its observer in separate terminals:
 
 ```bash
 make gpu-preflight
 make isaac-compatibility
 make isaac-minimal
 make models
-make phase1
-make phase2
+
+MNS_RUN_ID=coverage-real make phase1
+MNS_ACCEPTANCE_DURATION=20 make accept-phase1
+
+MNS_RUN_ID=diffusion-real make phase1-diffusion
+MNS_NAVIGATOR=nav2 MNS_RUN_ID=nav2-real make phase1
+
+MNS_RUN_ID=uav-real make uav-mapping
+MNS_ACCEPTANCE_DURATION=20 make accept-uav
+
+MNS_RUN_ID=phase2-real make phase2
+MNS_ACCEPTANCE_DURATION=20 make accept-phase2
 ```
 
-## Known issues and external blockers
+Stop bringup with Ctrl-C or `docker compose stop`; SIGINT reaches Python PID 1
+and Hydra saves all artifacts before both containers exit.
 
-- NVIDIA's compatibility checker reports this host's 8.59 GB VRAM below its
-  10 GB threshold and 16.49 GB RAM below 32 GB. Minimal PhysX and one 320x240
-  camera work, but four-camera/Hydra/Diffusion load may be resource-limited.
-- Real Hydra artifacts from Isaac data, real Coverage/Diffusion/Nav2
-  concurrency, UAV aerial reconstruction and real 2 Go2 + 2 UAV concurrency
-  are not yet validated. They remain explicitly separate from the passed
-  sensor and locomotion gates.
-- The locomotion actor has small residual zero-command drift. The 60-second
-  clear-lane gate passes, but an indefinitely unattended backend can eventually
-  reach a forest obstacle without a navigator/safety source. This is why real
-  navigation acceptance must include collision and safety-override evidence.
-- The complete initial coverage route is long. Sensor-depth ingestion is live
-  and residual planning is unit-tested, but a full-duration online mission that
-  naturally reaches and executes both residual passes has not been run.
+## Known remaining issues
+
+- The current 8 GB VRAM / 16 GB RAM laptop cannot run the four-camera/four-Hydra
+  graph at wall-clock real time with the default 320×240, 10 Hz configuration.
+  Functional simulated rates are exact; use a stronger host or deliberately
+  tune sensor resolution/rate for real-time performance.
+- Go2 meshes show a negative ground tail during body tilt (ground median near
+  -0.1 m, p99 near 0 m, minimum as low as -2.45 m in the longest Phase 2 run).
+  Scale, dominant ground plane, trunks and canopy remain coherent. Further
+  calibration/TSDF tuning should use recorded evidence rather than changing
+  Hydra algorithms blindly.
 - `PipelineStatus.dropped` estimates source timestamp gaps; pinned Hydra does
-  not expose its internal queue-drop counter. Per-frame mapping latency remains
-  a future measurement, as explicitly stated in the status detail.
-- Automatic bag recording is not part of bringup. The checked-in MCAP policy is
-  for an optional manual/sidecar recorder if needed.
+  not expose its internal queue-drop counter. Per-frame mapping latency and
+  explicit physical contact/safety-override counters remain observability work,
+  not prerequisites hidden as completed measurements.
+- The full initial-plus-residual Go2 coverage route has not been run to natural
+  exhaustion. Initial known-map obstacle avoidance and online sensor coverage
+  are validated; unknown-area exploration remains deliberately out of scope.
 
 ## Architecture decisions
 
-- Ubuntu 22.04 remains the host; ROS 2 Jazzy lives in an Ubuntu 24.04 container.
+- Ubuntu 22.04 host; ROS 2 Jazzy in Ubuntu 24.04 robotics containers.
 - Isaac Sim 5.1.0 / Isaac Lab 2.3.1 is the only simulator combination.
-- Hydra-ROS is commit-pinned because there is no stable ROS 2 release matching
-  this integration; its complete dependency graph is pinned too.
-- An Ianvs 20 ms wall-sleep compatibility patch plus Hydra `force_shutdown`
-  removes the Jazzy SIGINT context race in multi-instance launches.
-- One Hydra instance per robot is the Phase 2 isolation mechanism. There is no
-  global graph or implicit cross-robot state.
-- Isaac's internal Jazzy ROS bridge is used inside simulation; the boundary is
-  standard ROS messages, not shared Python modules or custom joint messages.
-- Go2 locomotion is a motion backend, never part of Diffusion navigation.
-- UAVs remain kinematic sensor platforms for this phase.
+- Commit-pinned Hydra/Hydra-ROS and dependencies; no ROS 1 path.
+- Isaac's Jazzy ROS bridge publishes standard ROS messages only. Navigation and
+  mapping do not import Isaac APIs.
+- Go2 RL locomotion is a replaceable motion backend, never part of Diffusion.
+- One Hydra pipeline per robot is the Phase 2 isolation boundary.
+- UAVs remain kinematic sensor platforms; a real flight stack is future adapter
+  work, not part of this phase.
 
 ## ForestNavigation migration state
 
 Migrated and reorganized: Go2 Isaac assets and actor inference, RGB-D history
 and NavDiffusion inference, pure pursuit, zigzag/connected/sensor/residual
 coverage, A* connectors, mapped-depth safety, stall recovery, Nav2 handoff,
-kinematic UAV behavior and deterministic multi-team partitioning.
+kinematic UAV behavior and multi-team partitioning.
 
 Intentionally excluded: ROS 1 handoff/conversion/validation, 1000 m reliability
 and static reconstruction benchmarks, training, historical wrappers, duplicate
 renderers/assets, backup/final scripts and conflicting environment freezes.
-Exact attribution, changes and model hashes are in
+Attribution, modifications and model hashes are in
 `docs/forestnavigation_migration.md` and `THIRD_PARTY_NOTICES.md`.
 
-## Remaining work
+## Future deployment boundaries
 
-1. Execute Phase 1 Coverage, Diffusion and Nav2 against the articulated Go2,
-   checking joint stability, collisions, rates and concurrent Hydra artifacts.
-2. Execute the 2 Go2 + 2 UAV roster, inspect each independent graph/mesh and
-   specifically evaluate the downward UAV RGB-D/semantic reconstruction.
-3. Run a full initial-plus-residual coverage mission and tune only configuration
-   thresholds if the real sensor geometry requires it.
-4. For real deployment, implement hardware-specific sensor calibration/time
-   sync, Unitree high-level motion and UAV flight-stack adapters. Navigation and
-   mapping interfaces should not change.
+Real robots still require calibrated/time-synchronized sensor adapters, a
+Unitree high-level locomotion adapter and a UAV flight-stack adapter. The ROS
+sensor and `cmd_vel_safe` contracts do not change.
 
-Future global DSG research would additionally need inter-robot transforms,
+Future global-DSG research would additionally need inter-robot transforms,
 loop closure, fusion policy, entity reconciliation and a global graph owner.
-Those modules are intentionally not implemented in Phase 1/2.
+Those modules are intentionally not implemented.

@@ -7,7 +7,8 @@ The project has three images with one frozen dependency direction:
 1. `multi-nav-scenegraph/robotics:jazzy-hydra-8f3b7e3` — Ubuntu 24.04,
    ROS 2 Jazzy, Nav2, project nodes and the complete pinned Hydra workspace.
 2. `multi-nav-scenegraph/robotics-ml:jazzy-torch-2.7.1` — optional child of
-   the robotics image containing fixed PyTorch/NavDiffusion dependencies.
+   the robotics image containing fixed PyTorch/NavDiffusion dependencies and
+   explicit NVIDIA compute/utility passthrough for real GPU inference.
 3. `multi-nav-scenegraph/simulation:isaac-lab-2.3.1` — official NGC Isaac Lab
    2.3.1 image with Isaac Sim 5.1.0.
 
@@ -87,6 +88,10 @@ GB RAM below 32 GB, so those are measured resource risks rather than hidden as
 software failures. Inside the Codex filesystem sandbox `/dev/nvidia*` is not
 visible; GPU commands must execute through the host-authorized Docker path.
 
+The simulation entrypoint sources Isaac's Python environment and then `exec`s
+the runtime, so Python is container PID 1. Docker SIGINT therefore stops the
+physics loop cleanly instead of killing a wrapper shell after its grace period.
+
 For real message inspection, run the normal simulation process and then:
 
 ```bash
@@ -98,6 +103,10 @@ integer semantic IDs, intrinsics, timestamps, rates and TF at the image stamp.
 The normal runtime loads `config/simulation/forest.yaml`; a finite diagnostic
 run can add `--max-steps N` to the simulation entrypoint and must print
 `MNS_ISAAC_RUNTIME_RESULT` before exiting with code zero.
+
+The general Phase 1/2 observer reports both simulation-time frequency and wall
+throughput. A low wall rate is a resource warning when message stamps still
+show the configured sensor rate; it is not mislabeled as a ROS contract failure.
 
 The articulated Go2 motion gate uses an isolated southern lane, independently
 of navigation and Hydra. Start the simulator in one terminal:
@@ -134,6 +143,10 @@ sustained four-camera runs, raising `net.core.rmem_max` and
 `net.core.wmem_max` to at least 16 MiB is a recommended optimization, not a
 startup requirement. Use the project acceptance observer for topic/TF/mapping
 health and `docker stats --no-stream` for container CPU and memory usage.
+The measured four-camera/four-Hydra run on the current host maintained 10 Hz in
+simulation time but only about 2.4 Hz wall throughput. It used about 4.5 GB
+VRAM, 3.0 GB Isaac RAM and 6.4 GB robotics RAM; CPU/Hydra concurrency is the
+dominant practical constraint.
 
 ## Runtime outputs and bags
 

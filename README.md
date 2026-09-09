@@ -93,8 +93,17 @@ make gpu-preflight       # Level 0 host + Level 1 Docker + graphics config
 make isaac-compatibility # Level 2 official Vulkan/requirements report
 make isaac-minimal       # Level 3 finite GPU PhysX smoke
 make models
-make phase1
-make phase2
+MNS_RUN_ID=coverage-real make phase1
+# second terminal: MNS_ACCEPTANCE_DURATION=20 make accept-phase1
+
+MNS_RUN_ID=diffusion-real make phase1-diffusion
+MNS_NAVIGATOR=nav2 MNS_RUN_ID=nav2-real make phase1
+
+MNS_RUN_ID=uav-real make uav-mapping
+# second terminal: MNS_ACCEPTANCE_DURATION=20 make accept-uav
+
+MNS_RUN_ID=phase2-real make phase2
+# second terminal: MNS_ACCEPTANCE_DURATION=20 make accept-phase2
 ```
 
 The shared Isaac world runs a deterministic collision-enabled semantic forest,
@@ -107,8 +116,11 @@ centres as inflated obstacles; it is not an unknown-environment explorer.
 The current development host passes the Level 0–3 runtime path on an RTX 4060
 Laptop GPU: Docker GPU passthrough, Vulkan enumeration and Isaac Lab 2.3.1 GPU
 PhysX stepping are real runtime evidence. The official compatibility checker
-still reports the 8 GB VRAM and 16 GB system RAM below its recommended minimum;
-multi-camera Phase 2 therefore remains resource-constrained until measured.
+reports the 8 GB VRAM and 16 GB system RAM below its recommended minimum. Real
+Phase 1 Coverage, Diffusion and Nav2 plus single-UAV mapping all pass. Real
+Phase 2 also passes functionally with four independent Hydra outputs, but its
+10 Hz simulation-time cameras deliver about 2.4 Hz in wall time (RTF 0.24) on
+this host; see the development status for exact evidence.
 
 To validate the message payloads separately from navigation and Hydra, run the
 simulation with `--enable_cameras` (the normal compose command already does),
@@ -118,7 +130,14 @@ The articulated motion gate is `make accept-go2-motion`. The supplied checkpoint
 passes stand, forward, moving-turn, explicit-stop and deadman phases through the
 public ROS boundary while cameras are active. Consult the
 [development status](docs/development_status.md) before interpreting
-`make phase1` or `make phase2` as full real-Isaac navigation/mapping acceptance.
+`make phase1` or `make phase2` as wall-clock real-time performance evidence.
+
+After a clean shutdown, inspect graph composition, semantic mesh bounds and the
+saved trajectory without a GUI:
+
+```bash
+MNS_HYDRA_DIR=runs/<run-id>/<robot>/hydra make inspect-hydra
+```
 
 ## Verification and observability
 
