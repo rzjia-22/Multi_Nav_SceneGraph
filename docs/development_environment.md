@@ -65,23 +65,36 @@ copying it. PyTorch loaders use `weights_only=True` and strict tensor shapes.
 ## Host GPU checks
 
 ```bash
-nvidia-smi
-docker run --rm --gpus all nvcr.io/nvidia/cuda:12.8.0-base-ubuntu22.04 nvidia-smi
-docker compose --profile simulation build simulation
+make gpu-preflight
+make isaac-compatibility
+make isaac-minimal
 ```
 
-An NGC pull may require Isaac EULA acceptance. The simulation runtime requires
-a working host NVIDIA driver, NVIDIA Container Toolkit, `libcuda.so.1` and a
-Vulkan-capable device. ROS builds, tests, Hydra and synthetic acceptance do not
-require a GPU.
+These are deliberately layered. `gpu-preflight` verifies host NVML, a CUDA
+container, the registered NVIDIA Docker runtime and graphics capabilities.
+`isaac-compatibility` runs NVIDIA's Vulkan/system checker. `isaac-minimal` then
+starts the frozen 2.3.1 image, drops one rigid body for 120 GPU PhysX steps and
+requires a machine-readable PASS marker. An NGC pull may require EULA
+acceptance. ROS builds, tests, Hydra and synthetic acceptance do not require a
+GPU.
 
-On the current host, `nvidia-smi` cannot access a usable driver. A bounded
-startup with the locally cached Isaac Lab 2.3.0 / Isaac Sim 5.1 image verified
-AppLauncher arguments, Replicator extension loading, internal Jazzy imports and
-project module imports, then stopped at `SimulationContext`/PhysX Fabric with
-missing CUDA/Vulkan. That is an external host blocker, not an application
-compile or ROS bridge failure. Re-run the official 2.3.1 GPU path after the
-driver stack is repaired.
+The simulation service mounts this repository at `/mns`; `/workspace` belongs
+to the official image and contains `/workspace/isaaclab`. Do not mount the
+project over that directory. The current host produced `GPU_PREFLIGHT_PASS`,
+enumerated Vulkan on an RTX 4060 Laptop GPU and passed the finite PhysX test on
+Isaac Lab 2.3.1. The official checker reports 8.59 GB VRAM below 10 GB and 16.49
+GB RAM below 32 GB, so those are measured resource risks rather than hidden as
+software failures. Inside the Codex filesystem sandbox `/dev/nvidia*` is not
+visible; GPU commands must execute through the host-authorized Docker path.
+
+For real message inspection, run the normal simulation process and then:
+
+```bash
+MNS_ACCEPTANCE_DURATION=30 make accept-isaac-sensors
+```
+
+This observer decodes image payloads and checks encodings, metric depth,
+integer semantic IDs, intrinsics, timestamps, rates and TF at the image stamp.
 
 ## DDS and throughput
 

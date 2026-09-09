@@ -89,6 +89,9 @@ Prerequisites are a compatible NVIDIA driver, NVIDIA Container Toolkit and a
 GPU meeting Isaac Sim 5.1 requirements.
 
 ```bash
+make gpu-preflight       # Level 0 host + Level 1 Docker + graphics config
+make isaac-compatibility # Level 2 official Vulkan/requirements report
+make isaac-minimal       # Level 3 finite GPU PhysX smoke
 make models
 make phase1
 make phase2
@@ -99,16 +102,20 @@ and RGB/depth/semantic publication at 10 Hz. Go2 is an articulated Isaac Lab
 asset controlled through the original 48-to-12 locomotion actor. UAVs are
 intentionally kinematic sensor platforms for Phase 2.
 
-On the current development host, the source and ROS bridge reach Isaac's
-`SimulationContext`, but PhysX cannot initialize because the host has no usable
-NVIDIA driver, `libcuda.so.1` or Vulkan device. Synthetic acceptance is fully
-available; hardware-backed Isaac acceptance must be rerun after the host GPU
-stack is repaired.
+The current development host passes the Level 0–3 runtime path on an RTX 4060
+Laptop GPU: Docker GPU passthrough, Vulkan enumeration and Isaac Lab 2.3.1 GPU
+PhysX stepping are real runtime evidence. The official compatibility checker
+still reports the 8 GB VRAM and 16 GB system RAM below its recommended minimum;
+multi-camera Phase 2 therefore remains resource-constrained until measured.
+
+To validate the message payloads separately from navigation and Hydra, run the
+simulation with `--enable_cameras` (the normal compose command already does),
+then in another terminal run `make accept-isaac-sensors`.
 
 ## Verification and observability
 
 ```bash
-make validate       # repository contracts and 13 pure unit tests
+make validate       # repository contracts and 16 pure unit tests
 make build          # all 8 ROS packages and package tests
 make test-models    # real Diffusion and Go2 checkpoint forward passes
 docker compose config --quiet

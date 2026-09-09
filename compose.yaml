@@ -65,7 +65,13 @@ services:
     environment:
       <<: *ros-environment
       ACCEPT_EULA: Y
+      CYCLONEDDS_URI: file:///mns/config/system/cyclonedds.xml
+      MNS_PROJECT_ROOT: /mns
+      MNS_RUN_ROOT: /mns/runs
       PRIVACY_CONSENT: Y
+      OMNI_KIT_ALLOW_ROOT: "1"
+      NVIDIA_VISIBLE_DEVICES: all
+      NVIDIA_DRIVER_CAPABILITIES: all
       ROS_DISTRO: jazzy
       LD_LIBRARY_PATH: /isaac-sim/exts/isaacsim.ros2.bridge/jazzy/lib
     deploy:
@@ -76,15 +82,18 @@ services:
               count: all
               capabilities: [gpu]
     volumes:
-      - .:/workspace:rw
+      # The Isaac Lab image owns /workspace/isaaclab.  Mounting the project at
+      # /workspace would hide that runtime directory.
+      - .:/mns:rw
       - isaac-kit-cache:/isaac-sim/kit/cache:rw
       - isaac-ov-cache:/root/.cache/ov:rw
       - isaac-compute-cache:/root/.nv/ComputeCache:rw
-    working_dir: /workspace
+    working_dir: /mns
     command: >-
-      /workspace/containers/simulation/entrypoint.sh
+      /mns/containers/simulation/entrypoint.sh
       --scenario ${MNS_SCENARIO:-phase1_go2}
       --headless
+      --enable_cameras
 
 volumes:
   isaac-kit-cache:

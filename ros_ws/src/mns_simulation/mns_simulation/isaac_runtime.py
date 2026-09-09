@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 from dataclasses import dataclass
 import math
+import os
 from pathlib import Path
 import sys
 
@@ -17,11 +18,14 @@ from isaaclab.app import AppLauncher
 
 
 def parse_args():
+    project_root = Path(os.environ.get("MNS_PROJECT_ROOT", "/workspace"))
     parser = argparse.ArgumentParser()
     parser.add_argument("--scenario", choices=("phase1_go2", "phase2_team"), default="phase1_go2")
     parser.add_argument("--system-config", type=Path)
     parser.add_argument("--go2-backend", choices=("rl", "kinematic"), default="rl")
-    parser.add_argument("--go2-checkpoint", type=Path, default=Path("/workspace/models/go2_locomotion.pt"))
+    parser.add_argument(
+        "--go2-checkpoint", type=Path, default=project_root / "models/go2_locomotion.pt"
+    )
     parser.add_argument("--width", type=int, default=320)
     parser.add_argument("--height-px", type=int, default=240)
     parser.add_argument("--sensor-rate", type=float, default=10.0)
@@ -45,7 +49,6 @@ def main() -> int:
     import numpy as np
     from isaacsim.core.utils.extensions import enable_extension
 
-    enable_extension("omni.replicator.core")
     enable_extension("isaacsim.ros2.bridge")
     import omni.replicator.core as rep
     import omni.usd
@@ -64,6 +67,8 @@ def main() -> int:
     from mns_simulation.go2_policy import Go2VelocityPolicy
     from mns_simulation.ros_publisher import StandardRobotPublisher, remap_semantic_ids
 
+    if not ARGS.enable_cameras:
+        raise ValueError("Isaac sensor runtime requires --enable_cameras")
     if min(ARGS.sensor_rate, ARGS.physics_rate, ARGS.policy_rate) <= 0:
         raise ValueError("physics, policy, and sensor rates must be positive")
     sensor_interval = round(ARGS.physics_rate / ARGS.sensor_rate)
@@ -73,10 +78,9 @@ def main() -> int:
     ):
         raise ValueError("sensor_rate and policy_rate must divide physics_rate exactly")
 
-    config_path = ARGS.system_config or Path(
-        "/workspace/config/robots/phase1.yaml"
-        if ARGS.scenario == "phase1_go2"
-        else "/workspace/config/robots/phase2.yaml"
+    project_root = Path(os.environ.get("MNS_PROJECT_ROOT", "/workspace"))
+    config_path = ARGS.system_config or project_root / "config" / "robots" / (
+        "phase1.yaml" if ARGS.scenario == "phase1_go2" else "phase2.yaml"
     )
     with config_path.open("r", encoding="utf-8") as stream:
         robot_items = yaml.safe_load(stream)["robots"]

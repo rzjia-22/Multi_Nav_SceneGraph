@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: lint test validate build robotics-image robotics-ml-image model-source models test-models phase1 phase1-diffusion phase2 phase1-synthetic phase1-synthetic-diffusion phase2-synthetic accept-phase1 accept-phase2
+.PHONY: lint test validate build robotics-image robotics-ml-image simulation-image gpu-preflight isaac-compatibility isaac-minimal model-source models test-models phase1 phase1-diffusion phase2 phase1-synthetic phase1-synthetic-diffusion phase2-synthetic accept-isaac-sensors accept-phase1 accept-phase2
 
 lint:
 	python3 -m compileall -q ros_ws/src tools tests
@@ -16,6 +16,20 @@ build:
 
 robotics-image:
 	docker compose build robotics-dev
+
+simulation-image:
+	docker compose --profile simulation build simulation
+
+gpu-preflight:
+	bash tools/gpu_preflight.sh
+
+isaac-compatibility: simulation-image
+	docker compose --profile simulation run --rm --entrypoint bash simulation -lc \
+		'/isaac-sim/isaac-sim.compatibility_check.sh --/app/quitAfter=20 --no-window'
+
+isaac-minimal:
+	docker compose --profile simulation run --rm simulation \
+		/mns/containers/simulation/entrypoint.sh --minimal --headless
 
 model-source:
 	bash tools/verify_model_source.sh
@@ -49,6 +63,10 @@ phase2-synthetic:
 
 accept-phase1:
 	docker compose run --rm robotics-dev python3 /workspace/tools/runtime_acceptance.py --robots go2_1 --duration $${MNS_ACCEPTANCE_DURATION:-12}
+
+accept-isaac-sensors:
+	docker compose run --rm robotics-dev python3 /workspace/tools/isaac_sensor_acceptance.py \
+		--robots $${MNS_ROBOTS:-go2_1} --duration $${MNS_ACCEPTANCE_DURATION:-30}
 
 accept-phase2:
 	docker compose run --rm robotics-dev python3 /workspace/tools/runtime_acceptance.py --robots go2_1 go2_2 uav_1 uav_2 --duration $${MNS_ACCEPTANCE_DURATION:-12}
