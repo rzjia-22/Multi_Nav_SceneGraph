@@ -13,7 +13,9 @@ import json
 import math
 import os
 from pathlib import Path
+import signal
 import sys
+import traceback
 
 from isaaclab.app import AppLauncher
 
@@ -88,9 +90,14 @@ def main() -> int:
         raise ValueError("sensor_rate and policy_rate must divide physics_rate exactly")
 
     project_root = Path(os.environ.get("MNS_PROJECT_ROOT", "/workspace"))
-    config_path = ARGS.system_config or project_root / "config" / "robots" / (
-        "phase1.yaml" if ARGS.scenario == "phase1_go2" else "phase2.yaml"
-    )
+    config_name = os.environ.get("MNS_ROBOT_CONFIG", "").strip()
+    config_path = ARGS.system_config
+    if config_path is None and config_name:
+        config_path = project_root / "config" / "robots" / config_name
+    if config_path is None:
+        config_path = project_root / "config" / "robots" / (
+            "phase1.yaml" if ARGS.scenario == "phase1_go2" else "phase2.yaml"
+        )
     with config_path.open("r", encoding="utf-8") as stream:
         robot_items = yaml.safe_load(stream)["robots"]
     with ARGS.scene_config.open("r", encoding="utf-8") as stream:
@@ -235,10 +242,10 @@ def main() -> int:
             output = self.camera.data.output
             if not output:
                 return
-            rgb = output["rgb"][0].detach().cpu().numpy()
-            depth = output["distance_to_image_plane"][0].detach().cpu().numpy()
-            raw = output["semantic_segmentation"][0].detach().cpu().numpy()
-            semantic_info = self.camera.data.info[0].get("semantic_segmentation")
+            rgb = output["rgb"][self.index].detach().cpu().numpy()
+            depth = output["distance_to_image_plane"][self.index].detach().cpu().numpy()
+            raw = output["semantic_segmentation"][self.index].detach().cpu().numpy()
+            semantic_info = self.camera.data.info[self.index].get("semantic_segmentation")
             info = semantic_info if isinstance(semantic_info, dict) else {}
             id_to_labels = info.get("idToLabels", {}) if isinstance(info, dict) else {}
             labels = remap_semantic_ids(raw, id_to_labels)
@@ -250,28 +257,6 @@ def main() -> int:
     def make_endpoint(item: dict, group: str, index: int, publish_clock: bool) -> Endpoint:
         model_path = f"/World/{group}/instance_{index}/Model"
         add_semantics(model_path, "robot")
-        camera = None
-        if ARGS.enable_cameras:
-            camera_parent = f"{model_path}/base" if item["kind"] == "go2" else model_path
-            camera_path = f"{camera_parent}/Camera"
-            if item["kind"] == "uav":
-                position, rotation = (0.0, 0.0, -0.08), (0.0, 1.0, 0.0, 0.0)
-            else:
-                position, rotation = (0.35, 0.0, 0.25), (0.5, -0.5, 0.5, -0.5)
-            camera = Camera(CameraCfg(
-                prim_path=camera_path,
-                update_period=1.0 / ARGS.sensor_rate,
-                height=ARGS.height_px,
-                width=ARGS.width,
-                data_types=["rgb", "distance_to_image_plane", "semantic_segmentation"],
-                colorize_semantic_segmentation=False,
-                spawn=sim_utils.PinholeCameraCfg(
-                    focal_length=18.0,
-                    horizontal_aperture=22.5,
-                    clipping_range=(0.1, 50.0),
-                ),
-                offset=CameraCfg.OffsetCfg(pos=position, rot=rotation, convention="ros"),
-            ))
         robot_id = item["id"]
         node = rclpy.create_node(f"{robot_id}_isaac_bridge", namespace=robot_id)
         publisher = StandardRobotPublisher(
@@ -290,7 +275,7 @@ def main() -> int:
             node=node,
             publisher=publisher,
             command=[0.0, 0.0, 0.0],
-            camera=camera,
+            camera=None,
             pose=[float(value) for value in item["spawn"]],
             command_age_steps=command_timeout_steps,
         )
@@ -310,6 +295,38 @@ def main() -> int:
         clock_assigned = True
         endpoints.append(endpoint)
         uav_endpoints.append(endpoint)
+
+    def create_group_camera(group: str, body: str, count: int, *, downward: bool):
+        if not ARGS.enable_cameras or count == 0:
+            return None
+        # Isaac Lab expands this regex once and manages all matched render
+        # products as one batched Camera.  This is required for instanceable
+        # assets such as Crazyflie, where adding a child to the first clone
+        # also authors that child on the remaining clones.
+        position = (0.0, 0.0, -0.08) if downward else (0.35, 0.0, 0.25)
+        rotation = (0.0, 1.0, 0.0, 0.0) if downward else (0.5, -0.5, 0.5, -0.5)
+        return Camera(CameraCfg(
+            prim_path=f"/World/{group}/instance_.*/Model/{body}/Camera",
+            update_period=1.0 / ARGS.sensor_rate,
+            height=ARGS.height_px,
+            width=ARGS.width,
+            data_types=["rgb", "distance_to_image_plane", "semantic_segmentation"],
+            colorize_semantic_segmentation=False,
+            spawn=sim_utils.PinholeCameraCfg(
+                focal_length=18.0,
+                horizontal_aperture=22.5,
+                clipping_range=(0.1, 50.0),
+            ),
+            offset=CameraCfg.OffsetCfg(pos=position, rot=rotation, convention="ros"),
+        ))
+
+    go2_camera = create_group_camera("Go2Instances", "base", len(go2_endpoints), downward=False)
+    uav_camera = create_group_camera("UavInstances", "body", len(uav_endpoints), downward=True)
+    for endpoint in go2_endpoints:
+        endpoint.camera = go2_camera
+    for endpoint in uav_endpoints:
+        endpoint.camera = uav_camera
+    cameras = [camera for camera in (go2_camera, uav_camera) if camera is not None]
 
     simulation.reset()
 
@@ -381,8 +398,19 @@ def main() -> int:
     physics_dt = 1.0 / ARGS.physics_rate
     frame = 0
     exit_reason = "app_closed"
+    stop_requested = False
+
+    def request_stop(signum, _frame) -> None:
+        nonlocal stop_requested, exit_reason
+        stop_requested = True
+        exit_reason = signal.Signals(signum).name.lower()
+
+    # Install after rclpy initialization so container SIGINT/SIGTERM reliably
+    # stops the Python loop and removes the authoritative /clock publisher.
+    signal.signal(signal.SIGINT, request_stop)
+    signal.signal(signal.SIGTERM, request_stop)
     try:
-        while APP.is_running():
+        while APP.is_running() and not stop_requested:
             for endpoint in endpoints:
                 rclpy.spin_once(endpoint.node, timeout_sec=0.0)
 
@@ -452,9 +480,8 @@ def main() -> int:
                 go2.update(physics_dt)
             if uav is not None:
                 uav.update(physics_dt)
-            for endpoint in endpoints:
-                if endpoint.camera is not None:
-                    endpoint.camera.update(physics_dt)
+            for camera in cameras:
+                camera.update(physics_dt)
             sim_time = (frame + 1) * physics_dt
 
             for index, endpoint in enumerate(go2_endpoints):
@@ -488,6 +515,24 @@ def main() -> int:
                     ),
                     flush=True,
                 )
+            if uav is not None and frame % round(ARGS.physics_rate) == 0:
+                print(
+                    "MNS_UAV_TELEMETRY="
+                    + json.dumps(
+                        [
+                            {
+                                "robot_id": endpoint.item["id"],
+                                "sim_time_s": sim_time,
+                                "position_m": endpoint.pose[:3],
+                                "yaw_rad": endpoint.pose[3],
+                                "command": list(endpoint.current_command()),
+                            }
+                            for endpoint in uav_endpoints
+                        ],
+                        sort_keys=True,
+                    ),
+                    flush=True,
+                )
             frame += 1
             for endpoint in endpoints:
                 endpoint.command_age_steps += 1
@@ -513,10 +558,14 @@ def main() -> int:
 
 
 if __name__ == "__main__":
+    exit_code = 1
     try:
-        sys.exit(main())
+        exit_code = main()
+    except BaseException:  # Isaac's immediate close otherwise masks initialization failures.
+        traceback.print_exc()
     finally:
         # This outer guard also covers failures during scene initialization.
         # Isaac 5.1 graceful close hangs on this headless host; use its official
         # immediate framework-release path after ROS resources are destroyed.
         APP.close(wait_for_replicator=False, skip_cleanup=True)
+    sys.exit(exit_code)

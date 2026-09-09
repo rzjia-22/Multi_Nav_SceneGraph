@@ -98,6 +98,12 @@ class StandardRobotPublisher:
         self.depth_pub = node.create_publisher(Image, "camera/depth/image_rect", image_qos)
         self.semantic_pub = node.create_publisher(Image, "camera/semantic/image_raw", image_qos)
         self.info_pub = node.create_publisher(CameraInfo, "camera/color/camera_info", image_qos)
+        # depth_image_proc derives the CameraInfo sibling name from image_rect.
+        # The RGB and depth images are registered, so publish the same calibrated
+        # model on the conventional depth topic as well as Hydra's color topic.
+        self.depth_info_pub = node.create_publisher(
+            CameraInfo, "camera/depth/camera_info", image_qos
+        )
         self.odom_pub = node.create_publisher(Odometry, "odom", 20)
         self.clock_pub = node.create_publisher(Clock, "/clock", 20) if publish_clock else None
         self.tf = TransformBroadcaster(node)
@@ -226,3 +232,4 @@ class StandardRobotPublisher:
         info.r = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
         info.p = [fx, 0.0, cx, 0.0, 0.0, fy, cy, 0.0, 0.0, 0.0, 1.0, 0.0]
         self.info_pub.publish(info)
+        self.depth_info_pub.publish(info)

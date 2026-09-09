@@ -21,7 +21,7 @@ class DepthSafetyController:
         self,
         stop_distance: float = 0.7,
         release_distance: float = 0.9,
-        reverse_speed: float = 0.15,
+        reverse_speed: float = 0.0,
         turn_speed: float = 0.5,
     ) -> None:
         if not 0 < stop_distance < release_distance:
@@ -42,6 +42,11 @@ class DepthSafetyController:
             return SafetyDecision("clear", None)
         self._active = True
         self._turn_sign = -1.0 if left_distance < right_distance else 1.0
+        # The migrated Go2 actor was trained for forward velocity tracking and
+        # is not stable under combined reverse/yaw commands.  The conservative
+        # default therefore stops translation and turns the camera away from
+        # the obstacle. Backends with validated reverse motion may opt in by
+        # constructing the controller with a non-zero reverse_speed.
         reverse = -self.reverse_speed if center_distance < self.stop_distance * 0.7 else 0.0
         return SafetyDecision(
             "avoidance",
@@ -96,4 +101,3 @@ class StallRecovery:
             self._turn_sign *= -1.0
             return SafetyDecision("stall_reverse", MotionCommand(-0.18, 0.0, 0.0))
         return SafetyDecision("monitoring", None)
-

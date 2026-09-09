@@ -108,7 +108,7 @@ def main(args=None) -> None:
     node = MappingMonitorNode()
     try:
         rclpy.spin(node)
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, rclpy.executors.ExternalShutdownException):
         pass
     finally:
         if node.context.ok():

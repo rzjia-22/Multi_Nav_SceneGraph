@@ -39,6 +39,11 @@ def _hydra_node(robot, names: RobotNames, hydra_config: str, label_space: str, l
             f"map_frame: '{names.map_frame}'",
             f"log_path: '{log_path}'",
             "enable_lcd: false",
+            # The simulator is the authoritative /clock owner.  Let Hydra
+            # finalize naturally when that publisher disappears during a
+            # coordinated Compose shutdown; ianvs does not treat launch's
+            # initial SIGINT as an exit request on Jazzy.
+            "exit_after_clock: true",
             "force_shutdown: true",
         ]) + "}",
     ]
@@ -48,6 +53,10 @@ def _hydra_node(robot, names: RobotNames, hydra_config: str, label_space: str, l
         name="hydra",
         namespace=robot.robot_id,
         output="screen",
+        # A real RGB-D run may need more than launch's five-second default to
+        # join Hydra worker threads and serialize DSG/mesh/timing outputs.
+        sigterm_timeout="45",
+        sigkill_timeout="10",
         parameters=[{"use_sim_time": True}],
         arguments=arguments,
         remappings=[
@@ -91,6 +100,10 @@ def _navigation_nodes(
             "global_frame": names.odom_frame,
             "local_frame": names.odom_frame,
             "robot_base_frame": names.base_frame,
+            # Costmap plugins are nested nodes (for example
+            # /go2_1/local_costmap/local_costmap), so a relative sensor topic
+            # would incorrectly resolve below the costmap namespace.
+            "topic": names.topic("camera/depth/points"),
             "use_sim_time": "true",
         }
         configured_params = ParameterFile(
@@ -111,7 +124,6 @@ def _navigation_nodes(
                 output="screen",
                 remappings=[
                     ("image_rect", "camera/depth/image_rect"),
-                    ("camera_info", "camera/color/camera_info"),
                     ("points", "camera/depth/points"),
                 ],
             ),
@@ -209,10 +221,16 @@ def _launch(context):
                 }],
             ))
         actions.extend(_navigation_nodes(robot, names, navigator, mission, obstacles_json))
-        actions.append(Node(
-            package="mns_navigation", executable="safety_monitor", namespace=robot.robot_id,
-            parameters=[{"use_sim_time": spec.use_sim_time}],
-        ))
+        # The current UAV sensor is nadir-facing mapping RGB-D, not a forward
+        # collision sensor.  Feeding it to the planar depth safety controller
+        # makes tree canopies look like frontal obstacles and traps the UAV in
+        # a turn.  Go2 keeps the reactive safety layer; a future UAV flight
+        # backend may provide its own correctly oriented safety source.
+        if robot.kind.value == "go2":
+            actions.append(Node(
+                package="mns_navigation", executable="safety_monitor", namespace=robot.robot_id,
+                parameters=[{"use_sim_time": spec.use_sim_time}],
+            ))
         actions.append(Node(
             package="mns_motion", executable="command_arbiter", namespace=robot.robot_id,
             parameters=[{"use_sim_time": spec.use_sim_time}],

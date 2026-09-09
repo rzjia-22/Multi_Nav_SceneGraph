@@ -30,6 +30,7 @@ class RuntimeObserver(Node):
         self.positions: dict[str, list[tuple[float, float]]] = {
             robot_id: [] for robot_id in robot_ids
         }
+        self.depth_stamps: dict[str, list[float]] = {robot_id: [] for robot_id in robot_ids}
         self.pipeline: dict[str, PipelineStatus] = {}
         self.mission: dict[str, MissionStatus] = {}
         self.tf_frames: set[str] = set()
@@ -46,10 +47,14 @@ class RuntimeObserver(Node):
                 ("semantic", f"{prefix}/camera/semantic/image_raw", Image),
                 ("camera_info", f"{prefix}/camera/color/camera_info", CameraInfo),
             ):
+                if key == "depth":
+                    callback = lambda message, rid=robot_id: self._depth(rid, message)
+                else:
+                    callback = (
+                        lambda _message, rid=robot_id, name=key: self._count(rid, name)
+                    )
                 self.create_subscription(
-                    message_type, topic,
-                    lambda _message, rid=robot_id, name=key: self._count(rid, name),
-                    reliable,
+                    message_type, topic, callback, reliable,
                 )
             self.create_subscription(
                 Odometry, f"{prefix}/odom",
@@ -83,14 +88,20 @@ class RuntimeObserver(Node):
         self._count(robot_id, "odom")
         self.positions[robot_id].append((message.pose.pose.position.x, message.pose.pose.position.y))
 
+    def _depth(self, robot_id: str, message: Image) -> None:
+        self._count(robot_id, "depth")
+        stamp = message.header.stamp
+        self.depth_stamps[robot_id].append(stamp.sec + stamp.nanosec / 1.0e9)
+
     def _tf(self, message: TFMessage) -> None:
         for transform in message.transforms:
             self.tf_frames.add(transform.header.frame_id)
             self.tf_frames.add(transform.child_frame_id)
 
-    def report(self, elapsed: float) -> tuple[dict, list[str]]:
+    def report(self, elapsed: float) -> tuple[dict, list[str], list[str]]:
         report: dict[str, dict] = {}
         failures: list[str] = []
+        warnings: list[str] = []
         for robot_id in self.robot_ids:
             counts = dict(self.counts[robot_id])
             start_end = self.positions[robot_id]
@@ -104,9 +115,15 @@ class RuntimeObserver(Node):
                 f"{robot_id}/camera_link", f"{robot_id}/camera_optical_frame",
             }
             missing_frames = sorted(expected_frames - self.tf_frames)
+            stamps = self.depth_stamps[robot_id]
+            sim_span = stamps[-1] - stamps[0] if len(stamps) > 1 else 0.0
+            depth_sim_rate = (len(stamps) - 1) / sim_span if sim_span > 0.0 else 0.0
+            depth_wall_rate = counts.get("depth", 0) / elapsed
             robot_report = {
                 "counts": counts,
-                "depth_rate_hz": counts.get("depth", 0) / elapsed,
+                "depth_sim_rate_hz": depth_sim_rate,
+                "depth_wall_rate_hz": depth_wall_rate,
+                "sensor_realtime_factor": depth_wall_rate / depth_sim_rate if depth_sim_rate else 0.0,
                 "displacement_m": displacement,
                 "mission_state": mission.state if mission else None,
                 "navigator": mission.navigator if mission else None,
@@ -116,8 +133,14 @@ class RuntimeObserver(Node):
             for key in required:
                 if counts.get(key, 0) == 0:
                     failures.append(f"{robot_id}: no {key} messages")
-            if counts.get("depth", 0) / elapsed < 5.0:
-                failures.append(f"{robot_id}: depth rate below 5 Hz")
+            if depth_sim_rate < 5.0:
+                failures.append(f"{robot_id}: simulated depth rate below 5 Hz")
+            if depth_wall_rate < 5.0:
+                warnings.append(
+                    f"{robot_id}: wall-clock depth throughput is {depth_wall_rate:.2f} Hz "
+                    f"(resource-limited RTF {depth_wall_rate / depth_sim_rate:.2f})"
+                    if depth_sim_rate else f"{robot_id}: wall-clock depth throughput below 5 Hz"
+                )
             if mission is None:
                 failures.append(f"{robot_id}: no mission status")
             if missing_frames:
@@ -132,7 +155,7 @@ class RuntimeObserver(Node):
                 if pipeline is None or pipeline.state != "running":
                     failures.append(f"{robot_id}: mapping pipeline is not running")
             report[robot_id] = robot_report
-        return report, failures
+        return report, failures, warnings
 
 
 def main() -> int:
@@ -150,11 +173,12 @@ def main() -> int:
         while rclpy.ok() and time.monotonic() - started < args.duration:
             rclpy.spin_once(node, timeout_sec=0.1)
         elapsed = time.monotonic() - started
-        report, failures = node.report(elapsed)
+        report, failures, warnings = node.report(elapsed)
         print(json.dumps({
             "elapsed_s": elapsed,
             "passed": not failures,
             "failures": failures,
+            "performance_warnings": warnings,
             "robots": report,
         }, indent=2, sort_keys=True))
         return 0 if not failures else 1

@@ -21,12 +21,17 @@ services:
     command: bash
     stdin_open: true
     tty: true
+    # ROS 2 launch handles SIGINT as its normal coordinated shutdown path.
+    # Hydra needs enough time to drain workers and serialize DSG/mesh outputs.
+    stop_signal: SIGINT
+    stop_grace_period: 75s
 
   robotics-phase1:
     extends: robotics-dev
     profiles: [robotics]
     command: >-
       ros2 launch mns_bringup phase1.launch.py
+      system_config:=/workspace/config/robots/${MNS_ROBOT_CONFIG:-phase1.yaml}
       navigator:=${MNS_NAVIGATOR:-configured}
       run_id:=${MNS_RUN_ID:-current}
 
@@ -35,6 +40,7 @@ services:
     profiles: [robotics]
     command: >-
       ros2 launch mns_bringup phase2.launch.py
+      system_config:=/workspace/config/robots/${MNS_ROBOT_CONFIG:-phase2.yaml}
       navigator:=${MNS_NAVIGATOR:-configured}
       run_id:=${MNS_RUN_ID:-current}
 
@@ -45,6 +51,17 @@ services:
       context: .
       dockerfile: containers/robotics-ml/Dockerfile
     image: multi-nav-scenegraph/robotics-ml:jazzy-torch-2.7.1
+    environment:
+      <<: *ros-environment
+      NVIDIA_VISIBLE_DEVICES: all
+      NVIDIA_DRIVER_CAPABILITIES: compute,utility
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
 
   robotics-phase1-diffusion:
     extends: robotics-ml-dev
@@ -68,6 +85,7 @@ services:
       CYCLONEDDS_URI: file:///mns/config/system/cyclonedds.xml
       MNS_PROJECT_ROOT: /mns
       MNS_RUN_ROOT: /mns/runs
+      MNS_ROBOT_CONFIG: ${MNS_ROBOT_CONFIG:-}
       PRIVACY_CONSENT: Y
       OMNI_KIT_ALLOW_ROOT: "1"
       NVIDIA_VISIBLE_DEVICES: all
@@ -89,6 +107,8 @@ services:
       - isaac-ov-cache:/root/.cache/ov:rw
       - isaac-compute-cache:/root/.nv/ComputeCache:rw
     working_dir: /mns
+    stop_signal: SIGINT
+    stop_grace_period: 30s
     command: >-
       /mns/containers/simulation/entrypoint.sh
       --scenario ${MNS_SCENARIO:-phase1_go2}

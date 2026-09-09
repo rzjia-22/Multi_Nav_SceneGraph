@@ -87,7 +87,7 @@ def main(args=None) -> None:
     node = MissionCoordinatorNode()
     try:
         rclpy.spin(node)
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, rclpy.executors.ExternalShutdownException):
         pass
     finally:
         if node.context.ok():

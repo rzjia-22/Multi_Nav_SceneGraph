@@ -65,7 +65,10 @@ def test_diffusion_is_trajectory_only_and_transforms_local_output():
 def test_safety_hysteresis_and_stall_recovery():
     safety = DepthSafetyController()
     assert safety.decide(2, 2, 2).command is None
-    assert safety.decide(0.6, 0.5, 0.8).command is not None
+    avoidance = safety.decide(0.6, 0.5, 0.8).command
+    assert avoidance is not None
+    assert avoidance.linear_x == 0.0
+    assert avoidance.angular_z != 0.0
     assert safety.decide(0.8, 0.8, 0.8).command is not None
     assert safety.decide(1.0, 1.0, 1.0).state == "released"
     recovery = StallRecovery(trigger_window=1.0)

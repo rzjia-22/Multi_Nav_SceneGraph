@@ -60,8 +60,8 @@ class RobotNames:
         return {
             "color": self.topic("camera/color/image_raw"),
             "camera_info": self.topic("camera/color/camera_info"),
+            "depth_camera_info": self.topic("camera/depth/camera_info"),
             "depth": self.topic("camera/depth/image_rect"),
             "semantic": self.topic("camera/semantic/image_raw"),
             "odom": self.topic("odom"),
         }
-

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import time
+
 import rclpy
 from action_msgs.msg import GoalStatus
 from geometry_msgs.msg import PoseStamped
@@ -16,6 +18,8 @@ class Nav2GoalAdapter(Node):
     def __init__(self) -> None:
         super().__init__("nav2_goal_adapter")
         self.declare_parameter("robot_id", "robot")
+        self.declare_parameter("goal_retry_interval", 1.0)
+        self.declare_parameter("goal_retry_limit", 30)
         self.client = ActionClient(self, NavigateToPose, "navigate_to_pose")
         goal_qos = QoSProfile(
             depth=1,
@@ -26,6 +30,8 @@ class Nav2GoalAdapter(Node):
         self.status_pub = self.create_publisher(MissionStatus, "mission/status", 10)
         self.pending: PoseStamped | None = None
         self.sent = False
+        self.rejections = 0
+        self.next_dispatch_time = 0.0
         self.state = "waiting_for_goal"
         self.detail = ""
         self.create_timer(0.2, self._dispatch)
@@ -34,10 +40,17 @@ class Nav2GoalAdapter(Node):
     def _goal(self, message: PoseStamped) -> None:
         self.pending = message
         self.sent = False
+        self.rejections = 0
+        self.next_dispatch_time = 0.0
         self.state = "waiting_for_nav2"
 
     def _dispatch(self) -> None:
-        if self.pending is None or self.sent or not self.client.server_is_ready():
+        if (
+            self.pending is None
+            or self.sent
+            or time.monotonic() < self.next_dispatch_time
+            or not self.client.server_is_ready()
+        ):
             return
         goal = NavigateToPose.Goal()
         goal.pose = self.pending
@@ -48,8 +61,21 @@ class Nav2GoalAdapter(Node):
     def _accepted(self, future) -> None:
         handle = future.result()
         if not handle.accepted:
-            self.state = "failed"
-            self.detail = "Nav2 rejected mission goal"
+            self.rejections += 1
+            limit = int(self.get_parameter("goal_retry_limit").value)
+            if self.rejections >= limit:
+                self.state = "failed"
+                self.detail = f"Nav2 rejected mission goal {self.rejections} times"
+                return
+            # The action server exists before bt_navigator is activated. A
+            # launch-time goal is therefore expected to be rejected briefly;
+            # retry the retained transient-local mission after activation.
+            self.sent = False
+            self.next_dispatch_time = time.monotonic() + float(
+                self.get_parameter("goal_retry_interval").value
+            )
+            self.state = "waiting_for_nav2"
+            self.detail = f"Nav2 not active; retry {self.rejections}/{limit}"
             return
         self.state = "running"
         handle.get_result_async().add_done_callback(self._result)
@@ -75,7 +101,7 @@ def main(args=None) -> None:
     node = Nav2GoalAdapter()
     try:
         rclpy.spin(node)
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, rclpy.executors.ExternalShutdownException):
         pass
     finally:
         if node.context.ok():

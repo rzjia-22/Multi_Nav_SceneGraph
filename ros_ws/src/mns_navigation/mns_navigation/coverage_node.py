@@ -134,6 +134,12 @@ class CoverageNavigatorNode(Node):
             path_message(self, self.samples, str(self.get_parameter("frame_id").value))
         )
 
+    def _route_complete(self) -> bool:
+        # The follower intentionally stops within goal_tolerance, so requiring
+        # an exact 99.9% projection can leave long routes permanently at
+        # 99.x% with a zero velocity command.
+        return self.route.total_length - self.tracker.distance <= self.follower.goal_tolerance
+
     def _plan_residual(self) -> bool:
         if self.sensor_grid is None or self.position is None:
             return False
@@ -155,7 +161,7 @@ class CoverageNavigatorNode(Node):
         if self.position is None:
             return
         distance = self.tracker.update(self.position.x, self.position.y)
-        if self.tracker.fraction >= 0.999 and self._plan_residual():
+        if self._route_complete() and self._plan_residual():
             distance = 0.0
         local = [self.route.point_at(distance)]
         cursor = distance + 0.2
@@ -179,11 +185,11 @@ class CoverageNavigatorNode(Node):
             or self.residual_passes >= int(self.get_parameter("max_residual_passes").value)
             or self.residual_exhausted
         )
-        route_complete = self.tracker.fraction >= 0.999
+        route_complete = self._route_complete()
         message.state = "waiting_for_odom" if self.position is None else (
             "complete" if route_complete and sensor_complete else "running"
         )
-        message.progress = float(self.tracker.fraction)
+        message.progress = 1.0 if route_complete else float(self.tracker.fraction)
         sensor_detail = "" if self.sensor_grid is None else (
             f" sensor_coverage={self.sensor_grid.ratio:.3f}"
             f" residual_passes={self.residual_passes}"
@@ -197,7 +203,7 @@ def main(args=None) -> None:
     node = CoverageNavigatorNode()
     try:
         rclpy.spin(node)
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, rclpy.executors.ExternalShutdownException):
         pass
     finally:
         if node.context.ok():

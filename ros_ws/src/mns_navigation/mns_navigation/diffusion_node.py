@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from pathlib import Path as FilePath
+import math
+import time
 
 import numpy as np
 import rclpy
@@ -34,6 +36,7 @@ class DiffusionNavigatorNode(Node):
             self.declare_parameter(name, default)
         self.declare_parameter("history_length", 5)
         self.declare_parameter("planning_rate_hz", 2.0)
+        self.declare_parameter("goal_tolerance", 0.35)
         self.bridge = CvBridge()
         self.history = RGBDHistory(int(self.get_parameter("history_length").value))
         config = DiffusionConfig(
@@ -49,6 +52,8 @@ class DiffusionNavigatorNode(Node):
         self.goal: Point2D | None = None
         self.latest_rgb: np.ndarray | None = None
         self.trajectory: tuple[Point2D, ...] = ()
+        self.plan_count = 0
+        self.last_planning_ms = 0.0
         self.cmd_pub = self.create_publisher(Twist, "cmd_vel/navigation", 10)
         self.path_pub = self.create_publisher(Path, "mission/path", 1)
         self.status_pub = self.create_publisher(MissionStatus, "mission/status", 10)
@@ -83,15 +88,38 @@ class DiffusionNavigatorNode(Node):
         self.goal = Point2D(message.pose.position.x, message.pose.position.y)
 
     def _plan(self) -> None:
-        if self.position is None or self.goal is None or not self.history.ready:
+        if (
+            self.position is None
+            or self.goal is None
+            or not self.history.ready
+            or self._goal_reached()
+        ):
             return
+        start = time.perf_counter()
         self.trajectory = self.planner.trajectory(self.position, self.yaw, self.goal)
+        self.last_planning_ms = (time.perf_counter() - start) * 1000.0
+        self.plan_count += 1
         self.path_pub.publish(path_message(self, self.trajectory, str(self.get_parameter("frame_id").value)))
 
     def _control(self) -> None:
-        if self.position is None or len(self.trajectory) < 2:
+        if self.position is None:
             return
-        self.cmd_pub.publish(twist_message(self.follower.command(self.position, self.yaw, self.trajectory)))
+        if self._goal_reached():
+            self.cmd_pub.publish(Twist())
+        elif len(self.trajectory) >= 2:
+            # A diffusion trajectory is a rolling local horizon, not the
+            # mission endpoint. A short stochastic sample must therefore not
+            # trigger the follower's local endpoint stop condition.
+            command = self.follower.command(
+                self.position, self.yaw, self.trajectory, stop_at_goal=False
+            )
+            self.cmd_pub.publish(twist_message(command))
+
+    def _goal_reached(self) -> bool:
+        if self.position is None or self.goal is None:
+            return False
+        tolerance = float(self.get_parameter("goal_tolerance").value)
+        return math.hypot(self.goal.x - self.position.x, self.goal.y - self.position.y) <= tolerance
 
     def _status(self) -> None:
         message = MissionStatus()
@@ -100,14 +128,19 @@ class DiffusionNavigatorNode(Node):
         message.navigator = "diffusion"
         if self.goal is None:
             message.state = "waiting_for_goal"
+        elif self._goal_reached():
+            message.state = "complete"
         elif not self.history.ready:
             message.state = "waiting_for_history"
         elif len(self.trajectory) < 2:
             message.state = "planning"
         else:
             message.state = "running"
-        message.progress = 0.0
-        message.detail = f"history={len(self.history)}/{self.history.length}"
+        message.progress = 1.0 if message.state == "complete" else 0.0
+        message.detail = (
+            f"history={len(self.history)}/{self.history.length}"
+            f" plans={self.plan_count} planning_ms={self.last_planning_ms:.1f}"
+        )
         self.status_pub.publish(message)
 
 
@@ -116,7 +149,7 @@ def main(args=None) -> None:
     node = DiffusionNavigatorNode()
     try:
         rclpy.spin(node)
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, rclpy.executors.ExternalShutdownException):
         pass
     finally:
         if node.context.ok():

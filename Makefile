@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: lint test validate build robotics-image robotics-ml-image simulation-image gpu-preflight isaac-compatibility isaac-minimal model-source models test-models probe-go2-upstream phase1 phase1-diffusion phase2 phase1-synthetic phase1-synthetic-diffusion phase2-synthetic accept-isaac-sensors accept-go2-motion accept-phase1 accept-phase2
+.PHONY: lint test validate build robotics-image robotics-ml-image simulation-image gpu-preflight isaac-compatibility isaac-minimal model-source models test-models probe-go2-upstream phase1 phase1-diffusion uav-mapping phase2 phase1-synthetic phase1-synthetic-diffusion phase2-synthetic accept-isaac-sensors accept-go2-motion accept-phase1 accept-uav accept-phase2 inspect-hydra
 
 lint:
 	python3 -m compileall -q ros_ws/src tools tests
@@ -55,8 +55,11 @@ phase1:
 phase1-diffusion:
 	docker compose --profile simulation --profile ml up simulation robotics-phase1-diffusion
 
+uav-mapping:
+	MNS_ROBOT_CONFIG=uav_mapping.yaml docker compose --profile simulation --profile robotics up simulation robotics-phase1
+
 phase2:
-	docker compose --profile simulation --profile robotics up simulation robotics-phase2
+	MNS_SCENARIO=phase2_team docker compose --profile simulation --profile robotics up simulation robotics-phase2
 
 phase1-synthetic:
 	docker compose run --rm robotics-dev ros2 launch mns_bringup phase1.launch.py simulation_mode:=synthetic navigator:=$${MNS_NAVIGATOR:-coverage} run_id:=$${MNS_RUN_ID:-synthetic-phase1}
@@ -70,6 +73,9 @@ phase2-synthetic:
 accept-phase1:
 	docker compose run --rm robotics-dev python3 /workspace/tools/runtime_acceptance.py --robots go2_1 --duration $${MNS_ACCEPTANCE_DURATION:-12}
 
+accept-uav:
+	docker compose run --rm robotics-dev python3 /workspace/tools/runtime_acceptance.py --robots uav_1 --duration $${MNS_ACCEPTANCE_DURATION:-12}
+
 accept-isaac-sensors:
 	docker compose run --rm robotics-dev python3 /workspace/tools/isaac_sensor_acceptance.py \
 		--robots $${MNS_ROBOTS:-go2_1} --duration $${MNS_ACCEPTANCE_DURATION:-30}
@@ -80,3 +86,6 @@ accept-go2-motion:
 
 accept-phase2:
 	docker compose run --rm robotics-dev python3 /workspace/tools/runtime_acceptance.py --robots go2_1 go2_2 uav_1 uav_2 --duration $${MNS_ACCEPTANCE_DURATION:-12}
+
+inspect-hydra:
+	python3 tools/inspect_hydra_artifacts.py "$${MNS_HYDRA_DIR:?set MNS_HYDRA_DIR to a finalized Hydra output directory}"
