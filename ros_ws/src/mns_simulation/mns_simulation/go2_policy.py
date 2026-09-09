@@ -1,7 +1,7 @@
 """Safe simulator-local adapter for the audited Go2 RSL-RL actor.
 
 The policy consumes the 48-value observation contract used by the upstream
-Isaac Lab velocity task and returns 12 normalized joint-position offsets.
+Isaac Lab velocity task and returns 12 policy-space joint-position offsets.
 Navigation never imports this module and only publishes ``Twist``.
 """
 
@@ -10,6 +10,14 @@ from __future__ import annotations
 
 ACTOR_INPUT_DIM = 48
 ACTOR_OUTPUT_DIM = 12
+CHECKPOINT_JOINT_ORDER = (
+    "FL_hip_joint", "FR_hip_joint", "RL_hip_joint", "RR_hip_joint",
+    "FL_thigh_joint", "FR_thigh_joint", "RL_thigh_joint", "RR_thigh_joint",
+    "FL_calf_joint", "FR_calf_joint", "RL_calf_joint", "RR_calf_joint",
+)
+CHECKPOINT_DEFAULT_JOINT_POS = (
+    0.1, -0.1, 0.1, -0.1, 0.8, 0.8, 1.0, 1.0, -1.5, -1.5, -1.5, -1.5,
+)
 
 
 def load_legacy_actor(checkpoint: str, device: str):

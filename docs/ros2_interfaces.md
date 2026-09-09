@@ -41,7 +41,9 @@ source does not change the topic contract.
 Only one navigator is instantiated per robot. The arbiter chooses a fresh
 safety command before a fresh navigation command and emits zero when both are
 stale. Go2 joint targets are simulator-local implementation details and are
-never a navigation or network interface.
+never a navigation or network interface. The Isaac Go2 adapter independently
+zeros a stale `cmd_vel_safe` after 0.3 simulation seconds, so losing the ROS
+publisher cannot leave a latched locomotion command active.
 
 `MissionStatus` contains `robot_id`, `navigator`, lifecycle `state`, progress
 and a human-readable detail. Coverage reports route progress, Diffusion reports

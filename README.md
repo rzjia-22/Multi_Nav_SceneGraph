@@ -114,6 +114,12 @@ To validate the message payloads separately from navigation and Hydra, run the
 simulation with `--enable_cameras` (the normal compose command already does),
 then in another terminal run `make accept-isaac-sensors`.
 
+The articulated motion gate is `make accept-go2-motion`. The supplied checkpoint
+passes stand, forward, moving-turn, explicit-stop and deadman phases through the
+public ROS boundary while cameras are active. Consult the
+[development status](docs/development_status.md) before interpreting
+`make phase1` or `make phase2` as full real-Isaac navigation/mapping acceptance.
+
 ## Verification and observability
 
 ```bash

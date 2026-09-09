@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 import math
+
 import numpy as np
 
 
@@ -15,6 +17,21 @@ PROJECT_SEMANTIC_LABELS = {
     "robot": 6,
     "other_object": 7,
 }
+
+
+def quaternion_xyzw(orientation_wxyz: float | Sequence[float]) -> tuple[float, float, float, float]:
+    """Convert either a planar yaw or Isaac's wxyz quaternion to ROS xyzw."""
+    if isinstance(orientation_wxyz, (int, float)):
+        yaw = float(orientation_wxyz)
+        return 0.0, 0.0, math.sin(yaw / 2.0), math.cos(yaw / 2.0)
+    values = tuple(float(value) for value in orientation_wxyz)
+    if len(values) != 4:
+        raise ValueError("orientation must be a yaw scalar or wxyz quaternion")
+    norm = math.sqrt(sum(value * value for value in values))
+    if norm <= 1.0e-9:
+        raise ValueError("orientation quaternion cannot be zero")
+    w, x, y, z = (value / norm for value in values)
+    return x, y, z, w
 
 
 def remap_semantic_ids(raw_ids: np.ndarray, id_to_labels: dict) -> np.ndarray:
@@ -132,8 +149,8 @@ class StandardRobotPublisher:
         self,
         sim_time: float,
         position: tuple[float, float, float],
-        yaw: float,
-        velocity: tuple[float, float, float],
+        orientation_wxyz: float | Sequence[float],
+        velocity: Sequence[float],
     ) -> None:
         stamp = time_message(sim_time)
         odom = self.Odometry()
@@ -141,11 +158,23 @@ class StandardRobotPublisher:
         odom.header.frame_id = self.odom_frame
         odom.child_frame_id = self.base_frame
         odom.pose.pose.position.x, odom.pose.pose.position.y, odom.pose.pose.position.z = position
-        odom.pose.pose.orientation.z = math.sin(yaw / 2.0)
-        odom.pose.pose.orientation.w = math.cos(yaw / 2.0)
+        (
+            odom.pose.pose.orientation.x,
+            odom.pose.pose.orientation.y,
+            odom.pose.pose.orientation.z,
+            odom.pose.pose.orientation.w,
+        ) = quaternion_xyzw(orientation_wxyz)
         odom.twist.twist.linear.x = velocity[0]
         odom.twist.twist.linear.y = velocity[1]
-        odom.twist.twist.angular.z = velocity[2]
+        if len(velocity) == 3:
+            odom.twist.twist.angular.z = velocity[2]
+        elif len(velocity) == 6:
+            odom.twist.twist.linear.z = velocity[2]
+            odom.twist.twist.angular.x = velocity[3]
+            odom.twist.twist.angular.y = velocity[4]
+            odom.twist.twist.angular.z = velocity[5]
+        else:
+            raise ValueError("velocity must contain planar vx/vy/wz or full vx/vy/vz/wx/wy/wz")
         self.odom_pub.publish(odom)
         transform = self.TransformStamped()
         transform.header = odom.header

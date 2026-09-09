@@ -99,6 +99,34 @@ The normal runtime loads `config/simulation/forest.yaml`; a finite diagnostic
 run can add `--max-steps N` to the simulation entrypoint and must print
 `MNS_ISAAC_RUNTIME_RESULT` before exiting with code zero.
 
+The articulated Go2 motion gate uses an isolated southern lane, independently
+of navigation and Hydra. Start the simulator in one terminal:
+
+```bash
+docker compose --profile simulation run --rm --name mns-go2-motion simulation \
+  /mns/containers/simulation/entrypoint.sh \
+  --scenario phase1_go2 \
+  --system-config /mns/config/robots/phase1_motion_acceptance.yaml \
+  --go2-backend rl --headless --enable_cameras
+```
+
+Then exercise the public ROS command boundary from another terminal:
+
+```bash
+make accept-go2-motion
+```
+
+The observer requires an upright base through stand, forward, moving turn,
+explicit stop, command-timeout and post-command settling phases. A failure is a
+motion-backend blocker; it must not be replaced with kinematic evidence or
+hidden by relaxing the fall thresholds. Remove `--enable_cameras` only for an
+explicit sensorless isolation run, never for final concurrency evidence.
+
+`make probe-go2-upstream` is a separate finite diagnostic. It runs the frozen
+actor in ForestNavigation's original Gym task, including the same navigation
+command profile, to distinguish a corrupt checkpoint or migrated tensor
+contract from behavior that fails only at the project's runtime boundary.
+
 ## DDS and throughput
 
 The checked-in CycloneDDS profile avoids mandatory host sysctl changes. For

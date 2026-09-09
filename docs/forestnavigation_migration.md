@@ -44,6 +44,15 @@ produces eight 2-D waypoints. The Go2 adapter reconstructs the actor-only MLP
 from tensor keys, validates the `48 → 512 → 256 → 128 → 12` layout and never
 loads arbitrary checkpoint Python objects. No retraining or conversion occurs.
 
+The runtime additionally asserts the upstream joint ordering and default pose.
+A 60-second probe against the original Gym environment and the project's ROS
+motion gate both pass the same low-speed stand/forward/moving-turn/stop profile.
+The first project failures were traced to an adapter scheduling error: the
+rendering timestep was 100 ms inside a 5 ms outer loop, so an RTX update skipped
+policy ticks. The migrated runtime now renders only on sensor frames while each
+render advances one physics tick. No actor clipping or checkpoint replacement
+was introduced.
+
 ## Intentionally excluded
 
 The following are intentionally absent: ROS 1 handoff and bag conversion, ROS

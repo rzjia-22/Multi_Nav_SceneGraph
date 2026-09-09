@@ -56,12 +56,17 @@ def validate_configs() -> None:
 
     phase1 = SystemSpec.load(ROOT / "config" / "robots" / "phase1.yaml")
     phase2 = SystemSpec.load(ROOT / "config" / "robots" / "phase2.yaml")
+    motion_acceptance = SystemSpec.load(
+        ROOT / "config" / "robots" / "phase1_motion_acceptance.yaml"
+    )
     if len(phase1.robots) != 1:
         fail("Phase 1 must contain exactly one robot")
     if [robot.kind.value for robot in phase2.robots].count("go2") != 2:
         fail("Phase 2 must contain two Go2")
     if [robot.kind.value for robot in phase2.robots].count("uav") != 2:
         fail("Phase 2 must contain two UAV")
+    if len(motion_acceptance.robots) != 1 or motion_acceptance.robots[0].kind.value != "go2":
+        fail("motion acceptance must contain exactly one Go2")
     all_frames = []
     for robot in phase2.robots:
         names = RobotNames(robot.robot_id)

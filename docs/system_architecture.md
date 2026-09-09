@@ -68,11 +68,17 @@ coupling navigation code to Isaac APIs.
 The planned runtime rates are 200 Hz physics, 50 Hz Go2 actor inference and
 10 Hz sensor publication. The Go2 adapter builds the audited 48-value velocity
 observation from body velocity, gravity projection, Twist command, joint state
-and previous action. The frozen actor produces 12 normalized offsets, which
+and previous action. The frozen actor produces 12 policy-space offsets, which
 are scaled and added to the default joint pose. Navigation never sees those
-joint targets.
+joint targets. The adapter asserts the checkpoint's exact joint order and
+default pose, starts the actor at 50 Hz from the first physics frame, publishes
+full roll/pitch/yaw odometry, and applies a simulation-time command deadman.
+Rendering remains 10 Hz but uses a one-physics-tick rendering timestep so an
+RTX update never bypasses policy ticks. Stand, forward, moving turn, stop and
+deadman behavior pass with real camera rendering enabled.
 
-Replicator produces RGB, metric depth and Isaac ground-truth semantic labels.
+Isaac Lab's managed Camera sensor produces RGB, metric depth and Isaac
+ground-truth semantic labels.
 Semantic metadata are remapped to the checked-in eight-class Hydra label space.
 Each camera is calibrated with `CameraInfo`, stamped with simulation time and
 connected to its robot base by prefixed TF.

@@ -1,6 +1,9 @@
-import numpy as np
+import math
 
-from mns_simulation.ros_publisher import remap_semantic_ids, time_message
+import numpy as np
+import pytest
+
+from mns_simulation.ros_publisher import quaternion_xyzw, remap_semantic_ids, time_message
 
 
 def test_fractional_time_normalization():
@@ -19,3 +22,8 @@ def test_isaac_semantic_ids_are_mapped_to_project_contract():
     })
     assert labels.dtype == np.uint16
     assert labels.tolist() == [[0, 1, 2], [6, 0, 0]]
+
+
+def test_planar_and_full_orientation_conversion():
+    assert quaternion_xyzw(math.pi) == pytest.approx((0.0, 0.0, 1.0, 0.0))
+    assert quaternion_xyzw((2.0, 0.0, 0.0, 0.0)) == pytest.approx((0.0, 0.0, 0.0, 1.0))
