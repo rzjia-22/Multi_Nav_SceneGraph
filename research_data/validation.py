@@ -10,7 +10,7 @@ from typing import Any
 
 import numpy as np
 
-from .common import ROOT, file_hash, load_yaml, scene_paths, stable_hash
+from .common import ROOT, load_yaml, scene_paths, stable_hash
 from .expert import occupancy_grid, path_length
 from .forest import generate_scene
 
@@ -39,12 +39,23 @@ def validate_manifest() -> dict[str, Any]:
 
 def validate_scene(scene_path: Path, deterministic: bool = True) -> dict[str, Any]:
     scene = load_yaml(scene_path)
-    required = {"scene_id", "scene_seed", "split", "terrain", "ground", "lighting", "semantics", "trees", "content_hash"}
+    required = {
+        "scene_id", "scene_seed", "split", "terrain", "ground", "lighting",
+        "semantics", "trees", "asset_registry", "content_hash",
+    }
     assert required <= set(scene), f"scene keys missing: {required - set(scene)}"
-    assert scene["semantics"] == {"unknown": 0, "ground": 1, "tree_trunk": 2, "foliage": 3, "robot": 4, "other": 5}
+    assert scene["schema_version"] == 2
+    assert scene["terrain"]["builder"] == "isaaclab.terrains.TerrainImporter"
+    assert {"unknown", "ground", "tree_trunk", "foliage", "robot", "other_object", "vegetation"} <= set(scene["semantics"])
+    assert scene["semantics"]["robot"] == 6
+    assert scene["semantics"]["vegetation"] == scene["semantics"]["other_object"] == 7
     assert len(scene["trees"]) > 0
     assert len({tree["tree_id"] for tree in scene["trees"]}) == len(scene["trees"])
-    assert all(float(tree["trunk_radius_m"]) > 0.0 for tree in scene["trees"])
+    registry = load_yaml(ROOT / scene["asset_registry"])
+    assert all(tree["asset_id"] in registry["trees"] for tree in scene["trees"])
+    assert all(not tree["asset_id"].startswith("procedural/") for tree in scene["trees"])
+    assert all(tree["collision_proxy"]["shape"] == "hidden_cylinder" for tree in scene["trees"])
+    assert scene["ground"]["material_uri"] == registry["ground_materials"][scene["ground"]["profile"]]["uri"]
     stored_hash = scene.pop("content_hash")
     assert stable_hash(scene) == stored_hash, "scene content hash mismatch"
     scene["content_hash"] = stored_hash
@@ -52,12 +63,25 @@ def validate_scene(scene_path: Path, deterministic: bool = True) -> dict[str, An
     if deterministic:
         with tempfile.TemporaryDirectory(prefix="mns-scene-check-") as directory:
             generated_yaml = Path(directory) / "scene.yaml"
-            generated_usda = Path(directory) / "scene.usda"
-            regenerated = generate_scene(scene["scene_id"], generated_yaml, generated_usda)
-            default_yaml, default_usda = scene_paths(scene["scene_id"])
-            deterministic_match = stable_hash(regenerated) == stable_hash(scene) and file_hash(generated_usda) == file_hash(default_usda)
+            regenerated = generate_scene(scene["scene_id"], generated_yaml)
+            deterministic_match = stable_hash(regenerated) == stable_hash(scene)
             assert deterministic_match, "scene regeneration differs from versioned scene"
-    return {"status": "PASS", "scene_id": scene["scene_id"], "tree_count": len(scene["trees"]), "content_hash": stored_hash, "deterministic_regeneration": deterministic_match}
+    _, stage_snapshot = scene_paths(scene["scene_id"])
+    assert stage_snapshot.is_file(), "Isaac-built scene.usda snapshot is missing"
+    stage_text = stage_snapshot.read_text(encoding="utf-8")
+    assert "Blue_Berry_Elder.usd" in stage_text or "Gray_Birch.usd" in stage_text
+    assert 'def Cylinder "Trunk"' not in stage_text
+    assert 'def Sphere "Foliage"' not in stage_text
+    return {
+        "status": "PASS",
+        "scene_id": scene["scene_id"],
+        "tree_count": len(scene["trees"]),
+        "tree_asset_ids": sorted({tree["asset_id"] for tree in scene["trees"]}),
+        "content_hash": stored_hash,
+        "deterministic_regeneration": deterministic_match,
+        "stage_snapshot": str(stage_snapshot.relative_to(ROOT)),
+        "primitive_tree_visuals": False,
+    }
 
 
 def validate_episode(path: Path, plan_path: Path) -> dict[str, Any]:

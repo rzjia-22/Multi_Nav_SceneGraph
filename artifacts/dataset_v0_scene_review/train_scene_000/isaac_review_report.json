@@ -1,0 +1,94 @@
+{
+  "average_render_fps": 15.288728207383743,
+  "gpu": {
+    "memory_total_mib": 8188,
+    "memory_used_mib": 5132,
+    "name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+    "utilization_percent": 1
+  },
+  "isaac_lab_version": "2.3.1",
+  "isaac_sim_version": "5.1.0",
+  "missing_registry_assets": [],
+  "mode": "capture",
+  "render_wall_time_s": 4.186090506147593,
+  "rendered_frames": 64,
+  "resolution": [
+    1280,
+    720
+  ],
+  "resolved_assets": {
+    "grass": "https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/5.1/NVIDIA/Materials/Base/Natural/Grass_Countryside.mdl",
+    "kloofendal_clear_4k": "https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/5.1/Isaac/Materials/Textures/Skies/PolyHaven/kloofendal_43d_clear_puresky_4k.hdr",
+    "nvidia_blue_berry_elder": "https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/5.1/NVIDIA/Assets/Vegetation/Trees/Blue_Berry_Elder.usd",
+    "nvidia_gray_birch": "https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/5.1/NVIDIA/Assets/Vegetation/Trees/Gray_Birch.usd"
+  },
+  "review_images": {
+    "isaac_aerial.png": {
+      "eye_m": [
+        0.0,
+        -0.5,
+        30.0
+      ],
+      "mean_rgb": 94.60145399305556,
+      "path": "/mns/artifacts/dataset_v0_scene_review/train_scene_000/isaac_aerial.png",
+      "std_rgb": 44.17756206575236,
+      "target_m": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "isaac_ground_view.png": {
+      "eye_m": [
+        -9.0,
+        -8.0,
+        0.5149999996647239
+      ],
+      "mean_rgb": 78.61536060474538,
+      "path": "/mns/artifacts/dataset_v0_scene_review/train_scene_000/isaac_ground_view.png",
+      "std_rgb": 48.69996717998213,
+      "target_m": [
+        -2.0,
+        -1.0,
+        1.1
+      ]
+    },
+    "isaac_mid_height.png": {
+      "eye_m": [
+        10.0,
+        -10.0,
+        1.7950000001117588
+      ],
+      "mean_rgb": 81.05230975115741,
+      "path": "/mns/artifacts/dataset_v0_scene_review/train_scene_000/isaac_mid_height.png",
+      "std_rgb": 56.435674723140664,
+      "target_m": [
+        0.0,
+        0.0,
+        2.225000000372529
+      ]
+    },
+    "isaac_tree_closeup.png": {
+      "eye_m": [
+        -1.3118350589216201,
+        0.7451031550762242,
+        1.6049999998882414
+      ],
+      "mean_rgb": 75.44306495949074,
+      "path": "/mns/artifacts/dataset_v0_scene_review/train_scene_000/isaac_tree_closeup.png",
+      "std_rgb": 55.536127732467115,
+      "target_m": [
+        -1.920776,
+        -3.208274,
+        2.174999999627471
+      ]
+    }
+  },
+  "scene_content_hash": "252374c6c0fe1881ee138351baf746caa15ee09d3a4a070098d74ce72b060c7c",
+  "scene_id": "train_scene_000",
+  "scene_load_time_s": 17.676513645099476,
+  "stage_snapshot": "/mns/research_scenes/dataset_v0/train_scene_000/scene.usda",
+  "status": "PASS",
+  "terrain_builder": "isaaclab.terrains.TerrainImporter",
+  "tree_count": 42
+}

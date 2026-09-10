@@ -18,5 +18,11 @@ if [[ "${1:-}" == "--tool" ]]; then
   exec "${isaac_sim_root}/kit/python/bin/python3" -m research_data.cli "$@"
 fi
 
+if [[ "${1:-}" == "--review" ]]; then
+  shift
+  exec "${isaac_sim_root}/kit/python/bin/python3" \
+    "${MNS_PROJECT_ROOT}/ros_ws/src/mns_simulation/mns_simulation/research_forest_review.py" "$@"
+fi
+
 exec "${isaac_sim_root}/kit/python/bin/python3" \
   "${MNS_PROJECT_ROOT}/ros_ws/src/mns_simulation/mns_simulation/research_dataset_runtime.py" "$@"

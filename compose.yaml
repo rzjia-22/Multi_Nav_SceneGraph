@@ -92,6 +92,9 @@ services:
       NVIDIA_DRIVER_CAPABILITIES: all
       ROS_DISTRO: jazzy
       LD_LIBRARY_PATH: /isaac-sim/exts/isaacsim.ros2.bridge/jazzy/lib
+      DISPLAY: ${DISPLAY:-:0}
+      XAUTHORITY: /tmp/mns-xauthority
+      QT_X11_NO_MITSHM: "1"
     deploy:
       resources:
         reservations:
@@ -106,6 +109,8 @@ services:
       - isaac-kit-cache:/isaac-sim/kit/cache:rw
       - isaac-ov-cache:/root/.cache/ov:rw
       - isaac-compute-cache:/root/.nv/ComputeCache:rw
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ${XAUTHORITY:-/dev/null}:/tmp/mns-xauthority:ro
     working_dir: /mns
     stop_signal: SIGINT
     stop_grace_period: 30s

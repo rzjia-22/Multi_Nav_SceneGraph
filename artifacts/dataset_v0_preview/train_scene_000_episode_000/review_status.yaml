@@ -1,0 +1,11 @@
+status: superseded_rejected_visual_domain
+training_eligible: false
+reason: >-
+  This historical episode was rendered against the schema-v1 project-owned
+  sine terrain and Cylinder/Sphere tree visuals. It remains versioned only as
+  evidence of the rejected prototype and must not be used for Dataset V0
+  training or scene approval.
+superseded_by:
+  scene_specification: research_scenes/dataset_v0/train_scene_000/scene.yaml
+  scene_review: artifacts/dataset_v0_scene_review/train_scene_000
+next_gate: Human visual acceptance of the Isaac Lab and NVIDIA-asset scene
