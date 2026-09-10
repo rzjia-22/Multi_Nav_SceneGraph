@@ -1,0 +1,30 @@
+{
+  "aligned_depth_valid_fraction": 0.7212476514935312,
+  "collision_free_in_privileged_map": true,
+  "depth_dtype": "uint16",
+  "depth_frames": 146,
+  "depth_scale_m": 0.001,
+  "duration_s": 14.620000000000001,
+  "episode_id": "validation_scene_001_episode_004",
+  "episode_schema_version": 2,
+  "executed_path_length_m": 8.614243507385254,
+  "goal_error_m": 0.1694117109886782,
+  "hdf5_sha256": "69ca6b300dec5f98ed20f91d509f53787b5f5304df1b7c52d2801d772112d49d",
+  "imu_samples": 1465,
+  "plan_hash": "35d618314b8414a2dc1e9bb2e1e43ab74fb1ea68602eb08a1a869b2b27f1d080",
+  "planned_path_collision_free": true,
+  "planned_path_length_m": 8.791434,
+  "planner_type": "privileged_grid_astar",
+  "planner_version": 2,
+  "pose_samples": 732,
+  "rgb_frames": 146,
+  "rgb_value_range": [
+    1,
+    246
+  ],
+  "route_bucket": "long",
+  "smoothed_waypoint_count": 7,
+  "status": "PASS",
+  "strict_corner_cut_validation": true,
+  "success": true
+}

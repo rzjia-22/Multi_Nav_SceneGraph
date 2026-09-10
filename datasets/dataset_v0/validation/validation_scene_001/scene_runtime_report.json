@@ -8,7 +8,7 @@
   "missing_registry_assets": [],
   "scene_content_hash": "ec8f27bc8fd927bc02a00ff1e52d471ec8146a69625c171471a76cbbc03d95f0",
   "scene_id": "validation_scene_001",
-  "scene_load_time_s": 10.446156790014356,
+  "scene_load_time_s": 11.415736775146797,
   "scene_seed": 51047,
   "split": "validation",
   "stage_snapshot": "research_scenes/dataset_v0/validation_scene_001/scene.usda",

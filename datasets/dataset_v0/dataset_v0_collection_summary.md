@@ -2,10 +2,10 @@
 
 Status: **PARTIAL**
 
-Episodes: 50/70  
-Splits: {'train': 50}  
-Route buckets: {'short': 15, 'medium': 20, 'long': 15}  
-Planned path: 327.414 m  
-Executed path: 317.984 m  
-Simulated duration: 556.900 s  
-HDF5 bytes: 3340237086  
+Episodes: 60/70  
+Splits: {'train': 50, 'validation': 10}  
+Route buckets: {'short': 18, 'medium': 24, 'long': 18}  
+Planned path: 393.476 m  
+Executed path: 382.122 m  
+Simulated duration: 669.280 s  
+HDF5 bytes: 4004654403  
