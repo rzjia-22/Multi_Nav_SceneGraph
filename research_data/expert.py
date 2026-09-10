@@ -57,12 +57,50 @@ def occupancy_grid(
 def line_free(grid: Grid, first: tuple[float, float], second: tuple[float, float]) -> bool:
     distance = math.dist(first, second)
     samples = max(2, int(math.ceil(distance / (grid.resolution * 0.45))))
+    previous_cell = None
     for fraction in np.linspace(0.0, 1.0, samples):
         point = (first[0] + fraction * (second[0] - first[0]), first[1] + fraction * (second[1] - first[1]))
         x, y = grid.world_to_cell(point)
         if x < 0 or y < 0 or y >= grid.occupied.shape[0] or x >= grid.occupied.shape[1] or grid.occupied[y, x]:
             return False
+        cell = (x, y)
+        if previous_cell is not None and cell != previous_cell and not grid_transition_free(grid, previous_cell, cell):
+            return False
+        previous_cell = cell
     return True
+
+
+def grid_transition_free(
+    grid: Grid, current: tuple[int, int], neighbor: tuple[int, int]
+) -> bool:
+    """Return whether an 8-connected grid transition is collision-free.
+
+    A diagonal move is only valid when both adjacent orthogonal cells are free.
+    This prevents the inflated robot footprint from slipping through an obstacle
+    corner even though the diagonal destination cell itself is free.
+    """
+    dx, dy = neighbor[0] - current[0], neighbor[1] - current[1]
+    if abs(dx) > 1 or abs(dy) > 1 or (dx == 0 and dy == 0):
+        return False
+    height, width = grid.occupied.shape
+    if not (0 <= neighbor[0] < width and 0 <= neighbor[1] < height):
+        return False
+    if grid.occupied[neighbor[1], neighbor[0]]:
+        return False
+    if dx and dy:
+        if grid.occupied[current[1], current[0] + dx]:
+            return False
+        if grid.occupied[current[1] + dy, current[0]]:
+            return False
+    return True
+
+
+def path_collision_free(grid: Grid, path: list[tuple[float, float]] | list[list[float]]) -> bool:
+    """Check every smoothed path segment against the conservative grid."""
+    return all(
+        line_free(grid, tuple(path[index - 1][:2]), tuple(path[index][:2]))
+        for index in range(1, len(path))
+    )
 
 
 def astar(grid: Grid, start: tuple[float, float], goal: tuple[float, float]) -> list[tuple[float, float]]:
@@ -79,9 +117,7 @@ def astar(grid: Grid, start: tuple[float, float], goal: tuple[float, float]) -> 
             break
         for dx, dy in motions:
             neighbor = current[0] + dx, current[1] + dy
-            if not (0 <= neighbor[0] < grid.occupied.shape[1] and 0 <= neighbor[1] < grid.occupied.shape[0]):
-                continue
-            if grid.occupied[neighbor[1], neighbor[0]]:
+            if not grid_transition_free(grid, current, neighbor):
                 continue
             step = grid.resolution * (math.sqrt(2.0) if dx and dy else 1.0)
             new_cost = cost[current] + step
@@ -106,6 +142,8 @@ def astar(grid: Grid, start: tuple[float, float], goal: tuple[float, float]) -> 
             candidate -= 1
         smooth.append(raw[candidate])
         index = candidate
+    if not path_collision_free(grid, smooth):
+        raise RuntimeError("A* smoothing produced a colliding segment")
     return smooth
 
 
@@ -146,16 +184,17 @@ def sample_episode_plan(
         route_length_xy = path_length(route)
         euclidean = math.dist(start, goal)
         if ranges["route"][0] <= route_length_xy <= ranges["route"][1] and route_length_xy / euclidean >= 1.07 and len(route) >= 3 and not line_free(grid, start, goal):
-            best = start, goal, route, euclidean
+            surface_path = [[float(x), float(y), float(surface_height(x, y))] for x, y in route]
+            route_length_surface = path_length(surface_path)
+            if not ranges["route"][0] <= route_length_surface <= ranges["route"][1]:
+                continue
+            best = start, goal, route, surface_path, euclidean, route_length_surface
             break
     if best is None:
         raise RuntimeError(f"could not sample a non-trivial {bucket} route")
-    start, goal, route, euclidean = best
+    start, goal, route, surface_path, euclidean, route_length = best
     start_yaw = math.atan2(route[1][1] - route[0][1], route[1][0] - route[0][0])
-    path = [[round(x, 6), round(y, 6), round(surface_height(x, y), 6)] for x, y in route]
-    route_length = path_length(path)
-    if not ranges["route"][0] <= route_length <= ranges["route"][1]:
-        raise RuntimeError(f"surface-following route is outside the {bucket} bucket: {route_length:.3f} m")
+    path = [[round(x, 6), round(y, 6), round(z, 6)] for x, y, z in surface_path]
     plan = {
         "schema_version": 2,
         "dataset_version": "dataset_v0",

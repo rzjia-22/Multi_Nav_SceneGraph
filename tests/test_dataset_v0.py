@@ -3,6 +3,7 @@ import tempfile
 
 from research_data.common import ROOT, load_yaml, stable_hash
 from research_data.depth import align_depth_to_rgb, dequantize_depth_z16, quantize_depth_z16
+from research_data.expert import Grid, astar, grid_transition_free, line_free, path_collision_free
 from research_data.forest import generate_scene
 from research_data.validation import validate_manifest, validate_runtime_contract, validate_scene
 
@@ -66,3 +67,35 @@ def test_offline_alignment_is_deterministic():
 def test_collector_uses_only_shared_research_forest_builder():
     report = validate_runtime_contract()
     assert report["shared_builder_call"] is True
+
+
+def _open_grid() -> Grid:
+    import numpy as np
+
+    occupied = np.zeros((5, 5), dtype=bool)
+    occupied[0, :] = occupied[-1, :] = True
+    occupied[:, 0] = occupied[:, -1] = True
+    return Grid(half_extent=0.2, resolution=0.1, occupied=occupied)
+
+
+def test_free_diagonal_transition_is_allowed():
+    grid = _open_grid()
+    assert grid_transition_free(grid, (1, 1), (2, 2))
+
+
+def test_diagonal_transition_requires_both_orthogonal_sides_free():
+    grid = _open_grid()
+    grid.occupied[1, 2] = True
+    assert not grid_transition_free(grid, (1, 1), (2, 2))
+    grid.occupied[1, 2] = False
+    grid.occupied[2, 1] = True
+    assert not grid_transition_free(grid, (1, 1), (2, 2))
+
+
+def test_astar_does_not_cut_an_obstacle_corner_and_smoothing_stays_free():
+    grid = _open_grid()
+    grid.occupied[1, 2] = True
+    path = astar(grid, grid.cell_to_world((1, 1)), grid.cell_to_world((2, 2)))
+    assert path_collision_free(grid, path)
+    assert all(line_free(grid, path[index - 1], path[index]) for index in range(1, len(path)))
+    assert len(path) >= 3

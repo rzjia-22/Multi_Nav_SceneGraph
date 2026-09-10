@@ -1,0 +1,17 @@
+{
+  "audit_rule": "A diagonal grid transition is valid only when both adjacent orthogonal cells are free.",
+  "audited_episode": "train_scene_000_episode_000",
+  "audited_hdf5_sha256": "7bfe4a571b60102f098b35b110eaadba66d7dcaf947ceb25e2542c525341974d",
+  "audited_plan_hash": "42aa29ffb57f9603d1b1f38687d176b0378df23af5b59009f7b44a925e1d5eeb",
+  "audited_source_commit": "67a6b81a34b230430a5743e3fe0bb9e3224dd98c",
+  "failed_segments": [
+    {"segment_index": 0, "transition": [[186, 126], [185, 125]], "occupied_side": [185, 126]},
+    {"segment_index": 1, "transition": [[185, 125], [184, 124]], "occupied_side": [184, 125]},
+    {"segment_index": 2, "transition": [[182, 123], [181, 122]], "occupied_side": [181, 123]},
+    {"segment_index": 4, "transition": [[173, 124], [172, 125]], "occupied_side": [173, 125]}
+  ],
+  "planning_grid_resolution_m": 0.1,
+  "status": "FAIL",
+  "bulk_collection_started": false,
+  "batch_gate_completed_episodes": 0
+}

@@ -13,8 +13,9 @@ final training corpus and no navigation model is trained by this workflow.
 belongs to exactly one split. The 70 planned episodes contain 21 short (3–5 m),
 28 medium (5–8 m), and 21 long (8–10 m) expert-route buckets. The collector
 reads each episode's bucket from this manifest; it never invents a split or
-silently changes a bucket at runtime. Only `train_scene_000_episode_000` has
-been collected. The remaining 69 episodes are intentionally not generated.
+silently changes a bucket at runtime. The first collected
+`train_scene_000_episode_000` was invalidated by the strict diagonal-corner
+audit described below. The remaining 69 episodes have not been generated.
 
 ## One Research Forest path
 
@@ -119,15 +120,16 @@ the in-memory aligned reference with 100% valid-pixel agreement and zero depth
 difference. Z16 quantization measured 0.250 mm mean, 0.475 mm p95, and
 0.501 mm maximum absolute error, with zero saturation.
 
-## Formal candidate and measured cost
+## Superseded pilot and measured cost
 
-The current and only valid preview is
-`artifacts/dataset_v0_preview/train_scene_000_episode_000/`. The manifest marks
-it short. Its blocked direct line is resolved by 0.10 m grid A*, greedy
-line-of-sight smoothing, and the same Pure Pursuit controller used previously.
-The planned 3D route is 3.766 m; execution covered 3.653 m, reached the goal
-with 0.124 m error, and was collision-free in the conservative privileged map.
-It contains 70 RGB/depth frames, 703 IMU samples, and 351 states over 7.0 s.
+The existing pilot remains at
+`artifacts/dataset_v0_preview/train_scene_000_episode_000/`, but it is no longer
+a valid Dataset V0 episode. The old 8-connected A* checked only the diagonal
+destination cell. A strict audit found four smoothed segments that transition
+diagonally while one adjacent orthogonal inflated-grid cell is occupied. The
+corrected planner permits a diagonal only when both side cells are free, and
+the validator now rejects this pilot. Its 70 RGB/depth frames, 703 IMU samples,
+351 states and benchmark remain useful implementation evidence only.
 
 The 50,295,537-byte HDF5 took 1.788 s to write. Compressed contributions are
 31,046,857 bytes RGB, 19,073,847 bytes depth, 49,208 bytes state/IMU/expert/
@@ -160,17 +162,17 @@ make dataset-v0-calibrate-terrain       # measure all three official profiles
 make dataset-v0-scene-preview           # deterministic YAML + schematic
 make dataset-v0-capture-scene-review    # four fixed RTX views
 make dataset-v0-view-scene              # interactive Isaac, no navigation
-make dataset-v0-episode-benchmark       # exactly episode_000; not bulk
+make dataset-v0-episode-benchmark       # blocked until episode_000 regeneration is authorized
 make dataset-v0-validate                # scene/split/runtime/HDF5/registration
 ```
 
 The collector accepts repeated `--episode-id` arguments within one Isaac scene
-lifecycle, which is the future scene-batched path. No Make target generates all
-70 episodes. Validation checks the 14/70 scene-level split, manifest bucket,
-deterministic scene specification, actual terrain statistics, scene hash,
-shared builder call, absence of primitive collector construction, HDF5 v2,
-Z16 calibration, offline registration, strictly increasing timestamps,
-terrain-induced body tilt, collision-free execution, and non-stale RGB.
+lifecycle, which is the future scene-batched path. No Make target currently
+generates all 70 episodes. Validation checks conservative no-corner-cut planned
+segments before accepting HDF5 evidence, in addition to the 14/70 scene-level
+split, manifest bucket, deterministic scene specification, actual terrain,
+hashes, shared builder, HDF5 v2, Z16 calibration, offline registration,
+timestamps, terrain-following pose, collision-free execution and non-stale RGB.
 
 Sources, YAML/JSON/CSV, the compact USDA, and review images use ordinary Git.
 The formal HDF5 is Git LFS. NVIDIA assets remain external URI references.

@@ -16,14 +16,13 @@ RTX 4060 Laptop / 16 GB RAM machine. All four cameras remain exactly 10 Hz in
 simulation time, but wall throughput is about 2.4 Hz (RTF about 0.24). This is
 reported as a performance warning, not hidden as a functional failure.
 
-The current milestone is the completed Dataset V0 single-episode pilot. The
-Research Forest visual domain was accepted by the user. The active viewer,
-fixed-view capture and collector now share one Isaac builder and the actual
-imported terrain surface. Flat/gentle/moderate profiles have measured geometry
-statistics. HDF5 schema v2 stores raw Z16 rather than float plus duplicated
-aligned depth. `train_scene_000_episode_000` is the sole formal candidate and
-has passed execution, storage, registration and resource validation. The other
-69 episodes remain intentionally ungenerated pending review of this evidence.
+The current milestone is blocked before Dataset V0 bulk collection. The
+Research Forest visual domain remains accepted and unchanged. A strict audit
+of the 8-connected privileged A* found that the previously collected
+`train_scene_000_episode_000` plan used diagonal transitions beside occupied
+inflated-grid cells. Its sensor/storage evidence remains technically readable,
+but the episode is no longer valid under the corrected expert contract. Per
+the bulk-collection gate, none of the remaining 69 episodes was generated.
 
 ## Dataset V0 milestone state
 
@@ -35,11 +34,11 @@ has passed execution, storage, registration and resource validation. The other
 | Terrain profiles | GPU Isaac geometry validated | flat median/p90 0/0°; gentle 2.361/3.042°; moderate 4.609/6.054° |
 | DIABLO profile | provisional V0 assumptions | non-holonomic surrogate; mount/footprint/limits isolated in config |
 | D435i profile | official capabilities documented; HDF5 v2 validated | 640×360 RGB, 848×480 Z16 depth at 0.001 m scale; offline registration exact against runtime reference |
-| Expert/recorder | GPU Isaac validated | manifest short route; A* + LOS + Pure Pursuit; 3.653 m executed, collision-free, goal reached |
+| Expert/recorder | planner defect corrected; pilot invalidated | diagonal moves now require both orthogonal side cells free; the old pilot fails strict path validation |
 | Historical primitive preview | removed from current tree | rejected implementation and artifacts remain available at commit `85d3fe6` only |
 | Scene visualization | GPU Isaac validated | aerial, 0.5 m ground, mid-height and close vegetation RTX views; interactive X11 viewer reached ready state |
-| Scene/episode validation | PASS | split/bucket/no leakage, shared builder, actual terrain, HDF5 v2, hash, timestamps, RGB, Z16 and alignment |
-| Bulk generation | intentionally stopped after pilot | remaining 69 episodes are not generated; no bulk Make target exists |
+| Scene/episode validation | BLOCKED | scene/storage checks pass, but the current pilot plan fails conservative diagonal corner validation |
+| Bulk generation | not started | batch gate is 0/4 and the remaining 69 episodes are absent |
 
 ## Milestone state
 
@@ -96,11 +95,11 @@ has passed execution, storage, registration and resource validation. The other
   gentle mesh has 0.312 m elevation range, 2.361° median and 3.042° p90 slope.
   Scene load took 11.80 s; 1280×720 fixed-view rendering averaged 19.70 FPS and
   used about 5,132 MiB of 8,188 MiB VRAM.
-- Formal Dataset V0 episode: the manifest-defined short expert planned 3.766 m
-  and executed 3.653 m in 7.0 simulated seconds, reached the goal with 0.124 m
-  error, and passed conservative collision checks. It recorded 70 RGB/depth,
-  703 IMU and 351 state samples. Wall execution was 14.353 s (RTF 0.488), with
-  27.337 s app startup, 12.625 s scene load and 1.788 s HDF5 write.
+- Superseded Dataset V0 episode evidence: the manifest-defined short expert
+  planned 3.766 m and executed 3.653 m, but four smoothed segments contain at
+  least one diagonal transition whose adjacent orthogonal cell is occupied in
+  the planning-radius grid. The prior runtime/storage measurements therefore
+  remain engineering evidence only, not a valid Dataset V0 sample.
 - HDF5 v2 is 50,295,537 bytes. Z16 at 0.001 m/unit had 0 saturation,
   0.250/0.475/0.501 mm mean/p95/max absolute error. Offline registration had
   100% valid-pixel agreement and zero depth difference from the in-memory
@@ -185,10 +184,11 @@ and Hydra saves all artifacts before both containers exit.
 
 ## Known remaining issues
 
-- `train_scene_000` still requires human visual acceptance. Reviewers must
-  judge the two tree species, orchard-like openness/density, Grass MDL,
-  terrain variation, normal lighting and the provisional 0.5 m viewpoint.
-  This is an intentional gate, not a source-completeness claim.
+- Bulk Dataset V0 collection is intentionally stopped because the current
+  `train_scene_000_episode_000` expert plan is invalid under the corrected
+  no-corner-cut rule. The visual scene itself is already human accepted. A
+  future authorized run must regenerate episode 000 before the four-episode
+  same-scene batch gate and the remaining scenes can proceed.
 
 - The current 8 GB VRAM / 16 GB RAM laptop cannot run the four-camera/four-Hydra
   graph at wall-clock real time with the default 320×240, 10 Hz configuration.

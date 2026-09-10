@@ -34,9 +34,11 @@ only standard message types; project ROS nodes run in the robotics image.
 A separate model-agnostic research-data path targets future standing-mode
 DIABLO + RealSense D435i local visual navigation. The fixed manifest plans 14
 scene-level-split scenes and 70 episodes. The Research Forest visual domain is
-approved, its official terrain profiles are geometry-calibrated, and exactly
-one formal candidate (`train_scene_000_episode_000`) has been collected. The
-remaining 69 episodes are intentionally absent pending review of this pilot.
+approved and its official terrain profiles are geometry-calibrated. A strict
+8-connected A* audit found that the previously collected
+`train_scene_000_episode_000` plan cuts an inflated-grid obstacle corner, so it
+is no longer accepted as a formal episode. Bulk collection is stopped until
+that episode is explicitly regenerated under the corrected planner.
 
 ```bash
 make dataset-v0-scene-preview

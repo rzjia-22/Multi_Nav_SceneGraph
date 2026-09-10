@@ -12,7 +12,7 @@ import numpy as np
 from .common import ROOT, load_yaml, scene_paths, stable_hash
 from .depth import ALIGNMENT_ALGORITHM, ALIGNMENT_VERSION, align_depth_to_rgb
 from .episode import COLLECTOR_VERSION, EPISODE_SCHEMA_VERSION
-from .expert import occupancy_grid, path_length
+from .expert import occupancy_grid, path_collision_free, path_length
 from .forest import generate_scene
 
 
@@ -102,6 +102,10 @@ def validate_episode(path: Path, plan_path: Path) -> dict[str, Any]:
     manifest_episode = next(item for item in manifest_scene["planned_episodes"] if item["episode_id"] == plan["episode_id"])
     assert plan["split"] == scene["split"] == manifest_scene["split"], "episode/scene split mismatch"
     assert plan["target_route_length_bucket"] == manifest_episode["target_route_length_bucket"], "episode length bucket differs from manifest"
+    planning_grid = occupancy_grid(scene, robot)
+    assert path_collision_free(planning_grid, plan["planned_path"]), (
+        "expert path violates conservative planning occupancy, including diagonal corner-cut constraints"
+    )
     with h5py.File(path, "r") as episode:
         assert int(episode.attrs["schema_version"]) == EPISODE_SCHEMA_VERSION
         metadata = json.loads(str(episode.attrs["metadata_json"]))
@@ -172,6 +176,7 @@ def validate_episode(path: Path, plan_path: Path) -> dict[str, Any]:
             "depth_frames": int(rgb_count), "imu_samples": int(len(imu_time)), "pose_samples": int(len(state_time)),
             "planned_path_length_m": float(plan["planned_path_length_m"]), "executed_path_length_m": executed_length,
             "goal_error_m": goal_error, "collision_free_in_privileged_map": True,
+            "planned_path_collision_free": True,
             "rgb_value_range": [int(rgb.min()), int(rgb.max())],
             "aligned_depth_valid_fraction": depth_valid_fraction,
             "episode_schema_version": EPISODE_SCHEMA_VERSION,
