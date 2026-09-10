@@ -1,0 +1,45 @@
+{
+  "episode": {
+    "aligned_depth_valid_fraction": 0.5611406748064663,
+    "collision_free_in_privileged_map": true,
+    "depth_frames": 122,
+    "duration_s": 12.22,
+    "episode_id": "train_scene_000_episode_000",
+    "executed_path_length_m": 7.051383972167969,
+    "goal_error_m": 0.17007216259469904,
+    "imu_samples": 1224,
+    "planned_path_length_m": 7.187339,
+    "pose_samples": 612,
+    "rgb_frames": 122,
+    "rgb_value_range": [
+      16,
+      252
+    ],
+    "status": "PASS",
+    "success": true
+  },
+  "manifest": {
+    "bucket_counts": {
+      "long": 21,
+      "medium": 28,
+      "short": 21
+    },
+    "episode_count": 70,
+    "scene_count": 14,
+    "scene_leakage": false,
+    "split_counts": {
+      "test": 2,
+      "train": 10,
+      "validation": 2
+    },
+    "status": "PASS"
+  },
+  "scene": {
+    "content_hash": "f8889a16e59be574de207bf66a061ab56cc9a68f006104d04b28721babf74ed7",
+    "deterministic_regeneration": true,
+    "scene_id": "train_scene_000",
+    "status": "PASS",
+    "tree_count": 42
+  },
+  "status": "PASS"
+}

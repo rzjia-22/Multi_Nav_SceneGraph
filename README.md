@@ -29,6 +29,26 @@ Hydra's complete source graph is pinned in `upstream.repos`. The Isaac process
 uses the Jazzy client libraries bundled with Isaac's ROS bridge and publishes
 only standard message types; project ROS nodes run in the robotics image.
 
+## Dataset V0 pilot
+
+A separate model-agnostic research-data path targets future standing-mode
+DIABLO + RealSense D435i local visual navigation. The fixed manifest plans 14
+scene-level-split scenes and 70 episodes, but only one formal candidate has
+been generated pending human review.
+
+```bash
+make dataset-v0-scene-preview
+make dataset-v0-episode-preview  # frozen Isaac GPU runtime
+make dataset-v0-validate
+make dataset-v0-visualize
+```
+
+The candidate uses real Isaac RGB and separate raw depth, RGB registration,
+clean IMU, state/commands and a privileged expert. Its HDF5 uses Git LFS;
+deterministic scenes, trajectories, reports and figures use normal Git. This
+does not replace the integration forest or require Hydra during collection.
+See [Dataset V0](docs/dataset_v0.md).
+
 ## CPU-only quick start
 
 The synthetic publisher exercises the complete ROS 2, navigation and Hydra
@@ -170,4 +190,5 @@ Authoritative details are in [system architecture](docs/system_architecture.md),
 [ROS 2 interfaces](docs/ros2_interfaces.md),
 [development environment](docs/development_environment.md),
 [development status](docs/development_status.md) and
-[ForestNavigation migration notes](docs/forestnavigation_migration.md).
+[ForestNavigation migration notes](docs/forestnavigation_migration.md). The
+research-data contract is in [Dataset V0](docs/dataset_v0.md).

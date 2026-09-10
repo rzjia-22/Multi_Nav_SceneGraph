@@ -22,11 +22,14 @@ Responsibilities were moved into stable packages instead of copying the old
 | Single UAV collector | `mns_simulation` | kinematic aerial sensor abstraction with live RGB-D/semantic ROS topics; no bag prerequisite |
 | Go2 + UAV and two-team runners | `mns_bringup`, `mns_multi_robot` | YAML roster and one shared simulation instead of experiment-specific entry scripts |
 | Two-team partition | `mns_multi_robot.partition` | deterministic general quadrant primitive used by configuration, not a coupled runner |
+| Forest generator design reference | `research_data.forest`, `config/research_forests` | retained meter scale, gentle procedural terrain and conservative trunk collision concepts; replaced unseeded prototype, hard-coded assets and script loop with deterministic manifests/USDA |
 
 The source files that retain adapted coverage/partition behavior include the
 audited revision in their module header. The exact upstream `navdiffusion`
 Python package is copied only from a locally verified checkout into the ML
 image because checkpoint compatibility depends on that model definition.
+No source from `scripts/forest_generator/forest_generator_isaaclab.py` or
+`scripts/forest_generator/test.py` is copied into the Dataset V0 generator.
 
 ## Checkpoint handling
 

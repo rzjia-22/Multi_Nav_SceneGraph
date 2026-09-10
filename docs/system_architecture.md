@@ -23,6 +23,20 @@ robotics image contains ROS 2 Jazzy, Hydra and project nodes. The simulation
 image contains Isaac Sim/Lab and uses Isaac's internal Jazzy ROS bridge to
 exchange standard DDS messages over host networking.
 
+Dataset V0 is a separate offline research-data consumer of Isaac:
+
+```text
+deterministic Research Forest + privileged map
+  ├── A* + LOS smoothing ─► Pure Pursuit ─► kinematic surrogate
+  └── moving D435i-like rig ─► RGB + raw/registered depth + IMU ─► HDF5
+```
+
+It reuses the simulation image but is not a ROS package and does not make
+Hydra a collection dependency. `research_data/` owns deterministic scene,
+expert, schema, validation and visualization logic; the Isaac camera/surrogate
+runtime stays in `mns_simulation`. The original integration forest remains
+unchanged while `research_scenes/dataset_v0/` stores research realizations.
+
 ## Package responsibilities
 
 `mns_core` owns validated robot descriptions, topic/frame naming and pure data

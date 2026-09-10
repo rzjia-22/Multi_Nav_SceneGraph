@@ -1,6 +1,6 @@
 # Development status
 
-This is the sole authoritative status document. Last updated 2026-09-09.
+This is the sole authoritative status document. Last updated 2026-09-10.
 
 ## Current milestone
 
@@ -15,6 +15,27 @@ The four-robot run is resource-limited rather than wall-clock real-time on this
 RTX 4060 Laptop / 16 GB RAM machine. All four cameras remain exactly 10 Hz in
 simulation time, but wall throughput is about 2.4 Hz (RTF about 0.24). This is
 reported as a performance warning, not hidden as a functional failure.
+
+The current milestone is Dataset V0 pilot infrastructure for future
+standing-mode DIABLO + D435i local navigation. Its 14-scene/70-episode
+scene-level split is frozen. One deterministic Research Forest and one real
+GPU Isaac expert episode are generated, validated and ready for Git/LFS review.
+The remaining 69 episodes are deliberately withheld until a human reviews the
+mounting, appearance and task difficulty.
+
+## Dataset V0 milestone state
+
+| Capability | State | Evidence |
+| --- | --- | --- |
+| Dataset plan | source complete, validated | 10/2/2 scene split; 21/28/21 short/medium/long; no leakage |
+| Research Forest | CPU deterministic validated | `train_scene_000`, seed 41001, YAML/USDA exact regeneration |
+| DIABLO profile | provisional V0 assumptions | non-holonomic surrogate; mount/footprint/limits isolated in config |
+| D435i profile | official capabilities documented; V0 approximation validated | separate 640×360 RGB and 848×480 depth; actual Isaac intrinsics saved; registered depth |
+| Expert/recorder | GPU Isaac validated | privileged A* + LOS + Pure Pursuit wrote model-independent HDF5 |
+| Preview episode | PASS, awaiting human review | 12.22 s; 7.187 m planned / 7.051 m executed; 0.170 m goal error; collision-free map check |
+| Preview sensors | GPU Isaac validated | 122 RGB/depth, 1,224 IMU, 612 states; RGB 16–252; 56.1% valid registered depth |
+| Validation/review | PASS | schema/time/image/depth/path/split gates and stable PNG/CSV/JSON evidence |
+| Bulk generation | deferred by scope | remaining 69 episodes are not generated |
 
 ## Milestone state
 
@@ -64,7 +85,7 @@ reported as a performance warning, not hidden as a functional failure.
 
 - `make build`: all 8 ROS packages built; 10 package tests passed, with zero
   errors, failures or skips.
-- `make validate`: repository validation and 17 pure Python tests passed.
+- `make validate`: repository validation and 20 pure Python tests passed.
 - `make gpu-preflight`, `make isaac-compatibility`, `make isaac-minimal`: RTX
   4060 Laptop GPU, 8,188 MiB VRAM, driver 550.144.03, CUDA container and Vulkan
   pass; frozen Isaac Lab 2.3.1 GPU PhysX steps and shuts down cleanly.
