@@ -1,0 +1,61 @@
+schema_version: 2
+dataset_version: dataset_v0
+episode_id: train_scene_003_episode_002
+episode_type: nominal_expert
+split: train
+scene_id: train_scene_003
+scene_seed: 41057
+scene_schema_version: 3
+scene_content_hash: e96f9558033c805ab674af44402c97f412f4df52e7d71f294e4a63d6a5632ece
+robot_profile: diablo_standing_v0
+sensor_profile: d435i_navigation_v0
+planner:
+  type: privileged_grid_astar
+  version: 2
+  grid_resolution_m: 0.1
+  diagonal_policy: require_both_orthogonal_cells_free
+  smoothing: greedy_line_of_sight
+controller:
+  type: pure_pursuit
+  lookahead_m: 0.32
+  goal_tolerance_m: 0.18
+target_route_length_bucket: medium
+start_pose_xyzyaw:
+- 10.478478
+- 2.512378
+- -0.032
+- 2.896614
+goal_pose_xyz:
+- 5.858413
+- 0.847216
+- 0.079
+straight_line_distance_m: 4.910983
+planned_path_length_m: 6.337546
+direct_line_collision_free: false
+planned_path:
+- - 10.5
+  - 2.5
+  - -0.032
+- - 7.7
+  - 3.2
+  - -0.0645
+- - 7.0
+  - 3.2
+  - -0.043
+- - 6.6
+  - 2.9
+  - -0.015
+- - 6.5
+  - 2.5
+  - 0.005
+- - 6.4
+  - 1.7
+  - 0.037
+- - 5.9
+  - 0.8
+  - 0.079
+configuration_hashes:
+  scene: e96f9558033c805ab674af44402c97f412f4df52e7d71f294e4a63d6a5632ece
+  robot: c47aee2bddaa21316aefb22a0ebdada0df08e1cd855f2d4498968df7863bbeff
+  sensor: 77955182bfa7d429a4b418485637067ade75ac9a754429dba06fc1710b9844da
+plan_hash: 6683445d6a432ef86b2ec31de9b0aa80096f4c28cd9eb88a13a1eb6583fee234

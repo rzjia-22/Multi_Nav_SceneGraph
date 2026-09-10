@@ -1,17 +1,17 @@
 {
   "factors": {
-    "ground": "grass",
-    "lighting": "normal",
+    "ground": "bare_soil",
+    "lighting": "bright",
     "terrain": "gentle",
-    "tree_density": "medium"
+    "tree_density": "high"
   },
   "missing_registry_assets": [],
-  "scene_content_hash": "07d75706a35ad4a7e02f696d2ce6ff5e0c1eae4e659651922a96e039e8e158f4",
-  "scene_id": "train_scene_000",
-  "scene_load_time_s": 8.829226748086512,
-  "scene_seed": 41001,
+  "scene_content_hash": "e96f9558033c805ab674af44402c97f412f4df52e7d71f294e4a63d6a5632ece",
+  "scene_id": "train_scene_003",
+  "scene_load_time_s": 9.790088757872581,
+  "scene_seed": 41057,
   "split": "train",
-  "stage_snapshot": "research_scenes/dataset_v0/train_scene_000/scene.usda",
+  "stage_snapshot": "research_scenes/dataset_v0/train_scene_003/scene.usda",
   "status": "PASS",
   "terrain_statistics": {
     "elevation_max_m": 0.15600000321865082,
@@ -26,8 +26,8 @@
     "slope_p95_deg": 3.2376871532953504
   },
   "tree_asset_distribution": {
-    "nvidia_blue_berry_elder": 23,
-    "nvidia_gray_birch": 19
+    "nvidia_blue_berry_elder": 22,
+    "nvidia_gray_birch": 34
   },
-  "tree_count": 42
+  "tree_count": 56
 }

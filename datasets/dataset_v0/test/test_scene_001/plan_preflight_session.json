@@ -1,0 +1,182 @@
+{
+  "app_startup_time_s": 18.981675395043567,
+  "planner_version": 2,
+  "plans": [
+    {
+      "conservative_planning_collision_free": true,
+      "diagonal_policy": "require_both_orthogonal_cells_free",
+      "disposition": "GENERATED",
+      "episode_id": "test_scene_001_episode_000",
+      "goal_pose_xyz": [
+        2.762928,
+        8.040852,
+        -0.195
+      ],
+      "plan_hash": "28e8383060882575bafe21ef1b9e03e1678929d29910dec457b99a9d8c0e4574",
+      "plan_path": "/mns/datasets/dataset_v0/test/test_scene_001/test_scene_001_episode_000/episode_plan.yaml",
+      "planned_path_length_m": 3.837613261528974,
+      "planner_type": "privileged_grid_astar",
+      "planner_version": 2,
+      "route_bucket": "short",
+      "smoothed_waypoint_count": 5,
+      "start_pose_xyzyaw": [
+        -0.23674,
+        9.559136,
+        -0.009,
+        -1.152572
+      ],
+      "status": "PASS",
+      "straight_line_distance_m": 3.362022,
+      "strict_corner_cut_validation": true
+    },
+    {
+      "conservative_planning_collision_free": true,
+      "diagonal_policy": "require_both_orthogonal_cells_free",
+      "disposition": "GENERATED",
+      "episode_id": "test_scene_001_episode_001",
+      "goal_pose_xyz": [
+        1.076754,
+        7.839535,
+        -0.1795
+      ],
+      "plan_hash": "d01f45bc2dfc50f8d8db130f991085bb9c9f75ba0ca70d1df18fc5e19b9262d7",
+      "plan_path": "/mns/datasets/dataset_v0/test/test_scene_001/test_scene_001_episode_001/episode_plan.yaml",
+      "planned_path_length_m": 3.7940728734695224,
+      "planner_type": "privileged_grid_astar",
+      "planner_version": 2,
+      "route_bucket": "short",
+      "smoothed_waypoint_count": 5,
+      "start_pose_xyzyaw": [
+        3.743568,
+        9.754,
+        -0.048,
+        -1.670465
+      ],
+      "status": "PASS",
+      "straight_line_distance_m": 3.282846,
+      "strict_corner_cut_validation": true
+    },
+    {
+      "conservative_planning_collision_free": true,
+      "diagonal_policy": "require_both_orthogonal_cells_free",
+      "disposition": "GENERATED",
+      "episode_id": "test_scene_001_episode_002",
+      "goal_pose_xyz": [
+        -7.553257,
+        3.911443,
+        0.085
+      ],
+      "plan_hash": "f12504c9c7da1fb748231802de2d46b9ba0cbf4dc480cb87922a91d199a44f4d",
+      "plan_path": "/mns/datasets/dataset_v0/test/test_scene_001/test_scene_001_episode_002/episode_plan.yaml",
+      "planned_path_length_m": 6.773861074308275,
+      "planner_type": "privileged_grid_astar",
+      "planner_version": 2,
+      "route_bucket": "medium",
+      "smoothed_waypoint_count": 4,
+      "start_pose_xyzyaw": [
+        -3.137224,
+        -0.618218,
+        -0.03,
+        2.107232
+      ],
+      "status": "PASS",
+      "straight_line_distance_m": 6.326071,
+      "strict_corner_cut_validation": true
+    },
+    {
+      "conservative_planning_collision_free": true,
+      "diagonal_policy": "require_both_orthogonal_cells_free",
+      "disposition": "GENERATED",
+      "episode_id": "test_scene_001_episode_003",
+      "goal_pose_xyz": [
+        0.84871,
+        -5.995385,
+        -0.068
+      ],
+      "plan_hash": "0574ce14e975b1c4d97eed4e3997dbb7144c6eaba4d92de044e6bf983a23291b",
+      "plan_path": "/mns/datasets/dataset_v0/test/test_scene_001/test_scene_001_episode_003/episode_plan.yaml",
+      "planned_path_length_m": 7.218547808112322,
+      "planner_type": "privileged_grid_astar",
+      "planner_version": 2,
+      "route_bucket": "medium",
+      "smoothed_waypoint_count": 4,
+      "start_pose_xyzyaw": [
+        7.303854,
+        -7.408775,
+        -0.042,
+        3.141593
+      ],
+      "status": "PASS",
+      "straight_line_distance_m": 6.608068,
+      "strict_corner_cut_validation": true
+    },
+    {
+      "conservative_planning_collision_free": true,
+      "diagonal_policy": "require_both_orthogonal_cells_free",
+      "disposition": "GENERATED",
+      "episode_id": "test_scene_001_episode_004",
+      "goal_pose_xyz": [
+        -6.545025,
+        -5.981904,
+        -0.1045
+      ],
+      "plan_hash": "3e0a5beb7477c7af88190707dd2f0baeb73dbbbd916b9dff97e403c1104daf4f",
+      "plan_path": "/mns/datasets/dataset_v0/test/test_scene_001/test_scene_001_episode_004/episode_plan.yaml",
+      "planned_path_length_m": 9.47673593910154,
+      "planner_type": "privileged_grid_astar",
+      "planner_version": 2,
+      "route_bucket": "long",
+      "smoothed_waypoint_count": 5,
+      "start_pose_xyzyaw": [
+        1.17248,
+        -9.44288,
+        -0.115,
+        2.173084
+      ],
+      "status": "PASS",
+      "straight_line_distance_m": 8.458028,
+      "strict_corner_cut_validation": true
+    }
+  ],
+  "report_type": "plan_preflight_session",
+  "resources": {
+    "gpu_memory_total_mib": 8188.0,
+    "gpu_memory_total_mib_average": 8188.0,
+    "gpu_memory_total_mib_peak": 8188.0,
+    "gpu_memory_used_mib_average": 1889.6666666666667,
+    "gpu_memory_used_mib_peak": 2920.0,
+    "gpu_name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+    "gpu_power_w_average": 8.914166666666665,
+    "gpu_power_w_peak": 9.17,
+    "gpu_temperature_c_average": 46.0,
+    "gpu_temperature_c_peak": 46.0,
+    "gpu_utilization_percent_average": 0.25,
+    "gpu_utilization_percent_peak": 6.0,
+    "host_memory_used_mib_average": 4862.294270833333,
+    "host_memory_used_mib_peak": 4959.2734375,
+    "monotonic_time_s_average": 1468021.0434948083,
+    "monotonic_time_s_peak": 1468027.793094571,
+    "process_cpu_percent_average": 66.69166666666665,
+    "process_cpu_percent_peak": 110.7,
+    "process_rss_mib_average": 2776.1822916666665,
+    "process_rss_mib_peak": 3002.859375,
+    "samples": 24
+  },
+  "scene_content_hash": "b491c5343850c266903094c63daf125c93aa8a6146c4fcc869d4a725c42c31ee",
+  "scene_id": "test_scene_001",
+  "scene_load_time_s": 10.761448120931163,
+  "status": "PASS",
+  "terrain_statistics": {
+    "elevation_max_m": 0.21199999749660492,
+    "elevation_min_m": -0.21199999749660492,
+    "elevation_range_m": 0.42399999499320984,
+    "elevation_std_m": 0.10605260635042686,
+    "sample_count": 27748,
+    "slope_max_deg": 6.854568620100251,
+    "slope_mean_deg": 4.5865737257623,
+    "slope_median_deg": 4.791064081870598,
+    "slope_p90_deg": 6.257972963747801,
+    "slope_p95_deg": 6.467310739140845
+  },
+  "total_wall_time_s": 32.82869224110618
+}

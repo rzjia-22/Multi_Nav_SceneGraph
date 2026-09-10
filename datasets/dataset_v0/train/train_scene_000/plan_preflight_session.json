@@ -1,0 +1,182 @@
+{
+  "app_startup_time_s": 17.540463995188475,
+  "planner_version": 2,
+  "plans": [
+    {
+      "conservative_planning_collision_free": true,
+      "diagonal_policy": "require_both_orthogonal_cells_free",
+      "disposition": "REUSED_EXACT",
+      "episode_id": "train_scene_000_episode_000",
+      "goal_pose_xyz": [
+        5.140417,
+        0.561137,
+        0.1125
+      ],
+      "plan_hash": "e83cdb9b979bee8a7c99b065498beba3829c5727719ec8977516abd2f166e0b4",
+      "plan_path": "/mns/datasets/dataset_v0/train/train_scene_000/train_scene_000_episode_000/episode_plan.yaml",
+      "planned_path_length_m": 3.876087523692872,
+      "planner_type": "privileged_grid_astar",
+      "planner_version": 2,
+      "route_bucket": "short",
+      "smoothed_waypoint_count": 6,
+      "start_pose_xyzyaw": [
+        7.824682,
+        2.224877,
+        -0.027,
+        -3.01189
+      ],
+      "status": "PASS",
+      "straight_line_distance_m": 3.158054,
+      "strict_corner_cut_validation": true
+    },
+    {
+      "conservative_planning_collision_free": true,
+      "diagonal_policy": "require_both_orthogonal_cells_free",
+      "disposition": "REUSED_EXACT",
+      "episode_id": "train_scene_000_episode_001",
+      "goal_pose_xyz": [
+        -8.161183,
+        -2.646105,
+        0.085
+      ],
+      "plan_hash": "f647eb7135167d81760b8c002762e05e37060f80aa7d1770d8a1d81bdbdef296",
+      "plan_path": "/mns/datasets/dataset_v0/train/train_scene_000/train_scene_000_episode_001/episode_plan.yaml",
+      "planned_path_length_m": 5.4795608401027005,
+      "planner_type": "privileged_grid_astar",
+      "planner_version": 2,
+      "route_bucket": "medium",
+      "smoothed_waypoint_count": 5,
+      "start_pose_xyzyaw": [
+        -3.424504,
+        -1.620006,
+        -0.026,
+        3.060689
+      ],
+      "status": "PASS",
+      "straight_line_distance_m": 4.846545,
+      "strict_corner_cut_validation": true
+    },
+    {
+      "conservative_planning_collision_free": true,
+      "diagonal_policy": "require_both_orthogonal_cells_free",
+      "disposition": "REUSED_EXACT",
+      "episode_id": "train_scene_000_episode_002",
+      "goal_pose_xyz": [
+        -7.278099,
+        -4.978304,
+        -0.016
+      ],
+      "plan_hash": "463dd253a45783d5c63823ce9521bb27361bf7c99534282983230ff4f196fd47",
+      "plan_path": "/mns/datasets/dataset_v0/train/train_scene_000/train_scene_000_episode_002/episode_plan.yaml",
+      "planned_path_length_m": 5.373611022317194,
+      "planner_type": "privileged_grid_astar",
+      "planner_version": 2,
+      "route_bucket": "medium",
+      "smoothed_waypoint_count": 4,
+      "start_pose_xyzyaw": [
+        -3.771726,
+        -1.511612,
+        -0.017,
+        -2.605781
+      ],
+      "status": "PASS",
+      "straight_line_distance_m": 4.930782,
+      "strict_corner_cut_validation": true
+    },
+    {
+      "conservative_planning_collision_free": true,
+      "diagonal_policy": "require_both_orthogonal_cells_free",
+      "disposition": "REUSED_EXACT",
+      "episode_id": "train_scene_000_episode_003",
+      "goal_pose_xyz": [
+        -0.806598,
+        9.190142,
+        -0.028
+      ],
+      "plan_hash": "ccc0c9d7ecc8d0ec95597f9622916582e13f0d9d713bfc1e86ac86a782a0f61b",
+      "plan_path": "/mns/datasets/dataset_v0/train/train_scene_000/train_scene_000_episode_003/episode_plan.yaml",
+      "planned_path_length_m": 9.224800718362115,
+      "planner_type": "privileged_grid_astar",
+      "planner_version": 2,
+      "route_bucket": "long",
+      "smoothed_waypoint_count": 6,
+      "start_pose_xyzyaw": [
+        6.488525,
+        4.603694,
+        -0.075,
+        2.630362
+      ],
+      "status": "PASS",
+      "straight_line_distance_m": 8.617095,
+      "strict_corner_cut_validation": true
+    },
+    {
+      "conservative_planning_collision_free": true,
+      "diagonal_policy": "require_both_orthogonal_cells_free",
+      "disposition": "REUSED_EXACT",
+      "episode_id": "train_scene_000_episode_004",
+      "goal_pose_xyz": [
+        1.156275,
+        8.697776,
+        0.0295
+      ],
+      "plan_hash": "ed05e3318eaf1e4095651d7fea92d82bba2defd90cc3bf386371e230d1da2232",
+      "plan_path": "/mns/datasets/dataset_v0/train/train_scene_000/train_scene_000_episode_004/episode_plan.yaml",
+      "planned_path_length_m": 9.142922198884525,
+      "planner_type": "privileged_grid_astar",
+      "planner_version": 2,
+      "route_bucket": "long",
+      "smoothed_waypoint_count": 7,
+      "start_pose_xyzyaw": [
+        0.101545,
+        0.369626,
+        0.077,
+        1.500736
+      ],
+      "status": "PASS",
+      "straight_line_distance_m": 8.394673,
+      "strict_corner_cut_validation": true
+    }
+  ],
+  "report_type": "plan_preflight_session",
+  "resources": {
+    "gpu_memory_total_mib": 8188.0,
+    "gpu_memory_total_mib_average": 8188.0,
+    "gpu_memory_total_mib_peak": 8188.0,
+    "gpu_memory_used_mib_average": 1694.9411764705883,
+    "gpu_memory_used_mib_peak": 2920.0,
+    "gpu_name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+    "gpu_power_w_average": 8.635882352941177,
+    "gpu_power_w_peak": 8.85,
+    "gpu_temperature_c_average": 46.294117647058826,
+    "gpu_temperature_c_peak": 47.0,
+    "gpu_utilization_percent_average": 0.058823529411764705,
+    "gpu_utilization_percent_peak": 1.0,
+    "host_memory_used_mib_average": 4789.912913602941,
+    "host_memory_used_mib_peak": 4848.65234375,
+    "monotonic_time_s_average": 1467450.1661071356,
+    "monotonic_time_s_peak": 1467454.48588146,
+    "process_cpu_percent_average": 55.95882352941176,
+    "process_cpu_percent_peak": 105.0,
+    "process_rss_mib_average": 2671.435661764706,
+    "process_rss_mib_peak": 2991.33203125,
+    "samples": 17
+  },
+  "scene_content_hash": "07d75706a35ad4a7e02f696d2ce6ff5e0c1eae4e659651922a96e039e8e158f4",
+  "scene_id": "train_scene_000",
+  "scene_load_time_s": 8.829226748086512,
+  "status": "PASS",
+  "terrain_statistics": {
+    "elevation_max_m": 0.15600000321865082,
+    "elevation_min_m": -0.15600000321865082,
+    "elevation_range_m": 0.31200000643730164,
+    "elevation_std_m": 0.07804359189812853,
+    "sample_count": 27748,
+    "slope_max_deg": 3.6413915277214315,
+    "slope_mean_deg": 2.258428162596288,
+    "slope_median_deg": 2.361018570448284,
+    "slope_p90_deg": 3.0424526785009944,
+    "slope_p95_deg": 3.2376871532953504
+  },
+  "total_wall_time_s": 26.954451619181782
+}

@@ -1,0 +1,776 @@
+schema_version: 3
+dataset_version: dataset_v0
+scene_id: train_scene_002
+scene_seed: 41039
+split: train
+generator:
+  name: mns_research_forest
+  version: 3
+  rng: numpy.PCG64
+  isaac_sim: 5.1.0
+  isaac_lab: 2.3.1
+extent_m:
+- 24.0
+- 24.0
+factors:
+  terrain: moderate
+  ground: grass
+  lighting: dim
+  tree_density: medium
+asset_registry: config/research_forests/assets.yaml
+terrain:
+  profile: moderate
+  builder: isaaclab.terrains.TerrainImporter
+  generator:
+    subterrain_type: hf_wave
+    horizontal_scale_m: 0.2
+    vertical_scale_m: 0.001
+    amplitude_range_m:
+    - 0.15
+    - 0.27
+    num_waves: 3
+    difficulty_range:
+    - 0.45
+    - 0.8
+    maximum_design_slope_deg: 12.0
+  seed: 41039
+  statistics_source: IsaacLab TerrainGenerator.terrain_mesh
+  actual_geometry_statistics: null
+ground:
+  profile: grass
+  material_asset_id: grass
+  material_uri: '{NVIDIA_NUCLEUS_DIR}/Materials/Base/Natural/Grass_Countryside.mdl'
+  texture_scale:
+  - 0.35
+  - 0.35
+lighting:
+  profile: dim
+  sky_asset_id: kloofendal_clear_4k
+  dome_intensity: 350.0
+  sun_elevation_deg: 24.0
+  sun_azimuth_deg: 210.0
+  sun_intensity: 1450.0
+  exposure_stops: -0.5
+  sky_uri: '{ISAAC_NUCLEUS_DIR}/Materials/Textures/Skies/PolyHaven/kloofendal_43d_clear_puresky_4k.hdr'
+physics:
+  static_friction: 0.85
+  dynamic_friction: 0.7
+  restitution: 0.0
+semantics:
+  unknown: 0
+  ground: 1
+  tree_trunk: 2
+  foliage: 3
+  rock: 4
+  building: 5
+  robot: 6
+  other_object: 7
+  vegetation: 7
+tree_count: 42
+trees:
+- tree_id: tree_000
+  asset_id: nvidia_blue_berry_elder
+  position_m:
+  - 9.910403
+  - -6.47282
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 350.068252
+  scale_multiplier: 0.970753
+  spawn_scale:
+  - 0.00970753
+  - 0.00970753
+  - 0.00970753
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.262103
+    height_m: 4.077162
+- tree_id: tree_001
+  asset_id: nvidia_gray_birch
+  position_m:
+  - -9.747361
+  - 6.989339
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 196.361796
+  scale_multiplier: 1.153163
+  spawn_scale:
+  - 0.01153163
+  - 0.01153163
+  - 0.01153163
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.253696
+    height_m: 3.69012
+- tree_id: tree_002
+  asset_id: nvidia_gray_birch
+  position_m:
+  - 4.816268
+  - 9.936735
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 313.75226
+  scale_multiplier: 0.959964
+  spawn_scale:
+  - 0.00959964
+  - 0.00959964
+  - 0.00959964
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.211192
+    height_m: 3.071885
+- tree_id: tree_003
+  asset_id: nvidia_gray_birch
+  position_m:
+  - -2.48738
+  - -1.240639
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 298.438751
+  scale_multiplier: 1.134968
+  spawn_scale:
+  - 0.01134968
+  - 0.01134968
+  - 0.01134968
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.249693
+    height_m: 3.631898
+- tree_id: tree_004
+  asset_id: nvidia_blue_berry_elder
+  position_m:
+  - 5.70215
+  - 8.185911
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 141.836457
+  scale_multiplier: 1.019322
+  spawn_scale:
+  - 0.01019322
+  - 0.01019322
+  - 0.01019322
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.275217
+    height_m: 4.281154
+- tree_id: tree_005
+  asset_id: nvidia_blue_berry_elder
+  position_m:
+  - 2.640915
+  - 4.795535
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 188.159723
+  scale_multiplier: 1.065268
+  spawn_scale:
+  - 0.01065268
+  - 0.01065268
+  - 0.01065268
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.287622
+    height_m: 4.474125
+- tree_id: tree_006
+  asset_id: nvidia_gray_birch
+  position_m:
+  - -1.00852
+  - -7.825124
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 145.659834
+  scale_multiplier: 1.00006
+  spawn_scale:
+  - 0.0100006
+  - 0.0100006
+  - 0.0100006
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.220013
+    height_m: 3.200191
+- tree_id: tree_007
+  asset_id: nvidia_blue_berry_elder
+  position_m:
+  - -0.249038
+  - 3.705535
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 232.320632
+  scale_multiplier: 1.004528
+  spawn_scale:
+  - 0.01004528
+  - 0.01004528
+  - 0.01004528
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.271223
+    height_m: 4.219019
+- tree_id: tree_008
+  asset_id: nvidia_gray_birch
+  position_m:
+  - 7.99174
+  - 2.839378
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 353.007476
+  scale_multiplier: 1.02633
+  spawn_scale:
+  - 0.0102633
+  - 0.0102633
+  - 0.0102633
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.225793
+    height_m: 3.284257
+- tree_id: tree_009
+  asset_id: nvidia_blue_berry_elder
+  position_m:
+  - -4.307337
+  - -2.776212
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 61.77254
+  scale_multiplier: 0.89381
+  spawn_scale:
+  - 0.0089381
+  - 0.0089381
+  - 0.0089381
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.241329
+    height_m: 3.754004
+- tree_id: tree_010
+  asset_id: nvidia_gray_birch
+  position_m:
+  - 8.051024
+  - -0.446797
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 56.777759
+  scale_multiplier: 1.125628
+  spawn_scale:
+  - 0.01125628
+  - 0.01125628
+  - 0.01125628
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.247638
+    height_m: 3.602009
+- tree_id: tree_011
+  asset_id: nvidia_gray_birch
+  position_m:
+  - -5.339173
+  - -10.532795
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 212.835686
+  scale_multiplier: 0.968618
+  spawn_scale:
+  - 0.00968618
+  - 0.00968618
+  - 0.00968618
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.213096
+    height_m: 3.099578
+- tree_id: tree_012
+  asset_id: nvidia_blue_berry_elder
+  position_m:
+  - -10.487934
+  - -5.783428
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 151.700507
+  scale_multiplier: 0.944055
+  spawn_scale:
+  - 0.00944055
+  - 0.00944055
+  - 0.00944055
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.254895
+    height_m: 3.965029
+- tree_id: tree_013
+  asset_id: nvidia_blue_berry_elder
+  position_m:
+  - -5.431843
+  - 10.707591
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 315.171582
+  scale_multiplier: 1.071135
+  spawn_scale:
+  - 0.01071135
+  - 0.01071135
+  - 0.01071135
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.289207
+    height_m: 4.498768
+- tree_id: tree_014
+  asset_id: nvidia_blue_berry_elder
+  position_m:
+  - 5.994017
+  - -2.229181
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 250.338658
+  scale_multiplier: 0.950275
+  spawn_scale:
+  - 0.00950275
+  - 0.00950275
+  - 0.00950275
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.256574
+    height_m: 3.991154
+- tree_id: tree_015
+  asset_id: nvidia_blue_berry_elder
+  position_m:
+  - -7.807847
+  - -9.714064
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 121.76976
+  scale_multiplier: 1.011171
+  spawn_scale:
+  - 0.01011171
+  - 0.01011171
+  - 0.01011171
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.273016
+    height_m: 4.246919
+- tree_id: tree_016
+  asset_id: nvidia_blue_berry_elder
+  position_m:
+  - 7.841669
+  - -9.409375
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 221.022639
+  scale_multiplier: 1.041207
+  spawn_scale:
+  - 0.01041207
+  - 0.01041207
+  - 0.01041207
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.281126
+    height_m: 4.37307
+- tree_id: tree_017
+  asset_id: nvidia_blue_berry_elder
+  position_m:
+  - 9.344434
+  - 0.793857
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 53.408544
+  scale_multiplier: 0.998827
+  spawn_scale:
+  - 0.00998827
+  - 0.00998827
+  - 0.00998827
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.269683
+    height_m: 4.195075
+- tree_id: tree_018
+  asset_id: nvidia_gray_birch
+  position_m:
+  - 1.325685
+  - -4.225229
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 4.289083
+  scale_multiplier: 1.07624
+  spawn_scale:
+  - 0.0107624
+  - 0.0107624
+  - 0.0107624
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.236773
+    height_m: 3.443969
+- tree_id: tree_019
+  asset_id: nvidia_blue_berry_elder
+  position_m:
+  - -9.034721
+  - -0.821621
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 333.404347
+  scale_multiplier: 0.888954
+  spawn_scale:
+  - 0.00888954
+  - 0.00888954
+  - 0.00888954
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.240018
+    height_m: 3.733609
+- tree_id: tree_020
+  asset_id: nvidia_gray_birch
+  position_m:
+  - 2.829187
+  - 8.658703
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 143.241499
+  scale_multiplier: 1.148467
+  spawn_scale:
+  - 0.01148467
+  - 0.01148467
+  - 0.01148467
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.252663
+    height_m: 3.675095
+- tree_id: tree_021
+  asset_id: nvidia_blue_berry_elder
+  position_m:
+  - -1.874367
+  - -2.807305
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 352.635545
+  scale_multiplier: 0.921139
+  spawn_scale:
+  - 0.00921139
+  - 0.00921139
+  - 0.00921139
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.248707
+    height_m: 3.868783
+- tree_id: tree_022
+  asset_id: nvidia_gray_birch
+  position_m:
+  - 5.717357
+  - 0.389675
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 17.84814
+  scale_multiplier: 1.174677
+  spawn_scale:
+  - 0.01174677
+  - 0.01174677
+  - 0.01174677
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.258429
+    height_m: 3.758965
+- tree_id: tree_023
+  asset_id: nvidia_gray_birch
+  position_m:
+  - 2.915384
+  - -7.975918
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 40.576486
+  scale_multiplier: 1.030443
+  spawn_scale:
+  - 0.01030443
+  - 0.01030443
+  - 0.01030443
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.226697
+    height_m: 3.297417
+- tree_id: tree_024
+  asset_id: nvidia_gray_birch
+  position_m:
+  - 3.272981
+  - 0.397519
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 60.757438
+  scale_multiplier: 1.064675
+  spawn_scale:
+  - 0.01064675
+  - 0.01064675
+  - 0.01064675
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.234229
+    height_m: 3.406961
+- tree_id: tree_025
+  asset_id: nvidia_blue_berry_elder
+  position_m:
+  - -4.166346
+  - 1.333013
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 168.739021
+  scale_multiplier: 1.015917
+  spawn_scale:
+  - 0.01015917
+  - 0.01015917
+  - 0.01015917
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.274298
+    height_m: 4.266851
+- tree_id: tree_026
+  asset_id: nvidia_blue_berry_elder
+  position_m:
+  - -4.776087
+  - -1.013735
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 81.393836
+  scale_multiplier: 0.892238
+  spawn_scale:
+  - 0.00892238
+  - 0.00892238
+  - 0.00892238
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.240904
+    height_m: 3.747399
+- tree_id: tree_027
+  asset_id: nvidia_gray_birch
+  position_m:
+  - 1.437549
+  - -6.052464
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 1.453305
+  scale_multiplier: 1.081754
+  spawn_scale:
+  - 0.01081754
+  - 0.01081754
+  - 0.01081754
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.237986
+    height_m: 3.461612
+- tree_id: tree_028
+  asset_id: nvidia_blue_berry_elder
+  position_m:
+  - 8.531723
+  - 8.142627
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 193.527219
+  scale_multiplier: 0.90926
+  spawn_scale:
+  - 0.0090926
+  - 0.0090926
+  - 0.0090926
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.2455
+    height_m: 3.818892
+- tree_id: tree_029
+  asset_id: nvidia_gray_birch
+  position_m:
+  - -9.309543
+  - -3.349841
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 324.122275
+  scale_multiplier: 1.055017
+  spawn_scale:
+  - 0.01055017
+  - 0.01055017
+  - 0.01055017
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.232104
+    height_m: 3.376056
+- tree_id: tree_030
+  asset_id: nvidia_blue_berry_elder
+  position_m:
+  - -0.838782
+  - -0.997501
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 352.088713
+  scale_multiplier: 0.900192
+  spawn_scale:
+  - 0.00900192
+  - 0.00900192
+  - 0.00900192
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.243052
+    height_m: 3.780805
+- tree_id: tree_031
+  asset_id: nvidia_gray_birch
+  position_m:
+  - 3.516297
+  - -2.374695
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 222.841698
+  scale_multiplier: 1.054485
+  spawn_scale:
+  - 0.01054485
+  - 0.01054485
+  - 0.01054485
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.231987
+    height_m: 3.374353
+- tree_id: tree_032
+  asset_id: nvidia_gray_birch
+  position_m:
+  - 3.303787
+  - 2.854195
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 28.642313
+  scale_multiplier: 0.985687
+  spawn_scale:
+  - 0.00985687
+  - 0.00985687
+  - 0.00985687
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.216851
+    height_m: 3.154199
+- tree_id: tree_033
+  asset_id: nvidia_gray_birch
+  position_m:
+  - -2.240852
+  - 6.160938
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 125.227638
+  scale_multiplier: 1.024228
+  spawn_scale:
+  - 0.01024228
+  - 0.01024228
+  - 0.01024228
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.22533
+    height_m: 3.27753
+- tree_id: tree_034
+  asset_id: nvidia_gray_birch
+  position_m:
+  - -5.501965
+  - 7.956977
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 268.156769
+  scale_multiplier: 1.089692
+  spawn_scale:
+  - 0.01089692
+  - 0.01089692
+  - 0.01089692
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.239732
+    height_m: 3.487014
+- tree_id: tree_035
+  asset_id: nvidia_gray_birch
+  position_m:
+  - 1.304081
+  - 10.200951
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 30.983005
+  scale_multiplier: 1.106539
+  spawn_scale:
+  - 0.01106539
+  - 0.01106539
+  - 0.01106539
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.243439
+    height_m: 3.540925
+- tree_id: tree_036
+  asset_id: nvidia_gray_birch
+  position_m:
+  - -5.444383
+  - 3.561968
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 338.236494
+  scale_multiplier: 1.122754
+  spawn_scale:
+  - 0.01122754
+  - 0.01122754
+  - 0.01122754
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.247006
+    height_m: 3.592812
+- tree_id: tree_037
+  asset_id: nvidia_gray_birch
+  position_m:
+  - -8.926548
+  - -7.2466
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 81.704959
+  scale_multiplier: 1.000738
+  spawn_scale:
+  - 0.01000738
+  - 0.01000738
+  - 0.01000738
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.220162
+    height_m: 3.202363
+- tree_id: tree_038
+  asset_id: nvidia_gray_birch
+  position_m:
+  - 8.983845
+  - -2.967924
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 297.101204
+  scale_multiplier: 1.136755
+  spawn_scale:
+  - 0.01136755
+  - 0.01136755
+  - 0.01136755
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.250086
+    height_m: 3.637616
+- tree_id: tree_039
+  asset_id: nvidia_gray_birch
+  position_m:
+  - 1.575041
+  - 2.449782
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 313.266698
+  scale_multiplier: 1.006467
+  spawn_scale:
+  - 0.01006467
+  - 0.01006467
+  - 0.01006467
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.221423
+    height_m: 3.220694
+- tree_id: tree_040
+  asset_id: nvidia_blue_berry_elder
+  position_m:
+  - 1.81886
+  - 6.556763
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 145.948308
+  scale_multiplier: 0.887311
+  spawn_scale:
+  - 0.00887311
+  - 0.00887311
+  - 0.00887311
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.239574
+    height_m: 3.726705
+- tree_id: tree_041
+  asset_id: nvidia_gray_birch
+  position_m:
+  - -8.699536
+  - 8.271674
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 113.800055
+  scale_multiplier: 1.178941
+  spawn_scale:
+  - 0.01178941
+  - 0.01178941
+  - 0.01178941
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.259367
+    height_m: 3.772612
+review_views:
+  aerial:
+    eye_m:
+    - 0.0
+    - -0.5
+    - 30.0
+    target_m:
+    - 0.0
+    - 0.0
+    - 0.0
+  ground:
+    eye_xy_height_m:
+    - -9.0
+    - -8.0
+    - 0.5
+    target_xy_height_m:
+    - -2.0
+    - -1.0
+    - 1.1
+  mid_height:
+    eye_xy_height_m:
+    - 10.0
+    - -10.0
+    - 1.8
+    target_xy_height_m:
+    - 0.0
+    - 0.0
+    - 2.2
+  closeup:
+    anchor_tree_id: tree_002
+    distance_m: 4.0
+    camera_height_m: 1.6
+    target_height_m: 2.2
+content_hash: f0d779b1853688cf23377d4f0e69a4e9df2532d0aa838282d578a71fe95671ae

@@ -1,0 +1,58 @@
+schema_version: 2
+dataset_version: dataset_v0
+episode_id: validation_scene_001_episode_003
+episode_type: nominal_expert
+split: validation
+scene_id: validation_scene_001
+scene_seed: 51047
+scene_schema_version: 3
+scene_content_hash: ec8f27bc8fd927bc02a00ff1e52d471ec8146a69625c171471a76cbbc03d95f0
+robot_profile: diablo_standing_v0
+sensor_profile: d435i_navigation_v0
+planner:
+  type: privileged_grid_astar
+  version: 2
+  grid_resolution_m: 0.1
+  diagonal_policy: require_both_orthogonal_cells_free
+  smoothing: greedy_line_of_sight
+controller:
+  type: pure_pursuit
+  lookahead_m: 0.32
+  goal_tolerance_m: 0.18
+target_route_length_bucket: medium
+start_pose_xyzyaw:
+- -2.144129
+- -4.452447
+- 0.2245
+- 2.896614
+goal_pose_xyz:
+- -6.863418
+- -2.984479
+- 0.012
+straight_line_distance_m: 4.942329
+planned_path_length_m: 5.36596
+direct_line_collision_free: false
+planned_path:
+- - -2.1
+  - -4.5
+  - 0.2245
+- - -4.1
+  - -4.0
+  - 0.0985
+- - -4.3
+  - -3.8
+  - 0.08
+- - -4.4
+  - -3.4
+  - 0.063
+- - -4.8
+  - -3.1
+  - 0.0175
+- - -6.9
+  - -3.0
+  - 0.012
+configuration_hashes:
+  scene: ec8f27bc8fd927bc02a00ff1e52d471ec8146a69625c171471a76cbbc03d95f0
+  robot: c47aee2bddaa21316aefb22a0ebdada0df08e1cd855f2d4498968df7863bbeff
+  sensor: 77955182bfa7d429a4b418485637067ade75ac9a754429dba06fc1710b9844da
+plan_hash: 9376f7ca46c062f668d629314c2fe0ef562d38c701c421b7b9c8ba6b97c78aa4

@@ -1,0 +1,33 @@
+{
+  "factors": {
+    "ground": "grass",
+    "lighting": "bright",
+    "terrain": "gentle",
+    "tree_density": "low"
+  },
+  "missing_registry_assets": [],
+  "scene_content_hash": "2bcf35f576d2aabca674983118a1a714d2235c6bb3e653a9748e84e6689f6b41",
+  "scene_id": "test_scene_000",
+  "scene_load_time_s": 7.167543007060885,
+  "scene_seed": 61001,
+  "split": "test",
+  "stage_snapshot": "research_scenes/dataset_v0/test_scene_000/scene.usda",
+  "status": "PASS",
+  "terrain_statistics": {
+    "elevation_max_m": 0.15399999916553497,
+    "elevation_min_m": -0.15399999916553497,
+    "elevation_range_m": 0.30799999833106995,
+    "elevation_std_m": 0.07704239983217036,
+    "sample_count": 27748,
+    "slope_max_deg": 3.4455229208527753,
+    "slope_mean_deg": 2.229429468622844,
+    "slope_median_deg": 2.3084194706383845,
+    "slope_p90_deg": 3.0424518776001217,
+    "slope_p95_deg": 3.237683301910592
+  },
+  "tree_asset_distribution": {
+    "nvidia_blue_berry_elder": 6,
+    "nvidia_gray_birch": 22
+  },
+  "tree_count": 28
+}
