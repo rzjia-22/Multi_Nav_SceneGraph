@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: lint test validate build robotics-image robotics-ml-image simulation-image gpu-preflight isaac-compatibility isaac-minimal model-source models test-models probe-go2-upstream phase1 phase1-diffusion uav-mapping phase2 phase1-synthetic phase1-synthetic-diffusion phase2-synthetic accept-isaac-sensors accept-go2-motion accept-phase1 accept-uav accept-phase2 inspect-hydra dataset-v0-calibrate-terrain dataset-v0-scene-preview dataset-v0-view-scene dataset-v0-capture-scene-review dataset-v0-episode-benchmark dataset-v0-validate
+.PHONY: lint test validate build robotics-image robotics-ml-image simulation-image gpu-preflight isaac-compatibility isaac-minimal model-source models test-models probe-go2-upstream phase1 phase1-diffusion uav-mapping phase2 phase1-synthetic phase1-synthetic-diffusion phase2-synthetic accept-isaac-sensors accept-go2-motion accept-phase1 accept-uav accept-phase2 inspect-hydra dataset-v0-calibrate-terrain dataset-v0-scene-preview dataset-v0-view-scene dataset-v0-capture-scene-review dataset-v0-regenerate-pilot dataset-v0-batch-gate dataset-v0-plan-preflight dataset-v0-collect dataset-v0-validate
 
 lint:
 	python3 -m compileall -q ros_ws/src research_data tools tests
@@ -111,17 +111,17 @@ dataset-v0-calibrate-terrain:
 		--profiles /mns/config/research_forests/profiles.yaml \
 		--output /mns/config/research_forests/terrain_calibration.yaml --headless
 
-dataset-v0-episode-benchmark: dataset-v0-scene-preview
-	docker compose --profile simulation run --rm --entrypoint /mns/containers/simulation/dataset_entrypoint.sh simulation \
-		--scene /mns/research_scenes/dataset_v0/train_scene_000/scene.yaml \
-		--assets /mns/config/research_forests/assets.yaml \
-		--episode-id train_scene_000_episode_000 \
-		--output-directory /mns/artifacts/dataset_v0_preview \
-		--benchmark-output /mns/artifacts/dataset_v0_preview/train_scene_000_episode_000/benchmark_report.json \
-		--headless --enable_cameras
-	test -f artifacts/dataset_v0_preview/train_scene_000_episode_000/benchmark_report.json
-	docker compose --profile simulation run --rm --entrypoint /mns/containers/simulation/dataset_entrypoint.sh simulation \
-		--tool visualize-episode
+dataset-v0-regenerate-pilot:
+	python3 -m research_data.collect regenerate-pilot
+
+dataset-v0-batch-gate:
+	python3 -m research_data.collect batch-gate
+
+dataset-v0-plan-preflight:
+	python3 -m research_data.collect plan-preflight
+
+dataset-v0-collect:
+	python3 -m research_data.collect collect
 
 dataset-v0-validate:
 	docker compose --profile simulation run --rm --entrypoint /mns/containers/simulation/dataset_entrypoint.sh simulation \

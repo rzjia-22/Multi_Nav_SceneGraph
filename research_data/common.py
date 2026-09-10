@@ -52,5 +52,32 @@ def scene_paths(scene_id: str) -> tuple[Path, Path]:
     return directory / "scene.yaml", directory / "scene.usda"
 
 
+def manifest_scene(scene_id: str) -> dict[str, Any]:
+    manifest = load_yaml(ROOT / "config/datasets/dataset_v0_manifest.yaml")
+    matches = [item for item in manifest["scenes"] if item["scene_id"] == scene_id]
+    if len(matches) != 1:
+        raise ValueError(f"scene {scene_id!r} must appear exactly once in Dataset V0 manifest")
+    return matches[0]
+
+
+def manifest_episode(episode_id: str) -> tuple[dict[str, Any], dict[str, Any]]:
+    manifest = load_yaml(ROOT / "config/datasets/dataset_v0_manifest.yaml")
+    matches = [
+        (scene, episode)
+        for scene in manifest["scenes"]
+        for episode in scene["planned_episodes"]
+        if episode["episode_id"] == episode_id
+    ]
+    if len(matches) != 1:
+        raise ValueError(f"episode {episode_id!r} must appear exactly once in Dataset V0 manifest")
+    return matches[0]
+
+
+def dataset_scene_directory(scene_id: str) -> Path:
+    scene = manifest_scene(scene_id)
+    return ROOT / "datasets" / "dataset_v0" / scene["split"] / scene_id
+
+
 def episode_directory(episode_id: str) -> Path:
-    return ROOT / "artifacts" / "dataset_v0_preview" / episode_id
+    scene, _ = manifest_episode(episode_id)
+    return ROOT / "datasets" / "dataset_v0" / scene["split"] / scene["scene_id"] / episode_id

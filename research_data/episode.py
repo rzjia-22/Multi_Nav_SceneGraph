@@ -13,7 +13,7 @@ from .depth import ALIGNMENT_ALGORITHM, ALIGNMENT_VERSION, INVALID_DEPTH_CONVENT
 
 
 EPISODE_SCHEMA_VERSION = 2
-COLLECTOR_VERSION = "research_forest_collector_v2"
+COLLECTOR_VERSION = "research_forest_collector_v3"
 
 
 def write_episode(path: Path, payload: dict[str, Any], metadata: dict[str, Any]) -> dict[str, Any]:

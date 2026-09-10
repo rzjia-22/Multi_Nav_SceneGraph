@@ -3,16 +3,17 @@
 from __future__ import annotations
 
 import json
+import math
 from pathlib import Path
 import tempfile
 from typing import Any
 
 import numpy as np
 
-from .common import ROOT, load_yaml, scene_paths, stable_hash
+from .common import ROOT, dataset_scene_directory, file_hash, load_yaml, scene_paths, stable_hash
 from .depth import ALIGNMENT_ALGORITHM, ALIGNMENT_VERSION, align_depth_to_rgb
 from .episode import COLLECTOR_VERSION, EPISODE_SCHEMA_VERSION
-from .expert import occupancy_grid, path_collision_free, path_length
+from .expert import PLANNER_TYPE, PLANNER_VERSION, occupancy_grid, path_length, validate_plan
 from .forest import generate_scene
 
 
@@ -49,6 +50,9 @@ def validate_scene(scene_path: Path, deterministic: bool = True) -> dict[str, An
     assert scene["terrain"]["builder"] == "isaaclab.terrains.TerrainImporter"
     assert "waves" not in scene["terrain"]
     statistics = scene["terrain"]["actual_geometry_statistics"]
+    runtime_report_path = dataset_scene_directory(scene["scene_id"]) / "scene_runtime_report.json"
+    if statistics is None and runtime_report_path.exists():
+        statistics = json.loads(runtime_report_path.read_text(encoding="utf-8"))["terrain_statistics"]
     assert statistics and statistics["sample_count"] > 0
     assert statistics["slope_max_deg"] >= statistics["slope_p95_deg"] >= statistics["slope_median_deg"]
     assert {"unknown", "ground", "tree_trunk", "foliage", "robot", "other_object", "vegetation"} <= set(scene["semantics"])
@@ -86,6 +90,7 @@ def validate_scene(scene_path: Path, deterministic: bool = True) -> dict[str, An
         "terrain_statistics": statistics,
         "deterministic_regeneration": deterministic_match,
         "stage_snapshot": str(stage_snapshot.relative_to(ROOT)),
+        "runtime_report": str(runtime_report_path.relative_to(ROOT)) if runtime_report_path.exists() else None,
         "primitive_tree_visuals": False,
     }
 
@@ -102,10 +107,7 @@ def validate_episode(path: Path, plan_path: Path) -> dict[str, Any]:
     manifest_episode = next(item for item in manifest_scene["planned_episodes"] if item["episode_id"] == plan["episode_id"])
     assert plan["split"] == scene["split"] == manifest_scene["split"], "episode/scene split mismatch"
     assert plan["target_route_length_bucket"] == manifest_episode["target_route_length_bucket"], "episode length bucket differs from manifest"
-    planning_grid = occupancy_grid(scene, robot)
-    assert path_collision_free(planning_grid, plan["planned_path"]), (
-        "expert path violates conservative planning occupancy, including diagonal corner-cut constraints"
-    )
+    plan_report = validate_plan(scene, plan)
     with h5py.File(path, "r") as episode:
         assert int(episode.attrs["schema_version"]) == EPISODE_SCHEMA_VERSION
         metadata = json.loads(str(episode.attrs["metadata_json"]))
@@ -115,6 +117,17 @@ def validate_episode(path: Path, plan_path: Path) -> dict[str, Any]:
         assert metadata["success"] is True
         assert metadata["scene_schema_version"] == scene["schema_version"]
         assert metadata["scene_content_hash"] == scene["content_hash"] == plan["scene_content_hash"]
+        assert metadata["plan_hash"] == plan["plan_hash"]
+        assert metadata["planner_type"] == plan["planner"]["type"] == PLANNER_TYPE
+        assert int(metadata["planner_version"]) == int(plan["planner"]["version"]) == PLANNER_VERSION
+        assert metadata["configuration_hashes"]["scene"] == scene["content_hash"]
+        assert metadata["configuration_hashes"]["robot"] == plan["configuration_hashes"]["robot"]
+        assert metadata["configuration_hashes"]["sensor"] == plan["configuration_hashes"]["sensor"]
+        assert np.allclose(metadata["start_pose_xyzyaw"], plan["start_pose_xyzyaw"], atol=1.0e-7)
+        assert np.allclose(metadata["goal_pose_xyz"], plan["goal_pose_xyz"], atol=1.0e-7)
+        assert math.isclose(
+            float(metadata["planned_path_length_m"]), float(plan["planned_path_length_m"]), abs_tol=1.0e-7
+        )
         required = (
             "state/timestamp_s", "state/position_xyz", "state/orientation_xyzw",
             "state/linear_velocity_xyz", "state/angular_velocity_xyz", "state/command_vw",
@@ -128,7 +141,7 @@ def validate_episode(path: Path, plan_path: Path) -> dict[str, Any]:
         )
         for name in required:
             assert name in episode, f"missing HDF5 dataset: {name}"
-            assert not np.isnan(np.asarray(episode[name])).any(), f"NaN in {name}"
+            assert np.isfinite(np.asarray(episode[name])).all(), f"NaN/Inf in {name}"
         state_time = np.asarray(episode["state/timestamp_s"])
         imu_time = np.asarray(episode["imu/timestamp_s"])
         sensor_time = np.asarray(episode["sensors/timestamp_s"])
@@ -137,6 +150,7 @@ def validate_episode(path: Path, plan_path: Path) -> dict[str, Any]:
         assert "sensors/depth_raw_m" not in episode
         assert "sensors/depth_aligned_to_rgb_m" not in episode
         assert episode["sensors/depth_raw_z16"].shape[0] == rgb_count
+        assert episode["sensors/camera_pose_xyz_xyzw"].shape[0] == rgb_count
         assert episode["sensors/depth_raw_z16"].dtype == np.dtype("uint16")
         rgb = np.asarray(episode["sensors/rgb"])
         depth_z16 = np.asarray(episode["sensors/depth_raw_z16"])
@@ -145,6 +159,7 @@ def validate_episode(path: Path, plan_path: Path) -> dict[str, Any]:
         assert episode["calibration"].attrs["alignment_algorithm"] == ALIGNMENT_ALGORITHM
         assert int(episode["calibration"].attrs["alignment_version"]) == ALIGNMENT_VERSION
         assert episode["calibration"].attrs["invalid_depth_convention"] == "zero_is_invalid"
+        assert int(metadata["depth_storage"]["saturation_count"]) == 0
         aligned_depth = align_depth_to_rgb(
             depth_z16, depth_scale,
             np.asarray(episode["calibration/depth_intrinsics"]),
@@ -161,7 +176,15 @@ def validate_episode(path: Path, plan_path: Path) -> dict[str, Any]:
         assert episode["calibration/depth_intrinsics"].shape == (3, 3)
         positions = np.asarray(episode["state/position_xyz"])
         orientations = np.asarray(episode["state/orientation_xyzw"])
-        assert float(np.max(np.abs(orientations[:, :2]))) > 1.0e-4, "body roll/pitch never followed terrain normal"
+        if scene["factors"]["terrain"] == "flat":
+            assert float(np.max(np.abs(orientations[:, :2]))) <= 1.0e-4
+        else:
+            assert float(np.max(np.abs(orientations[:, :2]))) > 1.0e-4, "body roll/pitch never followed terrain normal"
+        stored_path = np.asarray(episode["expert/global_path_xyz"])
+        assert stored_path.shape == np.asarray(plan["planned_path"]).shape
+        assert np.allclose(stored_path, np.asarray(plan["planned_path"]), atol=1.0e-6), (
+            "HDF5 expert path differs from authoritative YAML plan"
+        )
         executed_length = float(np.linalg.norm(np.diff(positions, axis=0), axis=1).sum())
         goal_error = float(np.linalg.norm(positions[-1, :2] - np.asarray(plan["goal_pose_xyz"][:2])))
         assert goal_error <= float(plan["controller"]["goal_tolerance_m"]) + 0.08, f"goal error {goal_error:.3f} m"
@@ -176,12 +199,16 @@ def validate_episode(path: Path, plan_path: Path) -> dict[str, Any]:
             "depth_frames": int(rgb_count), "imu_samples": int(len(imu_time)), "pose_samples": int(len(state_time)),
             "planned_path_length_m": float(plan["planned_path_length_m"]), "executed_path_length_m": executed_length,
             "goal_error_m": goal_error, "collision_free_in_privileged_map": True,
-            "planned_path_collision_free": True,
+            "planned_path_collision_free": True, "strict_corner_cut_validation": True,
             "rgb_value_range": [int(rgb.min()), int(rgb.max())],
             "aligned_depth_valid_fraction": depth_valid_fraction,
             "episode_schema_version": EPISODE_SCHEMA_VERSION,
             "depth_dtype": "uint16",
             "depth_scale_m": depth_scale,
+            "planner_type": PLANNER_TYPE, "planner_version": PLANNER_VERSION,
+            "plan_hash": plan["plan_hash"], "hdf5_sha256": file_hash(path),
+            "route_bucket": plan["target_route_length_bucket"],
+            "smoothed_waypoint_count": plan_report["smoothed_waypoint_count"],
         }
 
 

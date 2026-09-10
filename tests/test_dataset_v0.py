@@ -87,6 +87,32 @@ def test_diagonal_transition_requires_both_orthogonal_sides_free():
     grid = _open_grid()
     grid.occupied[1, 2] = True
     assert not grid_transition_free(grid, (1, 1), (2, 2))
+
+
+def test_all_four_diagonal_directions_use_the_same_corner_rule():
+    for dx, dy in ((1, 1), (1, -1), (-1, 1), (-1, -1)):
+        grid = _open_grid()
+        current = (2, 2)
+        neighbor = (2 + dx, 2 + dy)
+        assert grid_transition_free(grid, current, neighbor)
+        grid.occupied[current[1], current[0] + dx] = True
+        assert not grid_transition_free(grid, current, neighbor)
+        grid.occupied[current[1], current[0] + dx] = False
+        grid.occupied[current[1] + dy, current[0]] = True
+        assert not grid_transition_free(grid, current, neighbor)
+
+
+def test_grid_transition_rejects_out_of_bounds_cells():
+    grid = _open_grid()
+    assert not grid_transition_free(grid, (-1, 1), (0, 1))
+    assert not grid_transition_free(grid, (1, 1), (-1, 1))
+    assert not grid_transition_free(grid, (1, 1), (3, 1))
+
+
+def test_long_line_of_sight_checks_every_corner_transition():
+    grid = _open_grid()
+    grid.occupied[1, 2] = True
+    assert not line_free(grid, grid.cell_to_world((1, 1)), grid.cell_to_world((3, 3)))
     grid.occupied[1, 2] = False
     grid.occupied[2, 1] = True
     assert not grid_transition_free(grid, (1, 1), (2, 2))

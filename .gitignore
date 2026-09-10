@@ -24,6 +24,8 @@ bags/
 research_data/work/
 artifacts/dataset_v0_preview/*.tmp
 artifacts/dataset_v0_preview/**/*.tmp
+datasets/dataset_v0/**/.episode.h5.inprogress
+datasets/dataset_v0/**/.episode_plan.yaml.inprogress
 
 
 # Isaac / NVIDIA caches

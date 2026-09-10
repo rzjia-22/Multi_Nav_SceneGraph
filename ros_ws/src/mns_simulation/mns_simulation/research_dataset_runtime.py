@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import argparse
+import gc
 import json
 import math
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -24,6 +26,7 @@ def parse_args():
     parser.add_argument("--episode-id", action="append", required=True)
     parser.add_argument("--output-directory", type=Path, required=True)
     parser.add_argument("--benchmark-output", type=Path, required=True)
+    parser.add_argument("--plan-only", action="store_true")
     parser.add_argument("--physics-rate", type=float, default=100.0)
     parser.add_argument("--maximum-duration", type=float, default=30.0)
     AppLauncher.add_app_launcher_args(parser)
@@ -58,47 +61,55 @@ class ResourceMonitor:
     def stop(self) -> dict:
         self._stop.set()
         self._thread.join(timeout=3.0)
-        if not self.samples:
+        return self.summarize()
+
+    def summarize(self, start: int = 0, end: int | None = None) -> dict:
+        samples = self.samples[start:end]
+        if not samples:
             return {"samples": 0}
-        numeric = sorted({key for sample in self.samples for key, value in sample.items() if isinstance(value, (int, float))})
-        report = {"samples": len(self.samples)}
+        numeric = sorted({key for sample in samples for key, value in sample.items() if isinstance(value, (int, float))})
+        report = {"samples": len(samples)}
         for key in numeric:
-            values = [float(sample[key]) for sample in self.samples if key in sample]
+            values = [float(sample[key]) for sample in samples if key in sample]
             report[f"{key}_average"] = sum(values) / len(values)
             report[f"{key}_peak"] = max(values)
-        for sample in self.samples:
+        for sample in samples:
             if "gpu_name" in sample:
                 report["gpu_name"] = sample["gpu_name"]
                 report["gpu_memory_total_mib"] = sample["gpu_memory_total_mib"]
                 break
         return report
 
+    def snapshot(self) -> dict:
+        sample: dict = {"monotonic_time_s": time.monotonic()}
+        try:
+            output = subprocess.check_output(
+                ["nvidia-smi", "--query-gpu=name,memory.used,memory.total,utilization.gpu,temperature.gpu,power.draw", "--format=csv,noheader,nounits"],
+                text=True, timeout=3,
+            ).strip().split(", ")
+            sample.update({
+                "gpu_name": output[0], "gpu_memory_used_mib": float(output[1]),
+                "gpu_memory_total_mib": float(output[2]), "gpu_utilization_percent": float(output[3]),
+                "gpu_temperature_c": float(output[4]), "gpu_power_w": float(output[5]),
+            })
+        except (OSError, subprocess.SubprocessError, ValueError, IndexError):
+            pass
+        if self.process is not None:
+            try:
+                memory = self.psutil.virtual_memory()
+                sample.update({
+                    "process_cpu_percent": float(self.process.cpu_percent(None)),
+                    "process_rss_mib": float(self.process.memory_info().rss / 1024**2),
+                    "host_memory_used_mib": float(memory.used / 1024**2),
+                })
+            except self.psutil.Error:
+                pass
+        self.samples.append(sample)
+        return sample
+
     def _sample_loop(self):
         while not self._stop.wait(0.5):
-            sample: dict = {}
-            try:
-                output = subprocess.check_output(
-                    ["nvidia-smi", "--query-gpu=name,memory.used,memory.total,utilization.gpu,temperature.gpu,power.draw", "--format=csv,noheader,nounits"],
-                    text=True, timeout=3,
-                ).strip().split(", ")
-                sample.update({
-                    "gpu_name": output[0], "gpu_memory_used_mib": float(output[1]),
-                    "gpu_memory_total_mib": float(output[2]), "gpu_utilization_percent": float(output[3]),
-                    "gpu_temperature_c": float(output[4]), "gpu_power_w": float(output[5]),
-                })
-            except (OSError, subprocess.SubprocessError, ValueError, IndexError):
-                pass
-            if self.process is not None:
-                try:
-                    memory = self.psutil.virtual_memory()
-                    sample.update({
-                        "process_cpu_percent": float(self.process.cpu_percent(None)),
-                        "process_rss_mib": float(self.process.memory_info().rss / 1024**2),
-                        "host_memory_used_mib": float(memory.used / 1024**2),
-                    })
-                except self.psutil.Error:
-                    pass
-            self.samples.append(sample)
+            self.snapshot()
 
 
 def rotation_matrix_to_xyzw(matrix):
@@ -166,16 +177,41 @@ def run_episode(simulation, stage, built, scene, robot, sensor, rgb_camera, dept
     import torch
     from pxr import Gf, UsdGeom
 
-    from research_data.common import dump_yaml, load_yaml, stable_hash
+    from research_data.common import file_hash, load_yaml, stable_hash
     from research_data.depth import ALIGNMENT_ALGORITHM, ALIGNMENT_VERSION, align_depth_to_rgb, alignment_round_trip_report, dequantize_depth_z16, quantize_depth_z16
     from research_data.episode import COLLECTOR_VERSION, EPISODE_SCHEMA_VERSION, write_episode
-    from research_data.expert import sample_episode_plan
+    from research_data.expert import PLANNER_VERSION, validate_plan
+    from research_data.validation import validate_episode, write_report
 
-    plan = sample_episode_plan(scene, episode_id, built.surface.height)
     episode_directory = output_directory / episode_id
     episode_directory.mkdir(parents=True, exist_ok=True)
     plan_path = episode_directory / "episode_plan.yaml"
-    dump_yaml(plan_path, plan)
+    if not plan_path.is_file():
+        raise FileNotFoundError(f"preflighted exact plan is missing: {plan_path}")
+    plan = load_yaml(plan_path)
+    plan_validation = validate_plan(scene, plan)
+    episode_path = episode_directory / "episode.h5"
+    temporary_episode_path = episode_directory / ".episode.h5.inprogress"
+    if episode_path.exists():
+        try:
+            prior_validation = validate_episode(episode_path, plan_path)
+        except Exception:
+            episode_path.unlink()
+        else:
+            return {
+                "status": "SKIPPED_VALID", "episode_id": episode_id, "success": True,
+                "planned_path_length_m": prior_validation["planned_path_length_m"],
+                "executed_path_length_m": prior_validation["executed_path_length_m"],
+                "simulated_duration_s": prior_validation["duration_s"], "wall_execution_time_s": 0.0,
+                "real_time_factor": None, "rgb_frames": prior_validation["rgb_frames"],
+                "depth_frames": prior_validation["depth_frames"], "imu_samples": prior_validation["imu_samples"],
+                "state_samples": prior_validation["pose_samples"], "plan_hash": plan["plan_hash"],
+                "planner_version": PLANNER_VERSION, "hdf5_sha256": prior_validation["hdf5_sha256"],
+                "hdf5_size_bytes": episode_path.stat().st_size, "validation": prior_validation,
+                "episode_path": str(episode_path), "plan_path": str(plan_path),
+            }
+    if temporary_episode_path.exists():
+        temporary_episode_path.unlink()
 
     physics_rate = float(ARGS.physics_rate)
     physics_dt = 1.0 / physics_rate
@@ -232,6 +268,9 @@ def run_episode(simulation, stage, built, scene, robot, sensor, rgb_camera, dept
     max_accel = float(robot["motion"]["max_linear_acceleration_mps2"])
     lookahead = float(plan["controller"]["lookahead_m"])
     goal_tolerance = float(plan["controller"]["goal_tolerance_m"])
+
+    rgb_camera.reset()
+    depth_camera.reset()
 
     print("MNS_DATASET_EPISODE_READY=" + json.dumps({"scene_id": scene["scene_id"], "episode_id": episode_id}), flush=True)
     execution_started = time.monotonic()
@@ -346,6 +385,7 @@ def run_episode(simulation, stage, built, scene, robot, sensor, rgb_camera, dept
         "episode_id": episode_id, "episode_type": plan["episode_type"], "split": plan["split"],
         "scene_id": scene["scene_id"], "scene_seed": scene["scene_seed"], "scene_schema_version": scene["schema_version"],
         "scene_content_hash": scene["content_hash"], "robot_profile": plan["robot_profile"], "sensor_profile": plan["sensor_profile"],
+        "plan_hash": plan["plan_hash"], "planner_version": plan["planner"]["version"],
         "start_pose_xyzyaw": plan["start_pose_xyzyaw"], "goal_pose_xyz": plan["goal_pose_xyz"],
         "planned_path_length_m": plan["planned_path_length_m"], "executed_path_length_m": executed_length,
         "success": True, "collision": False, "planner_type": plan["planner"]["type"], "controller_type": plan["controller"]["type"],
@@ -354,17 +394,29 @@ def run_episode(simulation, stage, built, scene, robot, sensor, rgb_camera, dept
         "rgb_depth_alignment": {"algorithm": ALIGNMENT_ALGORITHM, "version": ALIGNMENT_VERSION, "persistence": "derived_offline"},
         "depth_storage": quantization, "terrain_statistics": built.terrain_statistics,
         "camera_mount_episode_variation": episode_mount, "semantic_recorded": False,
+        "training_eligible": True,
     }
-    episode_path = episode_directory / "episode.h5"
-    storage = write_episode(episode_path, payload, metadata)
-    with h5py.File(episode_path, "r") as episode:
-        reconstructed = align_depth_to_rgb(
-            np.asarray(episode["sensors/depth_raw_z16"]), float(np.asarray(episode["calibration/depth_scale_m"])),
-            np.asarray(episode["calibration/depth_intrinsics"]), np.asarray(episode["calibration/rgb_intrinsics"]),
-            np.asarray(episode["calibration/depth_to_rgb_translation_m"]), np.asarray(episode["calibration/depth_to_rgb_rotation_xyzw"]),
-            tuple(np.asarray(episode["calibration/rgb_resolution_wh"], dtype=int)),
-        )
-    alignment = alignment_round_trip_report(np.asarray(online_aligned_reference), reconstructed)
+    try:
+        storage = write_episode(temporary_episode_path, payload, metadata)
+        with h5py.File(temporary_episode_path, "r") as episode:
+            reconstructed = align_depth_to_rgb(
+                np.asarray(episode["sensors/depth_raw_z16"]), float(np.asarray(episode["calibration/depth_scale_m"])),
+                np.asarray(episode["calibration/depth_intrinsics"]), np.asarray(episode["calibration/rgb_intrinsics"]),
+                np.asarray(episode["calibration/depth_to_rgb_translation_m"]), np.asarray(episode["calibration/depth_to_rgb_rotation_xyzw"]),
+                tuple(np.asarray(episode["calibration/rgb_resolution_wh"], dtype=int)),
+            )
+        alignment = alignment_round_trip_report(np.asarray(online_aligned_reference), reconstructed)
+        if alignment["valid_pixel_agreement"] != 1.0 or alignment["maximum_depth_difference_m"] != 0.0:
+            raise RuntimeError(f"persisted depth alignment differs from runtime reference: {alignment}")
+        validation = validate_episode(temporary_episode_path, plan_path)
+        hdf5_sha256 = file_hash(temporary_episode_path)
+        os.replace(temporary_episode_path, episode_path)
+        validation["hdf5_sha256"] = hdf5_sha256
+        write_report(episode_directory / "validation_report.json", validation)
+    except BaseException:
+        if temporary_episode_path.exists():
+            temporary_episode_path.unlink()
+        raise
     simulated_duration = float(payload["timestamp_s"][-1] - payload["timestamp_s"][0])
     return {
         "status": "PASS", "episode_id": episode_id, "success": True,
@@ -374,6 +426,10 @@ def run_episode(simulation, stage, built, scene, robot, sensor, rgb_camera, dept
         "depth_frames": len(payload["depth_raw_z16"]), "imu_samples": len(payload["imu_timestamp_s"]),
         "state_samples": len(payload["timestamp_s"]), "depth_quantization": quantization,
         "alignment_round_trip": alignment, "storage": storage,
+        "plan_validation": plan_validation, "plan_hash": plan["plan_hash"],
+        "planner_version": PLANNER_VERSION, "hdf5_sha256": hdf5_sha256,
+        "hdf5_size_bytes": episode_path.stat().st_size, "goal_error_m": validation["goal_error_m"],
+        "validation": validation,
         "surface_following": {
             "maximum_height_error_m": surface_height_error,
             "body_roll_range_deg": [float(roll.min()), float(roll.max())],
@@ -384,6 +440,23 @@ def run_episode(simulation, stage, built, scene, robot, sensor, rgb_camera, dept
     }
 
 
+def _memory_leak_report(endpoints: list[dict]) -> dict:
+    report = {"episode_endpoints": endpoints, "suspected": False, "signals": []}
+    for key, label in (("process_rss_mib", "RSS"), ("gpu_memory_used_mib", "VRAM")):
+        values = [float(item["end"][key]) for item in endpoints if key in item["end"]]
+        if len(values) < 3:
+            continue
+        deltas = [values[index] - values[index - 1] for index in range(1, len(values))]
+        monotonic_growth = all(delta > 128.0 for delta in deltas) and values[-1] - values[0] > 768.0
+        report[f"{key}_end_values"] = values
+        report[f"{key}_net_change"] = values[-1] - values[0]
+        report[f"{key}_monotonic_significant_growth"] = monotonic_growth
+        if monotonic_growth:
+            report["signals"].append(f"{label} grew by more than 128 MiB after every episode and over 768 MiB overall")
+    report["suspected"] = bool(report["signals"])
+    return report
+
+
 def main() -> int:
     import numpy as np
     import omni.usd
@@ -391,22 +464,80 @@ def main() -> int:
     import isaaclab.sim as sim_utils
     from isaaclab.sensors import Camera, CameraCfg
     from isaaclab.sim import SimulationContext
-    from research_data.common import ROOT, camera_intrinsics, load_yaml
-    from mns_simulation.research_forest_scene import build_research_forest
+    from research_data.common import ROOT, camera_intrinsics, dump_yaml, load_yaml, scene_paths
+    from research_data.episode import COLLECTOR_VERSION, EPISODE_SCHEMA_VERSION
+    from research_data.expert import PLANNER_VERSION, sample_episode_plan, validate_plan
+    from research_data.validation import write_report
+    from mns_simulation.research_forest_scene import build_research_forest, export_stage_snapshot
 
-    if not ARGS.enable_cameras:
-        raise ValueError("Dataset V0 collection requires --enable_cameras")
     scene, registry = load_yaml(ARGS.scene), load_yaml(ARGS.assets)
     robot = load_yaml(ROOT / "config/robots/diablo_standing.yaml")
     sensor = load_yaml(ROOT / "config/sensors/d435i_navigation_v0.yaml")
+    ARGS.output_directory.mkdir(parents=True, exist_ok=True)
     simulation = SimulationContext(sim_utils.SimulationCfg(dt=1.0 / float(ARGS.physics_rate), render_interval=1, device=ARGS.device))
     simulation.set_camera_view([13.0, 13.0, 12.0], [0.0, 0.0, 0.0])
     stage = omni.usd.get_context().get_stage()
     monitor = ResourceMonitor()
     monitor.start()
+    session_start_snapshot = monitor.snapshot()
     scene_started = time.monotonic()
     built = build_research_forest(simulation, scene, registry)
     scene_load_time = time.monotonic() - scene_started
+    _, stage_snapshot = scene_paths(scene["scene_id"])
+    export_stage_snapshot(stage_snapshot)
+    scene_report = {
+        "status": "PASS", "scene_id": scene["scene_id"], "scene_seed": scene["scene_seed"],
+        "split": scene["split"], "scene_content_hash": scene["content_hash"], "factors": scene["factors"],
+        "tree_count": len(scene["trees"]), "tree_asset_distribution": {
+            asset_id: sum(tree["asset_id"] == asset_id for tree in scene["trees"])
+            for asset_id in sorted({tree["asset_id"] for tree in scene["trees"]})
+        },
+        "terrain_statistics": built.terrain_statistics, "scene_load_time_s": scene_load_time,
+        "missing_registry_assets": built.missing_registry_assets,
+        "stage_snapshot": str(stage_snapshot.relative_to(ROOT)),
+    }
+    write_report(ARGS.output_directory / "scene_runtime_report.json", scene_report)
+
+    if ARGS.plan_only:
+        plan_results = []
+        for episode_id in ARGS.episode_id:
+            directory = ARGS.output_directory / episode_id
+            directory.mkdir(parents=True, exist_ok=True)
+            plan_path = directory / "episode_plan.yaml"
+            if plan_path.exists():
+                plan = load_yaml(plan_path)
+                disposition = "REUSED_EXACT"
+            else:
+                plan = sample_episode_plan(scene, episode_id, built.surface.height)
+                temporary_plan = directory / ".episode_plan.yaml.inprogress"
+                dump_yaml(temporary_plan, plan)
+                validate_plan(scene, plan)
+                os.replace(temporary_plan, plan_path)
+                disposition = "GENERATED"
+            result = validate_plan(scene, plan)
+            result["disposition"] = disposition
+            result["plan_path"] = str(plan_path)
+            plan_results.append(result)
+        resources = monitor.stop()
+        report = {
+            "status": "PASS", "report_type": "plan_preflight_session", "scene_id": scene["scene_id"],
+            "scene_content_hash": scene["content_hash"], "planner_version": PLANNER_VERSION,
+            "app_startup_time_s": APP_READY - PROCESS_START, "scene_load_time_s": scene_load_time,
+            "total_wall_time_s": time.monotonic() - PROCESS_START, "terrain_statistics": built.terrain_statistics,
+            "plans": plan_results, "resources": resources,
+        }
+        write_report(ARGS.benchmark_output, report)
+        print("MNS_DATASET_PLAN_PREFLIGHT_RESULT=" + json.dumps(report, sort_keys=True), flush=True)
+        return 0
+
+    if not ARGS.enable_cameras:
+        raise ValueError("Dataset V0 collection requires --enable_cameras")
+    missing_plans = [
+        episode_id for episode_id in ARGS.episode_id
+        if not (ARGS.output_directory / episode_id / "episode_plan.yaml").is_file()
+    ]
+    if missing_plans:
+        raise FileNotFoundError(f"plan-only preflight must run before collection: {missing_plans}")
 
     surrogate = UsdGeom.Xform.Define(stage, "/World/DiabloSurrogate")
     surrogate.AddTranslateOp()
@@ -435,37 +566,56 @@ def main() -> int:
     if not np.allclose(rgb_intrinsics, configured_rgb, rtol=2.0e-3, atol=0.6) or not np.allclose(depth_intrinsics, configured_depth, rtol=2.0e-3, atol=0.6):
         raise RuntimeError("Isaac camera intrinsics differ from d435i_navigation_v0")
     print("MNS_DATASET_SESSION_READY=" + json.dumps({"scene_id": scene["scene_id"], "episodes": ARGS.episode_id, "scene_load_time_s": scene_load_time}), flush=True)
-    results = [run_episode(simulation, stage, built, scene, robot, sensor, rgb_camera, depth_camera, rgb_intrinsics, depth_intrinsics, episode_id, ARGS.output_directory) for episode_id in ARGS.episode_id]
+
+    results, endpoints = [], []
+    for episode_id in ARGS.episode_id:
+        start_index = len(monitor.samples)
+        start_snapshot = monitor.snapshot()
+        result = run_episode(
+            simulation, stage, built, scene, robot, sensor, rgb_camera, depth_camera,
+            rgb_intrinsics, depth_intrinsics, episode_id, ARGS.output_directory,
+        )
+        end_snapshot = monitor.snapshot()
+        result["resources"] = monitor.summarize(start_index)
+        endpoints.append({"episode_id": episode_id, "start": start_snapshot, "end": end_snapshot})
+        results.append(result)
+        gc.collect()
+        try:
+            import torch
+
+            torch.cuda.empty_cache()
+        except (ImportError, RuntimeError):
+            pass
+    session_end_snapshot = monitor.snapshot()
     resources = monitor.stop()
-    result = results[0]
-    size, length, duration = result["storage"]["file_size_bytes"], result["executed_path_length_m"], result["simulated_duration_s"]
-    app_startup, write_time = APP_READY - PROCESS_START, result["storage"]["write_time_s"]
-    total_path = 455.0
-    projected_size = size / length * total_path
-    naive_time = 70.0 * (app_startup + scene_load_time + write_time) + result["wall_execution_time_s"] / length * total_path
-    batched_time = 14.0 * (app_startup + scene_load_time) + 70.0 * write_time + result["wall_execution_time_s"] / length * total_path
-    projection = {
-        "basis": {"episodes": 70, "scenes": 14, "total_planned_expert_path_m": total_path, "single_episode_warning": True},
-        "naive_wall_time_s_point": naive_time, "naive_wall_time_s_conservative_range": [0.75 * naive_time, 1.75 * naive_time],
-        "scene_batched_wall_time_s_point": batched_time, "scene_batched_wall_time_s_conservative_range": [0.75 * batched_time, 1.75 * batched_time],
-        "dataset_size_bytes_point": projected_size, "dataset_size_bytes_conservative_range": [0.70 * projected_size, 1.60 * projected_size],
-        "git_lfs_workspace_plus_local_object_bytes_point": 2.0 * projected_size,
-        "recommended_free_disk_bytes": max(20.0 * 1024**3, 4.0 * projected_size),
+    memory = _memory_leak_report(endpoints)
+    rtf_values = [float(item["real_time_factor"]) for item in results if item["real_time_factor"] is not None]
+    total_bytes = sum(int(item["hdf5_size_bytes"]) for item in results)
+    report = {
+        "status": "FAIL" if memory["suspected"] else "PASS",
+        "report_type": "scene_collection_session", "report_version": 2,
+        "scene_id": scene["scene_id"], "scene_content_hash": scene["content_hash"],
+        "scene_schema_version": scene["schema_version"], "collector_version": COLLECTOR_VERSION,
+        "episode_schema_version": EPISODE_SCHEMA_VERSION, "planner_version": PLANNER_VERSION,
+        "session": {
+            "app_startup_time_s": APP_READY - PROCESS_START, "scene_load_time_s": scene_load_time,
+            "total_wall_time_s": time.monotonic() - PROCESS_START,
+            "session_start_resources": session_start_snapshot, "session_end_resources": session_end_snapshot,
+        },
+        "episodes": results,
+        "aggregate": {
+            "all_pass": all(item["status"] in {"PASS", "SKIPPED_VALID"} for item in results) and not memory["suspected"],
+            "episode_count": len(results), "total_simulated_time_s": sum(float(item["simulated_duration_s"]) for item in results),
+            "total_episode_wall_time_s": sum(float(item["wall_execution_time_s"]) for item in results),
+            "total_hdf5_bytes": total_bytes, "mean_rtf": float(np.mean(rtf_values)) if rtf_values else None,
+            "minimum_rtf": min(rtf_values) if rtf_values else None,
+        },
+        "resources": resources, "memory_trend": memory, "terrain_statistics": built.terrain_statistics,
     }
-    total_memory = float(resources.get("gpu_memory_total_mib", 0.0))
-    peak_memory = float(resources.get("gpu_memory_used_mib_peak", 0.0))
-    recommendation = "NOT RECOMMENDED" if total_memory and peak_memory / total_memory >= 0.92 else ("USABLE BUT SLOW" if result["real_time_factor"] < 0.25 else "SUFFICIENT")
-    benchmark = {
-        "status": "PASS", "benchmark_version": 1, "scene_id": scene["scene_id"], "scene_content_hash": scene["content_hash"],
-        "scene_schema_version": scene["schema_version"], "collector_version": "research_forest_collector_v2", "episode_schema_version": 2,
-        "app_startup_time_s": app_startup, "scene_load_time_s": scene_load_time, "terrain_statistics": built.terrain_statistics,
-        "episode": result, "resources": resources,
-        "throughput": {"bytes_per_simulated_second": size / duration, "bytes_per_trajectory_meter": size / length},
-        "dataset_v0_projection": projection, "hardware_recommendation": {"RTX 4060 Laptop": recommendation},
-    }
-    ARGS.benchmark_output.parent.mkdir(parents=True, exist_ok=True)
-    ARGS.benchmark_output.write_text(json.dumps(benchmark, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    print("MNS_DATASET_RUNTIME_RESULT=" + json.dumps(benchmark, sort_keys=True), flush=True)
+    write_report(ARGS.benchmark_output, report)
+    print("MNS_DATASET_RUNTIME_RESULT=" + json.dumps(report, sort_keys=True), flush=True)
+    if memory["suspected"]:
+        raise RuntimeError(f"scene batch resource growth failed stability gate: {memory['signals']}")
     return 0
 
 

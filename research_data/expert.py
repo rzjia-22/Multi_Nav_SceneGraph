@@ -13,6 +13,17 @@ import numpy as np
 from .common import ROOT, dump_yaml, load_yaml, stable_hash
 
 
+PLANNER_TYPE = "privileged_grid_astar"
+PLANNER_VERSION = 2
+DIAGONAL_POLICY = "require_both_orthogonal_cells_free"
+SMOOTHING_POLICY = "greedy_line_of_sight"
+ROUTE_RANGES = {
+    "short": (3.0, 5.0),
+    "medium": (5.0, 8.0),
+    "long": (8.0, 10.0),
+}
+
+
 @dataclass(frozen=True)
 class Grid:
     half_extent: float
@@ -83,6 +94,8 @@ def grid_transition_free(
     if abs(dx) > 1 or abs(dy) > 1 or (dx == 0 and dy == 0):
         return False
     height, width = grid.occupied.shape
+    if not (0 <= current[0] < width and 0 <= current[1] < height):
+        return False
     if not (0 <= neighbor[0] < width and 0 <= neighbor[1] < height):
         return False
     if grid.occupied[neighbor[1], neighbor[0]]:
@@ -151,6 +164,70 @@ def path_length(path: list[tuple[float, float]] | list[list[float]]) -> float:
     return sum(math.dist(path[index - 1], path[index]) for index in range(1, len(path)))
 
 
+def plan_hash(plan: dict[str, Any]) -> str:
+    """Hash the exact authoritative plan, excluding its self-referential field."""
+    return stable_hash({key: value for key, value in plan.items() if key != "plan_hash"})
+
+
+def validate_plan(scene: dict[str, Any], plan: dict[str, Any]) -> dict[str, Any]:
+    """Validate the complete planner-v2 contract without starting RTX sensors."""
+    robot = load_yaml(ROOT / "config/robots/diablo_standing.yaml")
+    sensor = load_yaml(ROOT / "config/sensors/d435i_navigation_v0.yaml")
+    manifest = load_yaml(ROOT / "config/datasets/dataset_v0_manifest.yaml")
+    manifest_scene = next(item for item in manifest["scenes"] if item["scene_id"] == scene["scene_id"])
+    episode_spec = next(item for item in manifest_scene["planned_episodes"] if item["episode_id"] == plan["episode_id"])
+    assert plan["schema_version"] == 2
+    assert plan["dataset_version"] == "dataset_v0"
+    assert plan["scene_id"] == scene["scene_id"]
+    assert plan["scene_seed"] == scene["scene_seed"]
+    assert plan["scene_content_hash"] == scene["content_hash"]
+    assert plan["split"] == scene["split"] == manifest_scene["split"]
+    assert plan["target_route_length_bucket"] == episode_spec["target_route_length_bucket"]
+    assert plan["planner"] == {
+        "type": PLANNER_TYPE,
+        "version": PLANNER_VERSION,
+        "grid_resolution_m": 0.1,
+        "diagonal_policy": DIAGONAL_POLICY,
+        "smoothing": SMOOTHING_POLICY,
+    }
+    assert plan["configuration_hashes"]["scene"] == scene["content_hash"]
+    assert plan["configuration_hashes"]["robot"] == stable_hash(robot)
+    assert plan["configuration_hashes"]["sensor"] == stable_hash(sensor)
+    assert plan["plan_hash"] == plan_hash(plan), "plan hash mismatch"
+    route = plan["planned_path"]
+    assert len(route) >= 3, "formal route must remain non-trivial after smoothing"
+    grid = occupancy_grid(scene, robot, resolution=float(plan["planner"]["grid_resolution_m"]))
+    assert path_collision_free(grid, route), "planned path violates strict conservative occupancy"
+    assert not line_free(grid, tuple(plan["start_pose_xyzyaw"][:2]), tuple(plan["goal_pose_xyz"][:2]))
+    assert plan["direct_line_collision_free"] is False
+    start_cell = grid.world_to_cell(tuple(plan["start_pose_xyzyaw"][:2]))
+    goal_cell = grid.world_to_cell(tuple(plan["goal_pose_xyz"][:2]))
+    assert not grid.occupied[start_cell[1], start_cell[0]], "start is occupied"
+    assert not grid.occupied[goal_cell[1], goal_cell[0]], "goal is occupied"
+    measured_length = path_length(route)
+    assert math.isclose(measured_length, float(plan["planned_path_length_m"]), abs_tol=2.0e-6)
+    lower, upper = ROUTE_RANGES[plan["target_route_length_bucket"]]
+    assert lower <= measured_length <= upper
+    straight = float(plan["straight_line_distance_m"])
+    assert measured_length / straight >= 1.07
+    return {
+        "status": "PASS",
+        "episode_id": plan["episode_id"],
+        "planner_type": PLANNER_TYPE,
+        "planner_version": PLANNER_VERSION,
+        "diagonal_policy": DIAGONAL_POLICY,
+        "plan_hash": plan["plan_hash"],
+        "route_bucket": plan["target_route_length_bucket"],
+        "start_pose_xyzyaw": plan["start_pose_xyzyaw"],
+        "goal_pose_xyz": plan["goal_pose_xyz"],
+        "planned_path_length_m": measured_length,
+        "straight_line_distance_m": straight,
+        "smoothed_waypoint_count": len(route),
+        "strict_corner_cut_validation": True,
+        "conservative_planning_collision_free": True,
+    }
+
+
 def sample_episode_plan(
     scene: dict[str, Any], episode_id: str, surface_height: Callable[[float, float], float]
 ) -> dict[str, Any]:
@@ -161,9 +238,9 @@ def sample_episode_plan(
     episode_spec = next(item for item in manifest_scene["planned_episodes"] if item["episode_id"] == episode_id)
     bucket = episode_spec["target_route_length_bucket"]
     ranges = {
-        "short": {"route": (3.0, 5.0), "euclidean": (3.0, 4.6)},
-        "medium": {"route": (5.0, 8.0), "euclidean": (4.8, 7.4)},
-        "long": {"route": (8.0, 10.0), "euclidean": (7.2, 9.3)},
+        "short": {"route": ROUTE_RANGES["short"], "euclidean": (3.0, 4.6)},
+        "medium": {"route": ROUTE_RANGES["medium"], "euclidean": (4.8, 7.4)},
+        "long": {"route": ROUTE_RANGES["long"], "euclidean": (7.2, 9.3)},
     }[bucket]
     grid = occupancy_grid(scene, robot)
     episode_index = int(episode_id.rsplit("_", 1)[-1])
@@ -207,7 +284,13 @@ def sample_episode_plan(
         "scene_content_hash": scene["content_hash"],
         "robot_profile": robot["profile_id"],
         "sensor_profile": sensor["profile_id"],
-        "planner": {"type": "privileged_grid_astar", "grid_resolution_m": grid.resolution, "smoothing": "greedy_line_of_sight"},
+        "planner": {
+            "type": PLANNER_TYPE,
+            "version": PLANNER_VERSION,
+            "grid_resolution_m": grid.resolution,
+            "diagonal_policy": DIAGONAL_POLICY,
+            "smoothing": SMOOTHING_POLICY,
+        },
         "controller": {"type": "pure_pursuit", "lookahead_m": 0.32, "goal_tolerance_m": 0.18},
         "target_route_length_bucket": bucket,
         "start_pose_xyzyaw": [round(start[0], 6), round(start[1], 6), path[0][2], round(start_yaw, 6)],
@@ -222,7 +305,8 @@ def sample_episode_plan(
             "sensor": stable_hash(sensor),
         },
     }
-    plan["plan_hash"] = stable_hash(plan)
+    plan["plan_hash"] = plan_hash(plan)
+    validate_plan(scene, plan)
     return plan
 
 
