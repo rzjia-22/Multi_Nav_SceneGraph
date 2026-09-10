@@ -125,4 +125,4 @@ dataset-v0-collect:
 
 dataset-v0-validate:
 	docker compose --profile simulation run --rm --entrypoint /mns/containers/simulation/dataset_entrypoint.sh simulation \
-		--tool validate
+		--tool validate --require-complete

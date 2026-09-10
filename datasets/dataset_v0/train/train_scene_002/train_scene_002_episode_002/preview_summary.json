@@ -1,0 +1,18 @@
+{
+  "aligned_depth_valid_fraction": 0.6390359115266842,
+  "depth_frames": 127,
+  "duration_s": 12.74,
+  "episode_id": "train_scene_002_episode_002",
+  "executed_path_length_m": 7.420311232321316,
+  "hdf5_sha256": "47c22b3b07c6280caeb75da7a73875c86bc4f803420407d056f49c72bc00b9b6",
+  "hdf5_size_bytes": 79792746,
+  "planned_path_length_m": 7.581512,
+  "pose_samples": 638,
+  "rgb_frames": 127,
+  "rgb_value_range": [
+    2,
+    234
+  ],
+  "scene_id": "train_scene_002",
+  "success": true
+}

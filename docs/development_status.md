@@ -1,6 +1,6 @@
 # Development status
 
-This is the sole authoritative status document. Last updated 2026-09-10.
+This is the sole authoritative status document. Last updated 2026-09-11.
 
 ## Current milestone
 
@@ -16,13 +16,12 @@ RTX 4060 Laptop / 16 GB RAM machine. All four cameras remain exactly 10 Hz in
 simulation time, but wall throughput is about 2.4 Hz (RTF about 0.24). This is
 reported as a performance warning, not hidden as a functional failure.
 
-The current milestone is blocked before Dataset V0 bulk collection. The
-Research Forest visual domain remains accepted and unchanged. A strict audit
-of the 8-connected privileged A* found that the previously collected
-`train_scene_000_episode_000` plan used diagonal transitions beside occupied
-inflated-grid cells. Its sensor/storage evidence remains technically readable,
-but the episode is no longer valid under the corrected expert contract. Per
-the bulk-collection gate, none of the remaining 69 episodes was generated.
+Dataset V0 collection is complete. The accepted Research Forest visual domain,
+calibrated terrain profiles, D435i-like sensor contract, DIABLO surrogate
+profile, and scene-level split remained frozen. Planner v2 applies one strict
+no-corner-cut transition contract to A*, LOS smoothing, and final validation.
+All 70 exact plans passed preflight, and all 70 scene-batched RTX episodes pass
+HDF5 v2, provenance, sensor, execution, and aggregate validation.
 
 ## Dataset V0 milestone state
 
@@ -34,11 +33,11 @@ the bulk-collection gate, none of the remaining 69 episodes was generated.
 | Terrain profiles | GPU Isaac geometry validated | flat median/p90 0/0°; gentle 2.361/3.042°; moderate 4.609/6.054° |
 | DIABLO profile | provisional V0 assumptions | non-holonomic surrogate; mount/footprint/limits isolated in config |
 | D435i profile | official capabilities documented; HDF5 v2 validated | 640×360 RGB, 848×480 Z16 depth at 0.001 m scale; offline registration exact against runtime reference |
-| Expert/recorder | planner defect corrected; pilot invalidated | diagonal moves now require both orthogonal side cells free; the old pilot fails strict path validation |
+| Expert/recorder | GPU Isaac validated | planner v2; both orthogonal cells required for diagonals; exact plan/YAML/HDF5 provenance enforced |
 | Historical primitive preview | removed from current tree | rejected implementation and artifacts remain available at commit `85d3fe6` only |
 | Scene visualization | GPU Isaac validated | aerial, 0.5 m ground, mid-height and close vegetation RTX views; interactive X11 viewer reached ready state |
-| Scene/episode validation | BLOCKED | scene/storage checks pass, but the current pilot plan fails conservative diagonal corner validation |
-| Bulk generation | not started | batch gate is 0/4 and the remaining 69 episodes are absent |
+| Scene/episode validation | PASS | 70/70 strict plans and 70/70 finalized HDF5 v2 episodes; no split leakage |
+| Bulk generation | complete | train 50, validation 10, test 10; 21/28/21 short/medium/long |
 
 ## Milestone state
 
@@ -95,18 +94,24 @@ the bulk-collection gate, none of the remaining 69 episodes was generated.
   gentle mesh has 0.312 m elevation range, 2.361° median and 3.042° p90 slope.
   Scene load took 11.80 s; 1280×720 fixed-view rendering averaged 19.70 FPS and
   used about 5,132 MiB of 8,188 MiB VRAM.
-- Superseded Dataset V0 episode evidence: the manifest-defined short expert
-  planned 3.766 m and executed 3.653 m, but four smoothed segments contain at
-  least one diagonal transition whose adjacent orthogonal cell is occupied in
-  the planning-radius grid. The prior runtime/storage measurements therefore
-  remain engineering evidence only, not a valid Dataset V0 sample.
-- HDF5 v2 is 50,295,537 bytes. Z16 at 0.001 m/unit had 0 saturation,
+- Dataset V0 Planner v2 tests cover all four diagonal directions, occupied-side
+  rejection, grid boundaries, long LOS segments, smoothing, and serialized
+  plan revalidation. The exact 70/70 plan preflight passed with the frozen
+  21/28/21 route buckets.
+- The regenerated `train_scene_000_episode_000` strict plan hash is
+  `e83cdb9b...`; it planned 3.876 m, executed 3.736 m, reached 0.233 m goal
+  error, and passed collision/provenance/sensor/storage checks. The rejected
+  predecessor remains in history at `67a6b81` only.
+- HDF5 v2 Z16 at 0.001 m/unit had 0 saturation,
   0.250/0.475/0.501 mm mean/p95/max absolute error. Offline registration had
   100% valid-pixel agreement and zero depth difference from the in-memory
-  reference. Peak GPU memory was 5,217 MiB and peak process RAM 10,101 MiB.
-- A single-episode extrapolation projects about 6.27 GB for 455 m. Per-episode
-  restart is about 78.5 min; loading 14 scenes once is about 41.2 min. The
-  conclusion is **RTX 4060 Laptop: SUFFICIENT** for one Isaac worker.
+  reference across collection validation.
+- Dataset V0 final totals: 70 episodes, 458.516 m planned / 445.278 m executed,
+  779.88 s simulated, 7,781 RGB/depth frames, 78,155 IMU samples, 39,064
+  states, and 4,699,759,237 HDF5 bytes. Reported collection-session wall time
+  was 3,686.80 s. Mean/min RTF was 0.472/0.319; peak VRAM 5,345 MiB, peak
+  process RSS 11,202 MiB, and peak GPU temperature 51°C. No retries or
+  memory-leak sessions were reported. **RTX 4060 Laptop: SUFFICIENT.**
 - `make dataset-v0-view-scene` reached `MNS_RESEARCH_FOREST_READY` through the
   host Xauthority path, opened the non-headless Isaac renderer and was then
   stopped manually. It launched no robot, ROS graph, navigator or collector.
@@ -183,12 +188,6 @@ Stop bringup with Ctrl-C or `docker compose stop`; SIGINT reaches Python PID 1
 and Hydra saves all artifacts before both containers exit.
 
 ## Known remaining issues
-
-- Bulk Dataset V0 collection is intentionally stopped because the current
-  `train_scene_000_episode_000` expert plan is invalid under the corrected
-  no-corner-cut rule. The visual scene itself is already human accepted. A
-  future authorized run must regenerate episode 000 before the four-episode
-  same-scene batch gate and the remaining scenes can proceed.
 
 - The current 8 GB VRAM / 16 GB RAM laptop cannot run the four-camera/four-Hydra
   graph at wall-clock real time with the default 320×240, 10 Hz configuration.

@@ -29,23 +29,24 @@ Hydra's complete source graph is pinned in `upstream.repos`. The Isaac process
 uses the Jazzy client libraries bundled with Isaac's ROS bridge and publishes
 only standard message types; project ROS nodes run in the robotics image.
 
-## Dataset V0 pilot
+## Dataset V0
 
 A separate model-agnostic research-data path targets future standing-mode
-DIABLO + RealSense D435i local visual navigation. The fixed manifest plans 14
-scene-level-split scenes and 70 episodes. The Research Forest visual domain is
-approved and its official terrain profiles are geometry-calibrated. A strict
-8-connected A* audit found that the previously collected
-`train_scene_000_episode_000` plan cuts an inflated-grid obstacle corner, so it
-is no longer accepted as a formal episode. Bulk collection is stopped until
-that episode is explicitly regenerated under the corrected planner.
+DIABLO + RealSense D435i local visual navigation. Dataset V0 is complete:
+70/70 episodes across 14 strictly scene-level-split Research Forest scenes
+(50 train, 10 validation, 10 test). Every episode uses the corner-safe
+privileged A* planner v2, exact versioned plan provenance, and independently
+validated HDF5 schema v2 sensor data.
 
 ```bash
 make dataset-v0-scene-preview
 make dataset-v0-capture-scene-review
 make dataset-v0-view-scene       # interactive Isaac window; no robot/navigation
-make dataset-v0-episode-benchmark # exactly one versioned short episode
-make dataset-v0-validate
+make dataset-v0-regenerate-pilot # regenerate only episode_000
+make dataset-v0-batch-gate       # episodes 001-004 in one scene lifecycle
+make dataset-v0-plan-preflight   # strict plan-only check for all 70 tasks
+make dataset-v0-collect          # resume-safe, one Isaac lifecycle per scene
+make dataset-v0-validate         # requires all 70 finalized episodes
 ```
 
 Scene review and collection use the same Isaac Lab 2.3.1 builder, NVIDIA
@@ -53,6 +54,9 @@ vegetation USDs, Grass Countryside MDL, and Kloofendal HDR sky. The HDF5 v2
 episode stores lossless RGB, calibrated Z16 raw depth, pose/state, IMU and the
 expert path; registered depth is reproducibly derived offline. The integration
 forest remains independent and Hydra is not part of data collection.
+The canonical training-facing index is
+`datasets/dataset_v0/dataset_index.json`; the aggregate evidence is
+`datasets/dataset_v0/dataset_v0_collection_report.json`.
 See [Dataset V0](docs/dataset_v0.md).
 
 ## CPU-only quick start

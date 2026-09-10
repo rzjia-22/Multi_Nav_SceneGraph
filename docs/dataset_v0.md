@@ -1,6 +1,6 @@
-# Dataset V0 pilot
+# Dataset V0
 
-Dataset V0 is the model-independent pilot contract for future goal-directed
+Dataset V0 is the complete model-independent pilot corpus for future goal-directed
 local visual navigation by a standing-mode DIABLO carrying an Intel RealSense
 D435i. It validates the research-forest domain, privileged expert, camera
 geometry, storage, and held-out-scene split before bulk collection. It is not a
@@ -13,9 +13,9 @@ final training corpus and no navigation model is trained by this workflow.
 belongs to exactly one split. The 70 planned episodes contain 21 short (3–5 m),
 28 medium (5–8 m), and 21 long (8–10 m) expert-route buckets. The collector
 reads each episode's bucket from this manifest; it never invents a split or
-silently changes a bucket at runtime. The first collected
-`train_scene_000_episode_000` was invalidated by the strict diagonal-corner
-audit described below. The remaining 69 episodes have not been generated.
+silently changes a bucket at runtime. All 70 episodes are collected and
+validated: 50 train, 10 validation, and 10 test, with 21/28/21
+short/medium/long routes and no scene leakage.
 
 ## One Research Forest path
 
@@ -120,40 +120,37 @@ the in-memory aligned reference with 100% valid-pixel agreement and zero depth
 difference. Z16 quantization measured 0.250 mm mean, 0.475 mm p95, and
 0.501 mm maximum absolute error, with zero saturation.
 
-## Superseded pilot and measured cost
+## Planner and collection evidence
 
-The existing pilot remains at
-`artifacts/dataset_v0_preview/train_scene_000_episode_000/`, but it is no longer
-a valid Dataset V0 episode. The old 8-connected A* checked only the diagonal
-destination cell. A strict audit found four smoothed segments that transition
-diagonally while one adjacent orthogonal inflated-grid cell is occupied. The
-corrected planner permits a diagonal only when both side cells are free, and
-the validator now rejects this pilot. Its 70 RGB/depth frames, 703 IMU samples,
-351 states and benchmark remain useful implementation evidence only.
+Planner v2 uses an 8-connected 0.1 m grid, but a diagonal transition is legal
+only when both adjacent orthogonal cells are free. The same transition
+contract is used by A* expansion, greedy line-of-sight smoothing, and final
+path validation. All 70 exact plans passed plan-only preflight before bulk RTX
+collection. Each HDF5 stores planner type/version, plan hash, scene hash, and
+robot/sensor profile hashes; validation compares `expert/global_path_xyz`,
+start, goal, and length against the versioned plan YAML.
 
-The 50,295,537-byte HDF5 took 1.788 s to write. Compressed contributions are
-31,046,857 bytes RGB, 19,073,847 bytes depth, 49,208 bytes state/IMU/expert/
-calibration, and 125,625 bytes HDF5 metadata overhead. RTX execution took
-14.353 s (RTF 0.488) after 27.337 s application startup and 12.625 s scene
-load. The machine report in `benchmark_report.json` is authoritative.
+The regenerated `train_scene_000_episode_000` is the only current episode with
+that ID. Its strict plan hash is `e83cdb9b979bee8a7c99b065498beba3829c5727719ec8977516abd2f166e0b4`;
+the rejected pre-v2 evidence is recoverable at commit
+`67a6b81a34b230430a5743e3fe0bb9e3224dd98c`. The current episode planned
+3.876 m, executed 3.736 m, reached 0.233 m goal error, and passed collision,
+sensor, depth, timestamp, provenance, and storage validation.
 
-Extrapolating this single short episode across the manifest's approximately
-455 m gives a deliberately uncertain 6.27 GB point estimate (4.39–10.02 GB).
-Naively restarting for every episode projects 78.5 minutes (58.9–137.4), while
-loading each of 14 scenes once and executing five plans projects 41.2 minutes
-(30.9–72.1). A local Git LFS checkout plus its object copy is about 12.53 GB at
-the point estimate; 25.1 GB free is recommended. These are planning estimates,
-not promises: depth/RGB compressibility and route visibility differ by scene.
+The scene-batched run collected all 70 episodes in 15 measured Isaac sessions
+(the pilot and four-episode gate are separate sessions for scene 000). It
+recorded 458.516 m planned / 445.278 m executed path, 779.88 s simulated time,
+7,781 RGB/depth frames, 78,155 IMU samples, and 39,064 states. The 70 HDF5
+files total 4,699,759,237 bytes. Reported session wall time was 3,686.80 s,
+including 360.88 s application startup and 155.46 s scene loading. RTF mean
+was 0.472 (minimum 0.319); peak VRAM was 5,345 MiB, peak process RSS
+11,202 MiB, and peak GPU temperature 51°C. No session triggered the memory
+leak detector and no retry was needed. The conclusion remains
+**RTX 4060 Laptop: SUFFICIENT** for a single worker.
 
-On the RTX 4060 Laptop, peak VRAM was 5,217/8,188 MiB, process RAM 10,101 MiB,
-GPU utilization 5.7% average/19% peak, 46.5°C average/48°C peak, and
-10.1 W average/12.6 W peak during the sampled interval. The current conclusion
-is **RTX 4060 Laptop: SUFFICIENT** for a single-worker Dataset V0 collection;
-no server or parallel Isaac workers are justified by this pilot.
-
-The earlier primitive-domain preview is rejected and removed from current
-`main`; it remains recoverable at Git commit `85d3fe6` and is not supported by
-the current schema.
+The earlier primitive-domain preview is rejected and absent from current
+`main`; it remains recoverable at commit `85d3fe6` and is not accepted by the
+current schema.
 
 ## Commands and validation
 
@@ -162,18 +159,22 @@ make dataset-v0-calibrate-terrain       # measure all three official profiles
 make dataset-v0-scene-preview           # deterministic YAML + schematic
 make dataset-v0-capture-scene-review    # four fixed RTX views
 make dataset-v0-view-scene              # interactive Isaac, no navigation
-make dataset-v0-episode-benchmark       # blocked until episode_000 regeneration is authorized
-make dataset-v0-validate                # scene/split/runtime/HDF5/registration
+make dataset-v0-regenerate-pilot        # one strict short pilot
+make dataset-v0-batch-gate              # scene 000 episodes 001-004
+make dataset-v0-plan-preflight          # exact strict plans, all 70 tasks
+make dataset-v0-collect                 # resume-safe scene-batched collection
+make dataset-v0-validate                # requires 70/70 and rebuilds index/report
 ```
 
 The collector accepts repeated `--episode-id` arguments within one Isaac scene
-lifecycle, which is the future scene-batched path. No Make target currently
-generates all 70 episodes. Validation checks conservative no-corner-cut planned
+lifecycle and atomically finalizes an episode only after validation. Re-running
+collection skips an existing valid episode and regenerates partial/invalid
+output. Validation checks conservative no-corner-cut planned
 segments before accepting HDF5 evidence, in addition to the 14/70 scene-level
 split, manifest bucket, deterministic scene specification, actual terrain,
 hashes, shared builder, HDF5 v2, Z16 calibration, offline registration,
 timestamps, terrain-following pose, collision-free execution and non-stale RGB.
 
 Sources, YAML/JSON/CSV, the compact USDA, and review images use ordinary Git.
-The formal HDF5 is Git LFS. NVIDIA assets remain external URI references.
+All 70 formal HDF5 files are Git LFS objects. NVIDIA assets remain external URI references.
 Caches, Isaac logs, ROS bags, and temporary collection output are ignored.
