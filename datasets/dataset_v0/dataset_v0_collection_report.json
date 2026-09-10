@@ -1,23 +1,24 @@
 {
   "dataset": {
-    "episode_count": 60,
+    "episode_count": 70,
     "route_bucket_counts": {
-      "long": 18,
-      "medium": 24,
-      "short": 18
+      "long": 21,
+      "medium": 28,
+      "short": 21
     },
     "split_counts": {
+      "test": 10,
       "train": 50,
       "validation": 10
     },
-    "total_depth_frames": 6678,
-    "total_executed_path_m": 382.12181997299194,
-    "total_hdf5_bytes": 4004654403,
-    "total_imu_samples": 67071,
-    "total_planned_path_m": 393.475804,
-    "total_rgb_frames": 6678,
-    "total_simulated_duration_s": 669.2799999999999,
-    "total_state_samples": 33524
+    "total_depth_frames": 7781,
+    "total_executed_path_m": 445.2775650024414,
+    "total_hdf5_bytes": 4699759237,
+    "total_imu_samples": 78155,
+    "total_planned_path_m": 458.5159619999999,
+    "total_rgb_frames": 7781,
+    "total_simulated_duration_s": 779.8799999999999,
+    "total_state_samples": 39064
   },
   "dataset_version": "dataset_v0",
   "expert": {
@@ -25,57 +26,57 @@
     "collision_count": 0,
     "executed_to_planned_ratio": {
       "maximum": 0.985292028456032,
-      "mean": 0.9676723371446739,
-      "median": 0.970678283042558,
+      "mean": 0.9676096265951031,
+      "median": 0.9709830207914574,
       "minimum": 0.9381492179156941,
-      "p95": 0.9840303251489564
+      "p95": 0.9836366330506203
     },
     "goal_error_m": {
       "maximum": 0.2385698514641329,
-      "mean": 0.17711945490339417,
-      "median": 0.1732306442212904,
+      "mean": 0.17641873071570993,
+      "median": 0.17222630592032523,
       "minimum": 0.13089304342173838,
-      "p95": 0.22744859390903355
+      "p95": 0.22430858612309224
     },
     "success_rate": 1.0
   },
   "report_version": 1,
   "resources": {
-    "collection_session_count": 13,
+    "collection_session_count": 15,
     "memory_leak_sessions": [],
     "peak_gpu_temperature_c": 51.0,
     "peak_process_rss_mib": 11202.14453125,
-    "peak_vram_mib": 5333.0,
+    "peak_vram_mib": 5345.0,
     "rtf": {
       "maximum": 0.6471035883536275,
-      "mean": 0.4676497326264449,
-      "median": 0.4657921738245915,
+      "mean": 0.47202365381614503,
+      "median": 0.46850003410126173,
       "minimum": 0.3190103225378959,
-      "p95": 0.5336149581009453
+      "p95": 0.5398573551830534
     },
-    "total_app_startup_time_s": 316.248580200132,
-    "total_reported_wall_time_s": 3182.7097648112103,
-    "total_scene_load_time_s": 136.02465658145957
+    "total_app_startup_time_s": 360.8839612461161,
+    "total_reported_wall_time_s": 3686.7978881991003,
+    "total_scene_load_time_s": 155.45778744341806
   },
   "retries": [],
   "scene_factor_episode_counts": {
     "ground": {
-      "bare_soil": 30,
-      "grass": 30
+      "bare_soil": 35,
+      "grass": 35
     },
     "lighting": {
-      "bright": 20,
+      "bright": 25,
       "dim": 20,
-      "normal": 20
+      "normal": 25
     },
     "terrain_profile": {
       "flat": 20,
-      "gentle": 20,
-      "moderate": 20
+      "gentle": 25,
+      "moderate": 25
     },
     "tree_density": {
-      "high": 20,
-      "low": 15,
+      "high": 25,
+      "low": 20,
       "medium": 25
     }
   },
@@ -445,5 +446,5 @@
       "tree_count": 56
     }
   ],
-  "status": "PARTIAL"
+  "status": "PASS"
 }
