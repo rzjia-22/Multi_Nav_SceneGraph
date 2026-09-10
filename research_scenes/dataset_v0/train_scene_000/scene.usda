@@ -92,7 +92,7 @@
     endTimeCode = 100
     metersPerUnit = 1
     startTimeCode = 0
-    timeCodesPerSecond = 60
+    timeCodesPerSecond = 100
     upAxis = "Z"
 )
 
@@ -131,7 +131,7 @@ def PhysicsScene "physicsScene" (
     uniform uint physxScene:minVelocityIterationCount = 0
     custom bool physxScene:solveArticulationContactLast = 0
     uniform token physxScene:solverType = "TGS"
-    uint physxScene:timeStepsPerSecond = 60
+    uint physxScene:timeStepsPerSecond = 100
 
     def Material "defaultMaterial" (
         prepend apiSchemas = ["PhysicsMaterialAPI", "PhysxMaterialAPI"]

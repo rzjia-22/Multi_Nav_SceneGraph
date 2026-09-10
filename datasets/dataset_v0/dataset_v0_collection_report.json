@@ -1,0 +1,103 @@
+{
+  "dataset": {
+    "episode_count": 5,
+    "route_bucket_counts": {
+      "long": 2,
+      "medium": 2,
+      "short": 1
+    },
+    "split_counts": {
+      "train": 5
+    },
+    "total_depth_frames": 563,
+    "total_executed_path_m": 32.2806453704834,
+    "total_hdf5_bytes": 303687134,
+    "total_imu_samples": 5668,
+    "total_planned_path_m": 33.096983,
+    "total_rgb_frames": 563,
+    "total_simulated_duration_s": 56.56000000000001,
+    "total_state_samples": 2833
+  },
+  "dataset_version": "dataset_v0",
+  "expert": {
+    "bucket_compliance": true,
+    "collision_count": 0,
+    "executed_to_planned_ratio": {
+      "maximum": 0.9851928799670543,
+      "mean": 0.9726607945360854,
+      "median": 0.9712741113014393,
+      "minimum": 0.9628217952637709,
+      "p95": 0.9841954739283827
+    },
+    "goal_error_m": {
+      "maximum": 0.23341988163464406,
+      "mean": 0.20004668292721753,
+      "median": 0.21572330175136975,
+      "minimum": 0.15794653517947124,
+      "p95": 0.23090688865832196
+    },
+    "success_rate": 1.0
+  },
+  "report_version": 1,
+  "resources": {
+    "collection_session_count": 2,
+    "memory_leak_sessions": [],
+    "peak_gpu_temperature_c": 51.0,
+    "peak_process_rss_mib": 10060.0234375,
+    "peak_vram_mib": 5217.0,
+    "rtf": {
+      "maximum": 0.6471035883536275,
+      "mean": 0.5058369673587593,
+      "median": 0.5240275879416499,
+      "minimum": 0.3190103225378959,
+      "p95": 0.6242810143614489
+    },
+    "total_app_startup_time_s": 39.03034973703325,
+    "total_reported_wall_time_s": 291.88956595910713,
+    "total_scene_load_time_s": 19.390712978783995
+  },
+  "retries": [],
+  "scene_factor_episode_counts": {
+    "ground": {
+      "grass": 5
+    },
+    "lighting": {
+      "normal": 5
+    },
+    "terrain_profile": {
+      "gentle": 5
+    },
+    "tree_density": {
+      "medium": 5
+    }
+  },
+  "scene_reports": [
+    {
+      "content_hash": "07d75706a35ad4a7e02f696d2ce6ff5e0c1eae4e659651922a96e039e8e158f4",
+      "deterministic_regeneration": true,
+      "primitive_tree_visuals": false,
+      "runtime_report": "datasets/dataset_v0/train/train_scene_000/scene_runtime_report.json",
+      "scene_id": "train_scene_000",
+      "stage_snapshot": "research_scenes/dataset_v0/train_scene_000/scene.usda",
+      "status": "PASS",
+      "terrain_statistics": {
+        "elevation_max_m": 0.15600000321865082,
+        "elevation_min_m": -0.15600000321865082,
+        "elevation_range_m": 0.31200000643730164,
+        "elevation_std_m": 0.07804359189812853,
+        "sample_count": 27748,
+        "slope_max_deg": 3.6413915277214315,
+        "slope_mean_deg": 2.25842818509723,
+        "slope_median_deg": 2.361019071736405,
+        "slope_p90_deg": 3.0424526785009944,
+        "slope_p95_deg": 3.2376876652726585
+      },
+      "tree_asset_ids": [
+        "nvidia_blue_berry_elder",
+        "nvidia_gray_birch"
+      ],
+      "tree_count": 42
+    }
+  ],
+  "status": "PARTIAL"
+}

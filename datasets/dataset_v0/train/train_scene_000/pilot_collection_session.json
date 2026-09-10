@@ -1,0 +1,261 @@
+{
+  "aggregate": {
+    "all_pass": true,
+    "episode_count": 1,
+    "mean_rtf": 0.6471035883536275,
+    "minimum_rtf": 0.6471035883536275,
+    "total_episode_wall_time_s": 11.064689068123698,
+    "total_hdf5_bytes": 52128214,
+    "total_simulated_time_s": 7.16
+  },
+  "collector_version": "research_forest_collector_v3",
+  "episode_schema_version": 2,
+  "episodes": [
+    {
+      "alignment_round_trip": {
+        "common_valid_pixels": 11422777,
+        "maximum_depth_difference_m": 0.0,
+        "mean_depth_difference_m": 0.0,
+        "pixel_count": 16358400,
+        "registration_coverage": 0.698282044698748,
+        "valid_pixel_agreement": 1.0
+      },
+      "depth_frames": 71,
+      "depth_quantization": {
+        "depth_scale_m": 0.001,
+        "invalid_convention": "zero_is_invalid",
+        "maximum_absolute_error_m": 0.0005006790161132812,
+        "mean_absolute_error_m": 0.0002500252448953688,
+        "p95_absolute_error_m": 0.0004749298095703125,
+        "saturation_count": 0,
+        "valid_range_m": [
+          0.2,
+          10.0
+        ]
+      },
+      "episode_id": "train_scene_000_episode_000",
+      "episode_path": "/mns/datasets/dataset_v0/train/train_scene_000/train_scene_000_episode_000/episode.h5",
+      "executed_path_length_m": 3.735809510899278,
+      "goal_error_m": 0.23341988163464406,
+      "hdf5_sha256": "3d9f3d1a9ae3906de27828e83472df3eaad2ebc8553ace188c66ea7f97107ea4",
+      "hdf5_size_bytes": 52128214,
+      "imu_samples": 718,
+      "plan_hash": "e83cdb9b979bee8a7c99b065498beba3829c5727719ec8977516abd2f166e0b4",
+      "plan_path": "/mns/datasets/dataset_v0/train/train_scene_000/train_scene_000_episode_000/episode_plan.yaml",
+      "plan_validation": {
+        "conservative_planning_collision_free": true,
+        "diagonal_policy": "require_both_orthogonal_cells_free",
+        "episode_id": "train_scene_000_episode_000",
+        "goal_pose_xyz": [
+          5.140417,
+          0.561137,
+          0.1125
+        ],
+        "plan_hash": "e83cdb9b979bee8a7c99b065498beba3829c5727719ec8977516abd2f166e0b4",
+        "planned_path_length_m": 3.876087523692872,
+        "planner_type": "privileged_grid_astar",
+        "planner_version": 2,
+        "route_bucket": "short",
+        "smoothed_waypoint_count": 6,
+        "start_pose_xyzyaw": [
+          7.824682,
+          2.224877,
+          -0.027,
+          -3.01189
+        ],
+        "status": "PASS",
+        "straight_line_distance_m": 3.158054,
+        "strict_corner_cut_validation": true
+      },
+      "planned_path_length_m": 3.876088,
+      "planner_version": 2,
+      "real_time_factor": 0.6471035883536275,
+      "resources": {
+        "gpu_memory_total_mib": 8188.0,
+        "gpu_memory_total_mib_average": 8188.0,
+        "gpu_memory_total_mib_peak": 8188.0,
+        "gpu_memory_used_mib_average": 5200.205128205128,
+        "gpu_memory_used_mib_peak": 5217.0,
+        "gpu_name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+        "gpu_power_w_average": 10.918974358974356,
+        "gpu_power_w_peak": 13.31,
+        "gpu_temperature_c_average": 49.8974358974359,
+        "gpu_temperature_c_peak": 51.0,
+        "gpu_utilization_percent_average": 9.333333333333334,
+        "gpu_utilization_percent_peak": 28.0,
+        "host_memory_used_mib_average": 12062.392928685897,
+        "host_memory_used_mib_peak": 12207.734375,
+        "monotonic_time_s_average": 1466905.742336932,
+        "monotonic_time_s_peak": 1466915.335546729,
+        "process_cpu_percent_average": 1735.8999999999994,
+        "process_cpu_percent_peak": 2892.6,
+        "process_rss_mib_average": 8971.159555288461,
+        "process_rss_mib_peak": 9093.4140625,
+        "samples": 39
+      },
+      "rgb_frames": 71,
+      "simulated_duration_s": 7.16,
+      "state_samples": 359,
+      "status": "PASS",
+      "storage": {
+        "compressed_dataset_contributions_bytes": {
+          "depth": 19484235,
+          "hdf5_metadata_overhead": 128491,
+          "rgb": 32465232,
+          "state_imu_expert_calibration": 50256
+        },
+        "disk_write_throughput_bytes_per_s": 38229764.83226623,
+        "file_size_bytes": 52128214,
+        "write_time_s": 1.3635504751000553
+      },
+      "success": true,
+      "surface_following": {
+        "body_pitch_range_deg": [
+          -2.9062991339179107,
+          0.32075474520489805
+        ],
+        "body_roll_range_deg": [
+          -2.2851069193018736,
+          2.0836378164554628
+        ],
+        "maximum_height_error_m": 0.0,
+        "pose_composition": "terrain_normal_then_navigation_yaw_then_camera_mount_then_correlated_motion"
+      },
+      "validation": {
+        "aligned_depth_valid_fraction": 0.698282044698748,
+        "collision_free_in_privileged_map": true,
+        "depth_dtype": "uint16",
+        "depth_frames": 71,
+        "depth_scale_m": 0.001,
+        "duration_s": 7.16,
+        "episode_id": "train_scene_000_episode_000",
+        "episode_schema_version": 2,
+        "executed_path_length_m": 3.735809803009033,
+        "goal_error_m": 0.23341988163464406,
+        "hdf5_sha256": "3d9f3d1a9ae3906de27828e83472df3eaad2ebc8553ace188c66ea7f97107ea4",
+        "imu_samples": 718,
+        "plan_hash": "e83cdb9b979bee8a7c99b065498beba3829c5727719ec8977516abd2f166e0b4",
+        "planned_path_collision_free": true,
+        "planned_path_length_m": 3.876088,
+        "planner_type": "privileged_grid_astar",
+        "planner_version": 2,
+        "pose_samples": 359,
+        "rgb_frames": 71,
+        "rgb_value_range": [
+          1,
+          241
+        ],
+        "route_bucket": "short",
+        "smoothed_waypoint_count": 6,
+        "status": "PASS",
+        "strict_corner_cut_validation": true,
+        "success": true
+      },
+      "wall_execution_time_s": 11.064689068123698
+    }
+  ],
+  "memory_trend": {
+    "episode_endpoints": [
+      {
+        "end": {
+          "gpu_memory_total_mib": 8188.0,
+          "gpu_memory_used_mib": 5217.0,
+          "gpu_name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+          "gpu_power_w": 9.09,
+          "gpu_temperature_c": 50.0,
+          "gpu_utilization_percent": 1.0,
+          "host_memory_used_mib": 11787.82421875,
+          "monotonic_time_s": 1466915.335546729,
+          "process_cpu_percent": 0.0,
+          "process_rss_mib": 8638.77734375
+        },
+        "episode_id": "train_scene_000_episode_000",
+        "start": {
+          "gpu_memory_total_mib": 8188.0,
+          "gpu_memory_used_mib": 5005.0,
+          "gpu_name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+          "gpu_power_w": 10.22,
+          "gpu_temperature_c": 49.0,
+          "gpu_utilization_percent": 28.0,
+          "host_memory_used_mib": 11717.21875,
+          "monotonic_time_s": 1466895.868905905,
+          "process_cpu_percent": 106.1,
+          "process_rss_mib": 8691.0859375
+        }
+      }
+    ],
+    "signals": [],
+    "suspected": false
+  },
+  "planner_version": 2,
+  "report_type": "scene_collection_session",
+  "report_version": 2,
+  "resources": {
+    "gpu_memory_total_mib": 8188.0,
+    "gpu_memory_total_mib_average": 8188.0,
+    "gpu_memory_total_mib_peak": 8188.0,
+    "gpu_memory_used_mib_average": 4318.1875,
+    "gpu_memory_used_mib_peak": 5217.0,
+    "gpu_name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+    "gpu_power_w_average": 10.226875000000005,
+    "gpu_power_w_peak": 13.31,
+    "gpu_temperature_c_average": 49.25,
+    "gpu_temperature_c_peak": 51.0,
+    "gpu_utilization_percent_average": 6.453125,
+    "gpu_utilization_percent_peak": 28.0,
+    "host_memory_used_mib_average": 10850.236877441406,
+    "host_memory_used_mib_peak": 12207.734375,
+    "monotonic_time_s_average": 1466900.364279845,
+    "monotonic_time_s_peak": 1466917.134700524,
+    "process_cpu_percent_average": 1139.6,
+    "process_cpu_percent_peak": 2892.6,
+    "process_rss_mib_average": 7902.601257324219,
+    "process_rss_mib_peak": 9093.4140625,
+    "samples": 64
+  },
+  "scene_content_hash": "07d75706a35ad4a7e02f696d2ce6ff5e0c1eae4e659651922a96e039e8e158f4",
+  "scene_id": "train_scene_000",
+  "scene_schema_version": 3,
+  "session": {
+    "app_startup_time_s": 15.35627168812789,
+    "scene_load_time_s": 9.524853063980117,
+    "session_end_resources": {
+      "gpu_memory_total_mib": 8188.0,
+      "gpu_memory_used_mib": 5217.0,
+      "gpu_name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+      "gpu_power_w": 8.98,
+      "gpu_temperature_c": 50.0,
+      "gpu_utilization_percent": 1.0,
+      "host_memory_used_mib": 12071.52734375,
+      "monotonic_time_s": 1466917.134700524,
+      "process_cpu_percent": 58.3,
+      "process_rss_mib": 8773.19921875
+    },
+    "session_start_resources": {
+      "gpu_memory_total_mib": 8188.0,
+      "gpu_memory_used_mib": 895.0,
+      "gpu_name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+      "gpu_power_w": 10.42,
+      "gpu_temperature_c": 48.0,
+      "gpu_utilization_percent": 2.0,
+      "host_memory_used_mib": 7875.359375,
+      "monotonic_time_s": 1466883.590613029,
+      "process_cpu_percent": 54.4,
+      "process_rss_mib": 4567.51953125
+    },
+    "total_wall_time_s": 49.446838102070615
+  },
+  "status": "PASS",
+  "terrain_statistics": {
+    "elevation_max_m": 0.15600000321865082,
+    "elevation_min_m": -0.15600000321865082,
+    "elevation_range_m": 0.31200000643730164,
+    "elevation_std_m": 0.07804359189812853,
+    "sample_count": 27748,
+    "slope_max_deg": 3.6413915277214315,
+    "slope_mean_deg": 2.258428162596288,
+    "slope_median_deg": 2.361018570448284,
+    "slope_p90_deg": 3.0424526785009944,
+    "slope_p95_deg": 3.2376871532953504
+  }
+}
