@@ -261,7 +261,11 @@ def sample_episode_plan(
         route_length_xy = path_length(route)
         euclidean = math.dist(start, goal)
         if ranges["route"][0] <= route_length_xy <= ranges["route"][1] and route_length_xy / euclidean >= 1.07 and len(route) >= 3 and not line_free(grid, start, goal):
-            surface_path = [[float(x), float(y), float(surface_height(x, y))] for x, y in route]
+            surface_path = [[round(float(x), 6), round(float(y), 6), round(float(surface_height(x, y)), 6)] for x, y in route]
+            if not path_collision_free(grid, surface_path):
+                # Serialization may move a waypoint lying extremely close to a
+                # cell boundary. Only accept the exact path that will be saved.
+                continue
             route_length_surface = path_length(surface_path)
             if not ranges["route"][0] <= route_length_surface <= ranges["route"][1]:
                 continue
@@ -271,7 +275,7 @@ def sample_episode_plan(
         raise RuntimeError(f"could not sample a non-trivial {bucket} route")
     start, goal, route, surface_path, euclidean, route_length = best
     start_yaw = math.atan2(route[1][1] - route[0][1], route[1][0] - route[0][0])
-    path = [[round(x, 6), round(y, 6), round(z, 6)] for x, y, z in surface_path]
+    path = surface_path
     plan = {
         "schema_version": 2,
         "dataset_version": "dataset_v0",

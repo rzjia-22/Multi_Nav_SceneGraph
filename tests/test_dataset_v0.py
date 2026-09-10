@@ -3,7 +3,7 @@ import tempfile
 
 from research_data.common import ROOT, load_yaml, stable_hash
 from research_data.depth import align_depth_to_rgb, dequantize_depth_z16, quantize_depth_z16
-from research_data.expert import Grid, astar, grid_transition_free, line_free, path_collision_free
+from research_data.expert import Grid, astar, grid_transition_free, line_free, path_collision_free, sample_episode_plan, validate_plan
 from research_data.forest import generate_scene
 from research_data.validation import validate_manifest, validate_runtime_contract, validate_scene
 
@@ -125,3 +125,9 @@ def test_astar_does_not_cut_an_obstacle_corner_and_smoothing_stays_free():
     assert path_collision_free(grid, path)
     assert all(line_free(grid, path[index - 1], path[index]) for index in range(1, len(path)))
     assert len(path) >= 3
+
+
+def test_sampled_formal_plan_revalidates_after_yaml_precision_rounding():
+    scene = load_yaml(ROOT / "research_scenes/dataset_v0/train_scene_000/scene.yaml")
+    plan = sample_episode_plan(scene, "train_scene_000_episode_000", lambda _x, _y: 0.0)
+    assert validate_plan(scene, plan)["strict_corner_cut_validation"] is True

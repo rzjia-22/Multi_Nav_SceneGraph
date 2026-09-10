@@ -10,6 +10,7 @@ import subprocess
 import time
 
 from .common import ROOT, dataset_scene_directory, episode_directory, load_yaml, scene_paths
+from .expert import validate_plan
 from .forest import generate_scene
 
 
@@ -86,8 +87,21 @@ def batch_gate() -> None:
 def all_plan_preflight() -> None:
     started = time.monotonic()
     for scene in _manifest_scenes():
-        generate_scene(scene["scene_id"])
+        generated = generate_scene(scene["scene_id"])
         episode_ids = [item["episode_id"] for item in scene["planned_episodes"]]
+        report_path = dataset_scene_directory(scene["scene_id"]) / "plan_preflight_session.json"
+        if report_path.exists():
+            try:
+                report = json.loads(report_path.read_text(encoding="utf-8"))
+                complete = report.get("status") == "PASS" and all(
+                    validate_plan(generated, load_yaml(episode_directory(episode_id) / "episode_plan.yaml"))["status"] == "PASS"
+                    for episode_id in episode_ids
+                )
+            except (AssertionError, FileNotFoundError, KeyError, ValueError):
+                complete = False
+            if complete:
+                print(f"MNS_PLAN_PREFLIGHT_RESUME_SKIP={scene['scene_id']}", flush=True)
+                continue
         _run_scene(scene, episode_ids, True, "plan_preflight_session.json")
     _run_tool("aggregate-plan-preflight")
     print(json.dumps({"status": "PASS", "wall_time_s": time.monotonic() - started}), flush=True)

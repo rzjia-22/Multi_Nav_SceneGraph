@@ -626,5 +626,10 @@ if __name__ == "__main__":
     except BaseException:
         traceback.print_exc()
     finally:
-        APP.close(wait_for_replicator=False, skip_cleanup=True)
+        try:
+            APP.close(wait_for_replicator=False, skip_cleanup=True)
+        except SystemExit:
+            # Some Kit shutdown paths raise SystemExit(0); never let that mask
+            # a failed preflight or collection result.
+            pass
     sys.exit(code)
