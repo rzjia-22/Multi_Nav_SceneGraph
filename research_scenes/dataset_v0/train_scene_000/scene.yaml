@@ -1,11 +1,11 @@
-schema_version: 2
+schema_version: 3
 dataset_version: dataset_v0
 scene_id: train_scene_000
 scene_seed: 41001
 split: train
 generator:
   name: mns_research_forest
-  version: 2
+  version: 3
   rng: numpy.PCG64
   isaac_sim: 5.1.0
   isaac_lab: 2.3.1
@@ -24,16 +24,28 @@ terrain:
   generator:
     subterrain_type: hf_wave
     horizontal_scale_m: 0.2
-    vertical_scale_m: 0.005
+    vertical_scale_m: 0.001
     amplitude_range_m:
-    - 0.035
-    - 0.08
+    - 0.12
+    - 0.22
     num_waves: 2
     difficulty_range:
     - 0.35
     - 0.65
-    maximum_design_slope_deg: 7.0
+    maximum_design_slope_deg: 8.0
   seed: 41001
+  statistics_source: IsaacLab TerrainGenerator.terrain_mesh
+  actual_geometry_statistics:
+    sample_count: 27748
+    elevation_min_m: -0.15600000321865082
+    elevation_max_m: 0.15600000321865082
+    elevation_range_m: 0.31200000643730164
+    elevation_std_m: 0.07804359189812853
+    slope_mean_deg: 2.25842818509723
+    slope_median_deg: 2.361019071736405
+    slope_p90_deg: 3.0424526785009944
+    slope_p95_deg: 3.2376876652726585
+    slope_max_deg: 3.6413915277214315
 ground:
   profile: grass
   material_asset_id: grass
@@ -771,4 +783,4 @@ review_views:
     distance_m: 4.0
     camera_height_m: 1.6
     target_height_m: 2.2
-content_hash: 252374c6c0fe1881ee138351baf746caa15ee09d3a4a070098d74ce72b060c7c
+content_hash: 07d75706a35ad4a7e02f696d2ce6ff5e0c1eae4e659651922a96e039e8e158f4

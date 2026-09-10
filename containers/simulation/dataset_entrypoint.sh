@@ -24,5 +24,11 @@ if [[ "${1:-}" == "--review" ]]; then
     "${MNS_PROJECT_ROOT}/ros_ws/src/mns_simulation/mns_simulation/research_forest_review.py" "$@"
 fi
 
+if [[ "${1:-}" == "--terrain-calibration" ]]; then
+  shift
+  exec "${isaac_sim_root}/kit/python/bin/python3" \
+    "${MNS_PROJECT_ROOT}/ros_ws/src/mns_simulation/mns_simulation/research_terrain_calibration.py" "$@"
+fi
+
 exec "${isaac_sim_root}/kit/python/bin/python3" \
   "${MNS_PROJECT_ROOT}/ros_ws/src/mns_simulation/mns_simulation/research_dataset_runtime.py" "$@"

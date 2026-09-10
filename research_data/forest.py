@@ -35,6 +35,7 @@ def generate_scene(scene_id: str, output_yaml: Path | None = None) -> dict[str, 
     """Realize one version-controlled scene specification from the V0 manifest."""
     plan = _scene_plan(scene_id)
     profiles = load_yaml(ROOT / "config/research_forests/profiles.yaml")
+    calibration = load_yaml(ROOT / "config/research_forests/terrain_calibration.yaml")
     registry = load_yaml(ROOT / "config/research_forests/assets.yaml")
     seed = int(plan["scene_seed"])
     rng = np.random.Generator(np.random.PCG64(seed))
@@ -79,14 +80,14 @@ def generate_scene(scene_id: str, output_yaml: Path | None = None) -> dict[str, 
     lighting_profile = profiles["lighting"][factors["lighting"]]
     sky = registry["sky"][lighting_profile["sky_asset_id"]]
     scene = {
-        "schema_version": 2,
+        "schema_version": 3,
         "dataset_version": "dataset_v0",
         "scene_id": scene_id,
         "scene_seed": seed,
         "split": plan["split"],
         "generator": {
             "name": "mns_research_forest",
-            "version": 2,
+            "version": 3,
             "rng": "numpy.PCG64",
             "isaac_sim": "5.1.0",
             "isaac_lab": "2.3.1",
@@ -99,6 +100,10 @@ def generate_scene(scene_id: str, output_yaml: Path | None = None) -> dict[str, 
             "builder": "isaaclab.terrains.TerrainImporter",
             "generator": terrain,
             "seed": seed,
+            "statistics_source": "IsaacLab TerrainGenerator.terrain_mesh",
+            "actual_geometry_statistics": calibration["profiles"][factors["terrain"]]["actual_geometry_statistics"]
+            if int(calibration["calibration_seed"]) == seed
+            else None,
         },
         "ground": {
             "profile": factors["ground"],

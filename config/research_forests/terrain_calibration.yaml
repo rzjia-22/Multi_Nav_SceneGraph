@@ -1,0 +1,82 @@
+schema_version: 1
+source: IsaacLab TerrainGenerator.terrain_mesh
+isaac_sim_version: 5.1.0
+isaac_lab_version: 2.3.1
+calibration_seed: 41001
+extent_m:
+- 24.0
+- 24.0
+profiles:
+  flat:
+    generator:
+      subterrain_type: hf_random_uniform
+      horizontal_scale_m: 0.2
+      vertical_scale_m: 0.005
+      noise_range_m:
+      - 0.0
+      - 0.0
+      noise_step_m: 0.005
+      downsampled_scale_m: 1.0
+      difficulty_range:
+      - 0.0
+      - 0.0
+      maximum_design_slope_deg: 1.0
+    actual_geometry_statistics:
+      sample_count: 27848
+      elevation_min_m: 0.0
+      elevation_max_m: 0.0
+      elevation_range_m: 0.0
+      elevation_std_m: 0.0
+      slope_mean_deg: 0.0
+      slope_median_deg: 0.0
+      slope_p90_deg: 0.0
+      slope_p95_deg: 0.0
+      slope_max_deg: 0.0
+  gentle:
+    generator:
+      subterrain_type: hf_wave
+      horizontal_scale_m: 0.2
+      vertical_scale_m: 0.001
+      amplitude_range_m:
+      - 0.12
+      - 0.22
+      num_waves: 2
+      difficulty_range:
+      - 0.35
+      - 0.65
+      maximum_design_slope_deg: 8.0
+    actual_geometry_statistics:
+      sample_count: 27748
+      elevation_min_m: -0.15600000321865082
+      elevation_max_m: 0.15600000321865082
+      elevation_range_m: 0.31200000643730164
+      elevation_std_m: 0.07804359189812853
+      slope_mean_deg: 2.25842818509723
+      slope_median_deg: 2.361019071736405
+      slope_p90_deg: 3.0424526785009944
+      slope_p95_deg: 3.2376876652726585
+      slope_max_deg: 3.6413915277214315
+  moderate:
+    generator:
+      subterrain_type: hf_wave
+      horizontal_scale_m: 0.2
+      vertical_scale_m: 0.001
+      amplitude_range_m:
+      - 0.15
+      - 0.27
+      num_waves: 3
+      difficulty_range:
+      - 0.45
+      - 0.8
+      maximum_design_slope_deg: 12.0
+    actual_geometry_statistics:
+      sample_count: 27748
+      elevation_min_m: -0.20399999618530273
+      elevation_max_m: 0.20399999618530273
+      elevation_range_m: 0.40799999237060547
+      elevation_std_m: 0.10204538673927514
+      slope_mean_deg: 4.414187179302845
+      slope_median_deg: 4.609368981233679
+      slope_p90_deg: 6.054499613681677
+      slope_p95_deg: 6.2579674884033665
+      slope_max_deg: 6.854533655326618

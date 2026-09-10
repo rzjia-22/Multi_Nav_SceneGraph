@@ -1,4 +1,4 @@
-schema_version: 2
+schema_version: 3
 scene_size_m: 24.0
 
 # These profiles map directly to official Isaac Lab 2.3.1 terrain configs.
@@ -15,16 +15,16 @@ terrain:
   gentle:
     subterrain_type: hf_wave
     horizontal_scale_m: 0.20
-    vertical_scale_m: 0.005
-    amplitude_range_m: [0.035, 0.080]
+    vertical_scale_m: 0.001
+    amplitude_range_m: [0.120, 0.220]
     num_waves: 2
     difficulty_range: [0.35, 0.65]
-    maximum_design_slope_deg: 7.0
+    maximum_design_slope_deg: 8.0
   moderate:
     subterrain_type: hf_wave
     horizontal_scale_m: 0.20
-    vertical_scale_m: 0.005
-    amplitude_range_m: [0.080, 0.150]
+    vertical_scale_m: 0.001
+    amplitude_range_m: [0.150, 0.270]
     num_waves: 3
     difficulty_range: [0.45, 0.80]
     maximum_design_slope_deg: 12.0

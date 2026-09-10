@@ -88,6 +88,7 @@ def main() -> int:
         "isaac_sim_version": "5.1.0",
         "isaac_lab_version": "2.3.1",
         "terrain_builder": scene["terrain"]["builder"],
+        "terrain_statistics": built.terrain_statistics,
         "tree_count": len(scene["trees"]),
         "resolved_assets": built.resolved_assets,
         "missing_registry_assets": built.missing_registry_assets,

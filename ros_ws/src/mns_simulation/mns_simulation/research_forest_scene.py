@@ -1,4 +1,4 @@
-"""Shared Isaac Lab builder for Dataset V0 Research Forest review scenes."""
+"""Shared Isaac Lab builder for every Dataset V0 Research Forest runtime."""
 
 from __future__ import annotations
 
@@ -8,12 +8,109 @@ from pathlib import Path
 from typing import Any
 
 
-_TERRAIN_POINTS = None
+_ACTIVE_TERRAIN_SURFACE = None
+
+
+class TerrainSurfaceQuery:
+    """Exact XY queries over the top-facing triangles authored by Isaac Lab.
+
+    The query is built from the actual USD mesh after ``TerrainImporter`` has
+    generated it.  It is therefore shared ground truth for rendering, tree
+    placement, the kinematic surrogate, cameras, and stored terrain metrics.
+    """
+
+    def __init__(self, points, faces, extent_m, horizontal_scale_m):
+        import numpy as np
+
+        self._np = np
+        self.points = np.asarray(points, dtype=np.float64)
+        triangles = self.points[np.asarray(faces, dtype=np.int64)]
+        cross = np.cross(triangles[:, 1] - triangles[:, 0], triangles[:, 2] - triangles[:, 0])
+        norms = np.linalg.norm(cross, axis=1)
+        usable = norms > 1.0e-10
+        cross[usable] /= norms[usable, None]
+        cross[cross[:, 2] < 0.0] *= -1.0
+        # Side walls and degenerate caps are not terrain surfaces.
+        usable &= cross[:, 2] > 1.0e-4
+        self.triangles = triangles[usable]
+        self.normals = cross[usable]
+        self.extent_m = tuple(float(value) for value in extent_m)
+        self.bin_size_m = max(float(horizontal_scale_m), 0.05)
+        self._bins: dict[tuple[int, int], list[int]] = {}
+        for index, triangle in enumerate(self.triangles):
+            minimum = np.floor(triangle[:, :2].min(axis=0) / self.bin_size_m).astype(int)
+            maximum = np.floor(triangle[:, :2].max(axis=0) / self.bin_size_m).astype(int)
+            for ix in range(int(minimum[0]), int(maximum[0]) + 1):
+                for iy in range(int(minimum[1]), int(maximum[1]) + 1):
+                    self._bins.setdefault((ix, iy), []).append(index)
+        if not self._bins:
+            raise RuntimeError("Isaac terrain mesh has no queryable top-facing triangles")
+
+    def height_and_normal(self, x: float, y: float):
+        """Return the highest containing triangle's height and upward normal."""
+        np = self._np
+        key = (math.floor(float(x) / self.bin_size_m), math.floor(float(y) / self.bin_size_m))
+        candidates = self._bins.get(key, ())
+        matches = []
+        query = np.asarray([float(x), float(y)], dtype=np.float64)
+        for index in candidates:
+            triangle = self.triangles[index]
+            a, b, c = triangle[:, :2]
+            denominator = (b[1] - c[1]) * (a[0] - c[0]) + (c[0] - b[0]) * (a[1] - c[1])
+            if abs(float(denominator)) < 1.0e-12:
+                continue
+            first = ((b[1] - c[1]) * (query[0] - c[0]) + (c[0] - b[0]) * (query[1] - c[1])) / denominator
+            second = ((c[1] - a[1]) * (query[0] - c[0]) + (a[0] - c[0]) * (query[1] - c[1])) / denominator
+            third = 1.0 - first - second
+            if min(first, second, third) >= -1.0e-7:
+                z = first * triangle[0, 2] + second * triangle[1, 2] + third * triangle[2, 2]
+                matches.append((float(z), self.normals[index]))
+        if not matches:
+            raise ValueError(f"point ({x:.3f}, {y:.3f}) is outside the imported terrain surface")
+        height, normal = max(matches, key=lambda item: item[0])
+        return height, normal.copy()
+
+    def height(self, x: float, y: float) -> float:
+        return self.height_and_normal(x, y)[0]
+
+    def normal(self, x: float, y: float):
+        return self.height_and_normal(x, y)[1]
+
+    def statistics(self) -> dict[str, float | int]:
+        """Summarize actual top-surface geometry, excluding the outer rim."""
+        np = self._np
+        half_x, half_y = self.extent_m[0] / 2.0, self.extent_m[1] / 2.0
+        centers = self.triangles.mean(axis=1)
+        margin = self.bin_size_m * 1.01
+        interior = (
+            (np.abs(centers[:, 0]) < half_x - margin)
+            & (np.abs(centers[:, 1]) < half_y - margin)
+        )
+        triangles = self.triangles[interior]
+        normals = self.normals[interior]
+        if len(triangles) == 0:
+            raise RuntimeError("no interior terrain triangles available for statistics")
+        elevations = triangles[:, :, 2].reshape(-1)
+        slopes = np.degrees(np.arccos(np.clip(normals[:, 2], 0.0, 1.0)))
+        return {
+            "sample_count": int(len(slopes)),
+            "elevation_min_m": float(elevations.min()),
+            "elevation_max_m": float(elevations.max()),
+            "elevation_range_m": float(elevations.max() - elevations.min()),
+            "elevation_std_m": float(elevations.std()),
+            "slope_mean_deg": float(slopes.mean()),
+            "slope_median_deg": float(np.median(slopes)),
+            "slope_p90_deg": float(np.percentile(slopes, 90)),
+            "slope_p95_deg": float(np.percentile(slopes, 95)),
+            "slope_max_deg": float(slopes.max()),
+        }
 
 
 @dataclass
 class BuiltResearchForest:
     terrain: Any
+    surface: TerrainSurfaceQuery
+    terrain_statistics: dict[str, float | int]
     resolved_assets: dict[str, str]
     tree_ground_heights_m: dict[str, float]
     missing_registry_assets: list[str]
@@ -90,13 +187,10 @@ def _sun_orientation(scene: dict[str, Any]) -> tuple[float, float, float, float]
 
 
 def sample_terrain_height(x: float, y: float) -> float:
-    import numpy as np
-
-    if _TERRAIN_POINTS is None:
-        raise RuntimeError("terrain height sampler is not initialized")
-    delta = _TERRAIN_POINTS[:, :2] - np.asarray([x, y], dtype=np.float64)
-    index = int(np.argmin(np.einsum("ij,ij->i", delta, delta)))
-    return float(_TERRAIN_POINTS[index, 2])
+    """Compatibility facade for review cameras; backed by the active mesh."""
+    if _ACTIVE_TERRAIN_SURFACE is None:
+        raise RuntimeError("terrain surface query is not initialized")
+    return _ACTIVE_TERRAIN_SURFACE.height(x, y)
 
 
 def build_research_forest(simulation, scene: dict[str, Any], registry: dict[str, Any]) -> BuiltResearchForest:
@@ -108,7 +202,7 @@ def build_research_forest(simulation, scene: dict[str, Any], registry: dict[str,
     import isaaclab.sim as sim_utils
     from isaaclab.terrains import TerrainImporter, TerrainImporterCfg
 
-    global _TERRAIN_POINTS
+    global _ACTIVE_TERRAIN_SURFACE
     stage = omni.usd.get_context().get_stage()
     UsdGeom.SetStageMetersPerUnit(stage, 1.0)
     UsdGeom.SetStageUpAxis(stage, UsdGeom.Tokens.z)
@@ -152,7 +246,25 @@ def build_research_forest(simulation, scene: dict[str, Any], registry: dict[str,
         raise RuntimeError("Isaac Lab TerrainImporter did not create the expected terrain mesh")
     import numpy as np
 
-    _TERRAIN_POINTS = np.asarray(terrain_mesh.GetPointsAttr().Get(), dtype=np.float64)
+    local_points = terrain_mesh.GetPointsAttr().Get()
+    transform = UsdGeom.XformCache().GetLocalToWorldTransform(terrain_mesh.GetPrim())
+    points = np.asarray([transform.Transform(point) for point in local_points], dtype=np.float64)
+    counts = list(terrain_mesh.GetFaceVertexCountsAttr().Get())
+    indices = list(terrain_mesh.GetFaceVertexIndicesAttr().Get())
+    faces = []
+    cursor = 0
+    for count in counts:
+        polygon = indices[cursor : cursor + count]
+        cursor += count
+        for offset in range(1, count - 1):
+            faces.append((polygon[0], polygon[offset], polygon[offset + 1]))
+    surface = TerrainSurfaceQuery(
+        points,
+        faces,
+        scene["extent_m"],
+        scene["terrain"]["generator"]["horizontal_scale_m"],
+    )
+    _ACTIVE_TERRAIN_SURFACE = surface
 
     dome_cfg = sim_utils.DomeLightCfg(
         intensity=float(scene["lighting"]["dome_intensity"]),
@@ -182,7 +294,7 @@ def build_research_forest(simulation, scene: dict[str, Any], registry: dict[str,
     for tree in scene["trees"]:
         asset = registry["trees"][tree["asset_id"]]
         x, y = (float(value) for value in tree["position_m"])
-        ground_z = sample_terrain_height(x, y)
+        ground_z = surface.height(x, y)
         ground_heights[tree["tree_id"]] = ground_z
         root_path = f"/World/ResearchForest/Trees/{tree['tree_id']}"
         root = UsdGeom.Xform.Define(stage, root_path)
@@ -215,6 +327,8 @@ def build_research_forest(simulation, scene: dict[str, Any], registry: dict[str,
     simulation.reset()
     return BuiltResearchForest(
         terrain=terrain,
+        surface=surface,
+        terrain_statistics=surface.statistics(),
         resolved_assets=resolved_assets,
         tree_ground_heights_m=ground_heights,
         missing_registry_assets=missing,
