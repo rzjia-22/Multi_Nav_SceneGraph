@@ -66,6 +66,7 @@ def generate_scene(scene_id: str, output_yaml: Path | None = None, output_usda: 
                 "trunk_radius_m": round(radius * scale, 6),
                 "trunk_height_m": round(height * scale, 6),
                 "foliage_radius_m": round(height * float(tree_cfg["types"][tree_type]["foliage_radius_ratio"]) * scale, 6),
+                "foliage_color": list(tree_cfg["types"][tree_type]["foliage_color"]),
                 "yaw_deg": round(float(rng.uniform(0.0, 360.0)), 6),
                 "scale": round(scale, 6),
                 "asset_id": f"procedural/{tree_type}/v0",
@@ -152,6 +153,7 @@ def _write_usda(path: Path, scene: dict[str, Any]) -> None:
         radius = tree["trunk_radius_m"]
         height = tree["trunk_height_m"]
         foliage = tree["foliage_radius_m"]
+        foliage_color = tree["foliage_color"]
         lines.extend(
             [
                 f'        def Xform "{tree["tree_id"]}" {{',
@@ -167,7 +169,7 @@ def _write_usda(path: Path, scene: dict[str, Any]) -> None:
                 "            }",
                 '            def Sphere "Foliage" (prepend apiSchemas = ["SemanticsAPI:Semantics"]) {',
                 f"                double radius = {foliage}",
-                "                color3f[] primvars:displayColor = [(0.08, 0.34, 0.06)]",
+                f"                color3f[] primvars:displayColor = [({foliage_color[0]}, {foliage_color[1]}, {foliage_color[2]})]",
                 '                uniform token semantics:Semantics:semanticType = "class"',
                 '                uniform string semantics:Semantics:semanticData = "foliage"',
                 f"                double3 xformOp:translate = ({x}, {y}, {z + height - 0.25})",
@@ -179,4 +181,3 @@ def _write_usda(path: Path, scene: dict[str, Any]) -> None:
     lines.extend(("    }", "}", ""))
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text("\n".join(lines), encoding="utf-8")
-

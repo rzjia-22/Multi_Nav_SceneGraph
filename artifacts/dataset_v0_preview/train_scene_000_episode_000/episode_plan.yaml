@@ -13,36 +13,42 @@ planner:
   smoothing: greedy_line_of_sight
 controller:
   type: pure_pursuit
-  lookahead_m: 0.55
+  lookahead_m: 0.32
   goal_tolerance_m: 0.18
 target_route_length_bucket: medium
 start_pose_xyzyaw:
 - -0.859835
 - 4.721714
 - 0.008923
-- -2.27529
+- 2.677945
 goal_pose_xyz:
 - -6.988531
 - 2.795561
 - -0.03699
 straight_line_distance_m: 6.424249
-planned_path_length_m: 7.096397
+planned_path_length_m: 7.187339
 direct_line_collision_free: false
 planned_path:
 - - -0.9
   - 4.7
   - 0.008923
-- - -2.6
-  - 2.7
-  - 0.089391
-- - -2.9
-  - 2.5
-  - 0.092903
+- - -2.5
+  - 5.5
+  - 0.046528
+- - -3.0
+  - 5.5
+  - 0.055158
+- - -3.3
+  - 5.3
+  - 0.060302
+- - -4.8
+  - 3.8
+  - 0.052128
 - - -7.0
   - 2.8
   - -0.03699
 configuration_hashes:
-  scene: 8e55eada8b535480a7b462b318ccb1e23f125e1a9fd3730eb909cb0f902b2538
-  robot: 05e7ee07de1af8cbb60b6fe192cc1a91ffa228621a2e8ad78bd63e40dc4a0217
-  sensor: 3e49d92db289076ac0a27c83f7b32fdff4a206257fb94857ce1abd8386f9a7bb
-plan_hash: fac05c579b4c1991b6ab984e0261b751052fd351927dc8f5c8e70508dad59c1f
+  scene: f8889a16e59be574de207bf66a061ab56cc9a68f006104d04b28721babf74ed7
+  robot: c47aee2bddaa21316aefb22a0ebdada0df08e1cd855f2d4498968df7863bbeff
+  sensor: b9c4a80296e6c405e1eeda903e1d6976584815908a82c5958d24dabd99e36e60
+plan_hash: ecb71b441f9069c25bfeeb0c9075ba13cd8c021763791b51d512a18c1558da8a

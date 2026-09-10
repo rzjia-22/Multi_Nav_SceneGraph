@@ -45,7 +45,7 @@ lighting:
   sun_elevation_deg: 48.0
   sun_azimuth_deg: 135.0
   intensity: 2800.0
-  ambient_intensity: 700.0
+  ambient_intensity: 2500.0
 physics:
   static_friction: 0.85
   dynamic_friction: 0.7
@@ -67,6 +67,10 @@ trees:
   trunk_radius_m: 0.246703
   trunk_height_m: 4.874782
   foliage_radius_m: 1.657426
+  foliage_color:
+  - 0.08
+  - 0.31
+  - 0.05
   yaw_deg: 195.208821
   scale: 1.067703
   asset_id: procedural/broadleaf_round/v0
@@ -79,6 +83,10 @@ trees:
   trunk_radius_m: 0.184105
   trunk_height_m: 3.637874
   foliage_radius_m: 1.236877
+  foliage_color:
+  - 0.08
+  - 0.31
+  - 0.05
   yaw_deg: 58.538452
   scale: 0.968604
   asset_id: procedural/broadleaf_round/v0
@@ -91,6 +99,10 @@ trees:
   trunk_radius_m: 0.311705
   trunk_height_m: 5.689556
   foliage_radius_m: 1.593076
+  foliage_color:
+  - 0.12
+  - 0.38
+  - 0.07
   yaw_deg: 233.182117
   scale: 1.063304
   asset_id: procedural/broadleaf_tall/v0
@@ -103,6 +115,10 @@ trees:
   trunk_radius_m: 0.275862
   trunk_height_m: 4.413777
   foliage_radius_m: 1.235858
+  foliage_color:
+  - 0.12
+  - 0.38
+  - 0.07
   yaw_deg: 216.405023
   scale: 0.869225
   asset_id: procedural/broadleaf_tall/v0
@@ -115,6 +131,10 @@ trees:
   trunk_radius_m: 0.25413
   trunk_height_m: 4.427586
   foliage_radius_m: 1.505379
+  foliage_color:
+  - 0.08
+  - 0.31
+  - 0.05
   yaw_deg: 297.757156
   scale: 0.901692
   asset_id: procedural/broadleaf_round/v0
@@ -127,6 +147,10 @@ trees:
   trunk_radius_m: 0.211668
   trunk_height_m: 4.174777
   foliage_radius_m: 1.419424
+  foliage_color:
+  - 0.08
+  - 0.31
+  - 0.05
   yaw_deg: 179.7393
   scale: 1.110617
   asset_id: procedural/broadleaf_round/v0
@@ -139,6 +163,10 @@ trees:
   trunk_radius_m: 0.245331
   trunk_height_m: 3.823518
   foliage_radius_m: 1.070585
+  foliage_color:
+  - 0.12
+  - 0.38
+  - 0.07
   yaw_deg: 335.636758
   scale: 0.875298
   asset_id: procedural/broadleaf_tall/v0
@@ -151,6 +179,10 @@ trees:
   trunk_radius_m: 0.244431
   trunk_height_m: 3.613836
   foliage_radius_m: 1.011874
+  foliage_color:
+  - 0.12
+  - 0.38
+  - 0.07
   yaw_deg: 34.628123
   scale: 1.024342
   asset_id: procedural/broadleaf_tall/v0
@@ -163,6 +195,10 @@ trees:
   trunk_radius_m: 0.202183
   trunk_height_m: 5.018632
   foliage_radius_m: 1.706335
+  foliage_color:
+  - 0.08
+  - 0.31
+  - 0.05
   yaw_deg: 266.387098
   scale: 1.014831
   asset_id: procedural/broadleaf_round/v0
@@ -175,6 +211,10 @@ trees:
   trunk_radius_m: 0.240028
   trunk_height_m: 5.332851
   foliage_radius_m: 1.81317
+  foliage_color:
+  - 0.08
+  - 0.31
+  - 0.05
   yaw_deg: 5.015492
   scale: 1.076122
   asset_id: procedural/broadleaf_round/v0
@@ -187,6 +227,10 @@ trees:
   trunk_radius_m: 0.252713
   trunk_height_m: 4.192442
   foliage_radius_m: 1.42543
+  foliage_color:
+  - 0.08
+  - 0.31
+  - 0.05
   yaw_deg: 4.120296
   scale: 1.059495
   asset_id: procedural/broadleaf_round/v0
@@ -199,6 +243,10 @@ trees:
   trunk_radius_m: 0.186994
   trunk_height_m: 4.398883
   foliage_radius_m: 1.49562
+  foliage_color:
+  - 0.08
+  - 0.31
+  - 0.05
   yaw_deg: 176.188782
   scale: 0.98876
   asset_id: procedural/broadleaf_round/v0
@@ -211,6 +259,10 @@ trees:
   trunk_radius_m: 0.284007
   trunk_height_m: 3.695417
   foliage_radius_m: 1.256442
+  foliage_color:
+  - 0.08
+  - 0.31
+  - 0.05
   yaw_deg: 121.475278
   scale: 0.913956
   asset_id: procedural/broadleaf_round/v0
@@ -223,6 +275,10 @@ trees:
   trunk_radius_m: 0.257686
   trunk_height_m: 5.593762
   foliage_radius_m: 1.901879
+  foliage_color:
+  - 0.08
+  - 0.31
+  - 0.05
   yaw_deg: 110.676268
   scale: 1.095596
   asset_id: procedural/broadleaf_round/v0
@@ -235,6 +291,10 @@ trees:
   trunk_radius_m: 0.209123
   trunk_height_m: 4.742347
   foliage_radius_m: 1.327857
+  foliage_color:
+  - 0.12
+  - 0.38
+  - 0.07
   yaw_deg: 169.248759
   scale: 0.970341
   asset_id: procedural/broadleaf_tall/v0
@@ -247,6 +307,10 @@ trees:
   trunk_radius_m: 0.267393
   trunk_height_m: 4.14015
   foliage_radius_m: 1.407651
+  foliage_color:
+  - 0.08
+  - 0.31
+  - 0.05
   yaw_deg: 287.915579
   scale: 0.873655
   asset_id: procedural/broadleaf_round/v0
@@ -259,6 +323,10 @@ trees:
   trunk_radius_m: 0.248479
   trunk_height_m: 4.097043
   foliage_radius_m: 1.392995
+  foliage_color:
+  - 0.08
+  - 0.31
+  - 0.05
   yaw_deg: 25.894328
   scale: 0.96387
   asset_id: procedural/broadleaf_round/v0
@@ -271,6 +339,10 @@ trees:
   trunk_radius_m: 0.216072
   trunk_height_m: 3.433492
   foliage_radius_m: 1.167387
+  foliage_color:
+  - 0.08
+  - 0.31
+  - 0.05
   yaw_deg: 336.731604
   scale: 0.901162
   asset_id: procedural/broadleaf_round/v0
@@ -283,6 +355,10 @@ trees:
   trunk_radius_m: 0.258625
   trunk_height_m: 4.860759
   foliage_radius_m: 1.361012
+  foliage_color:
+  - 0.12
+  - 0.38
+  - 0.07
   yaw_deg: 324.979692
   scale: 1.118037
   asset_id: procedural/broadleaf_tall/v0
@@ -295,6 +371,10 @@ trees:
   trunk_radius_m: 0.336225
   trunk_height_m: 5.029803
   foliage_radius_m: 1.710133
+  foliage_color:
+  - 0.08
+  - 0.31
+  - 0.05
   yaw_deg: 121.511425
   scale: 1.06832
   asset_id: procedural/broadleaf_round/v0
@@ -307,6 +387,10 @@ trees:
   trunk_radius_m: 0.192676
   trunk_height_m: 3.71217
   foliage_radius_m: 1.262138
+  foliage_color:
+  - 0.08
+  - 0.31
+  - 0.05
   yaw_deg: 109.335785
   scale: 0.906947
   asset_id: procedural/broadleaf_round/v0
@@ -319,6 +403,10 @@ trees:
   trunk_radius_m: 0.261827
   trunk_height_m: 3.846827
   foliage_radius_m: 1.077112
+  foliage_color:
+  - 0.12
+  - 0.38
+  - 0.07
   yaw_deg: 152.932719
   scale: 0.922045
   asset_id: procedural/broadleaf_tall/v0
@@ -331,6 +419,10 @@ trees:
   trunk_radius_m: 0.211006
   trunk_height_m: 3.995158
   foliage_radius_m: 1.118644
+  foliage_color:
+  - 0.12
+  - 0.38
+  - 0.07
   yaw_deg: 341.169009
   scale: 0.965055
   asset_id: procedural/broadleaf_tall/v0
@@ -343,6 +435,10 @@ trees:
   trunk_radius_m: 0.254079
   trunk_height_m: 4.265127
   foliage_radius_m: 1.450143
+  foliage_color:
+  - 0.08
+  - 0.31
+  - 0.05
   yaw_deg: 214.135796
   scale: 0.972998
   asset_id: procedural/broadleaf_round/v0
@@ -355,6 +451,10 @@ trees:
   trunk_radius_m: 0.255298
   trunk_height_m: 4.863139
   foliage_radius_m: 1.653467
+  foliage_color:
+  - 0.08
+  - 0.31
+  - 0.05
   yaw_deg: 269.048446
   scale: 1.074764
   asset_id: procedural/broadleaf_round/v0
@@ -367,6 +467,10 @@ trees:
   trunk_radius_m: 0.363261
   trunk_height_m: 3.817447
   foliage_radius_m: 1.068885
+  foliage_color:
+  - 0.12
+  - 0.38
+  - 0.07
   yaw_deg: 347.944821
   scale: 1.092819
   asset_id: procedural/broadleaf_tall/v0
@@ -379,6 +483,10 @@ trees:
   trunk_radius_m: 0.254116
   trunk_height_m: 4.235407
   foliage_radius_m: 1.440038
+  foliage_color:
+  - 0.08
+  - 0.31
+  - 0.05
   yaw_deg: 211.409587
   scale: 1.106734
   asset_id: procedural/broadleaf_round/v0
@@ -391,6 +499,10 @@ trees:
   trunk_radius_m: 0.298794
   trunk_height_m: 4.879717
   foliage_radius_m: 1.366321
+  foliage_color:
+  - 0.12
+  - 0.38
+  - 0.07
   yaw_deg: 167.651785
   scale: 1.125068
   asset_id: procedural/broadleaf_tall/v0
@@ -403,6 +515,10 @@ trees:
   trunk_radius_m: 0.208744
   trunk_height_m: 3.647193
   foliage_radius_m: 1.021214
+  foliage_color:
+  - 0.12
+  - 0.38
+  - 0.07
   yaw_deg: 113.237421
   scale: 0.907307
   asset_id: procedural/broadleaf_tall/v0
@@ -415,6 +531,10 @@ trees:
   trunk_radius_m: 0.184867
   trunk_height_m: 4.191773
   foliage_radius_m: 1.425203
+  foliage_color:
+  - 0.08
+  - 0.31
+  - 0.05
   yaw_deg: 142.01166
   scale: 1.012892
   asset_id: procedural/broadleaf_round/v0
@@ -427,6 +547,10 @@ trees:
   trunk_radius_m: 0.220277
   trunk_height_m: 5.085232
   foliage_radius_m: 1.423865
+  foliage_color:
+  - 0.12
+  - 0.38
+  - 0.07
   yaw_deg: 230.951811
   scale: 1.022003
   asset_id: procedural/broadleaf_tall/v0
@@ -439,6 +563,10 @@ trees:
   trunk_radius_m: 0.28953
   trunk_height_m: 3.362815
   foliage_radius_m: 0.941588
+  foliage_color:
+  - 0.12
+  - 0.38
+  - 0.07
   yaw_deg: 216.159965
   scale: 0.916527
   asset_id: procedural/broadleaf_tall/v0
@@ -451,6 +579,10 @@ trees:
   trunk_radius_m: 0.235836
   trunk_height_m: 5.031819
   foliage_radius_m: 1.710819
+  foliage_color:
+  - 0.08
+  - 0.31
+  - 0.05
   yaw_deg: 270.118553
   scale: 0.946157
   asset_id: procedural/broadleaf_round/v0
@@ -463,6 +595,10 @@ trees:
   trunk_radius_m: 0.16469
   trunk_height_m: 3.258097
   foliage_radius_m: 1.107753
+  foliage_color:
+  - 0.08
+  - 0.31
+  - 0.05
   yaw_deg: 261.043351
   scale: 0.889567
   asset_id: procedural/broadleaf_round/v0
@@ -475,6 +611,10 @@ trees:
   trunk_radius_m: 0.333068
   trunk_height_m: 5.044371
   foliage_radius_m: 1.715086
+  foliage_color:
+  - 0.08
+  - 0.31
+  - 0.05
   yaw_deg: 13.373099
   scale: 0.996402
   asset_id: procedural/broadleaf_round/v0
@@ -487,6 +627,10 @@ trees:
   trunk_radius_m: 0.167705
   trunk_height_m: 3.610068
   foliage_radius_m: 1.010819
+  foliage_color:
+  - 0.12
+  - 0.38
+  - 0.07
   yaw_deg: 182.370968
   scale: 0.85001
   asset_id: procedural/broadleaf_tall/v0
@@ -499,6 +643,10 @@ trees:
   trunk_radius_m: 0.334991
   trunk_height_m: 4.298705
   foliage_radius_m: 1.46156
+  foliage_color:
+  - 0.08
+  - 0.31
+  - 0.05
   yaw_deg: 160.497609
   scale: 1.090709
   asset_id: procedural/broadleaf_round/v0
@@ -511,6 +659,10 @@ trees:
   trunk_radius_m: 0.177093
   trunk_height_m: 4.160797
   foliage_radius_m: 1.414671
+  foliage_color:
+  - 0.08
+  - 0.31
+  - 0.05
   yaw_deg: 91.713153
   scale: 0.856302
   asset_id: procedural/broadleaf_round/v0
@@ -523,6 +675,10 @@ trees:
   trunk_radius_m: 0.215355
   trunk_height_m: 4.107006
   foliage_radius_m: 1.396382
+  foliage_color:
+  - 0.08
+  - 0.31
+  - 0.05
   yaw_deg: 351.938289
   scale: 0.983074
   asset_id: procedural/broadleaf_round/v0
@@ -535,6 +691,10 @@ trees:
   trunk_radius_m: 0.26404
   trunk_height_m: 5.030616
   foliage_radius_m: 1.710409
+  foliage_color:
+  - 0.08
+  - 0.31
+  - 0.05
   yaw_deg: 211.70436
   scale: 0.97033
   asset_id: procedural/broadleaf_round/v0
@@ -547,6 +707,10 @@ trees:
   trunk_radius_m: 0.283935
   trunk_height_m: 3.863215
   foliage_radius_m: 1.313493
+  foliage_color:
+  - 0.08
+  - 0.31
+  - 0.05
   yaw_deg: 11.301411
   scale: 0.929026
   asset_id: procedural/broadleaf_round/v0
@@ -559,7 +723,11 @@ trees:
   trunk_radius_m: 0.270757
   trunk_height_m: 4.33733
   foliage_radius_m: 1.214452
+  foliage_color:
+  - 0.12
+  - 0.38
+  - 0.07
   yaw_deg: 28.260113
   scale: 1.014106
   asset_id: procedural/broadleaf_tall/v0
-content_hash: 8e55eada8b535480a7b462b318ccb1e23f125e1a9fd3730eb909cb0f902b2538
+content_hash: f8889a16e59be574de207bf66a061ab56cc9a68f006104d04b28721babf74ed7

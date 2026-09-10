@@ -20,9 +20,9 @@ ground:
   bare_soil: {rgb: [0.30, 0.20, 0.10], roughness: 0.92}
   grass: {rgb: [0.16, 0.30, 0.08], roughness: 0.88}
 lighting:
-  normal: {sun_elevation_deg: 48.0, sun_azimuth_deg: 135.0, intensity: 2800.0, ambient_intensity: 700.0}
-  bright: {sun_elevation_deg: 62.0, sun_azimuth_deg: 110.0, intensity: 4200.0, ambient_intensity: 950.0}
-  dim: {sun_elevation_deg: 24.0, sun_azimuth_deg: 210.0, intensity: 1450.0, ambient_intensity: 360.0}
+  normal: {sun_elevation_deg: 48.0, sun_azimuth_deg: 135.0, intensity: 2800.0, ambient_intensity: 2500.0}
+  bright: {sun_elevation_deg: 62.0, sun_azimuth_deg: 110.0, intensity: 4200.0, ambient_intensity: 3500.0}
+  dim: {sun_elevation_deg: 24.0, sun_azimuth_deg: 210.0, intensity: 1450.0, ambient_intensity: 1000.0}
 trees:
   low: {count: 28, minimum_spacing_m: 1.55}
   medium: {count: 42, minimum_spacing_m: 1.35}
@@ -42,4 +42,3 @@ semantics:
   foliage: 3
   robot: 4
   other: 5
-

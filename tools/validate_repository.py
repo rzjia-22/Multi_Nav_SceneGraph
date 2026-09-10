@@ -26,7 +26,7 @@ def validate_yaml() -> None:
 
 
 def validate_python() -> None:
-    for base in (ROOT / "ros_ws" / "src", ROOT / "tools", ROOT / "tests"):
+    for base in (ROOT / "ros_ws" / "src", ROOT / "research_data", ROOT / "tools", ROOT / "tests"):
         for path in sorted(base.rglob("*.py")):
             ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
 
@@ -91,11 +91,24 @@ def validate_configs() -> None:
             fail(f"invalid tree position: {item}")
 
 
+def validate_dataset_v0() -> None:
+    sys.path.insert(0, str(ROOT))
+    from research_data.validation import validate_manifest
+
+    report = validate_manifest()
+    if report["scene_leakage"] or report["scene_count"] != 14 or report["episode_count"] != 70:
+        fail("Dataset V0 manifest contract failed")
+    attributes = (ROOT / ".gitattributes").read_text(encoding="utf-8")
+    if "*.h5 filter=lfs" not in attributes or "*.usd filter=lfs" not in attributes:
+        fail("Dataset V0 binary artifacts are not covered by Git LFS")
+
+
 def main() -> int:
     validate_yaml()
     validate_python()
     validate_packages()
     validate_configs()
+    validate_dataset_v0()
     print("repository validation passed")
     return 0
 

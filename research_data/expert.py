@@ -31,11 +31,14 @@ class Grid:
         return x * self.resolution - self.half_extent, y * self.resolution - self.half_extent
 
 
-def occupancy_grid(scene: dict[str, Any], robot: dict[str, Any], resolution: float = 0.10) -> Grid:
+def occupancy_grid(
+    scene: dict[str, Any], robot: dict[str, Any], resolution: float = 0.10,
+    clearance_key: str = "planning_radius_m",
+) -> Grid:
     half = min(float(value) for value in scene["extent_m"]) / 2.0
     size = int(round(2.0 * half / resolution)) + 1
     occupied = np.zeros((size, size), dtype=bool)
-    clearance = float(robot["surrogate"]["footprint"]["planning_radius_m"])
+    clearance = float(robot["surrogate"]["footprint"][clearance_key])
     xs = np.linspace(-half, half, size)
     ys = np.linspace(-half, half, size)
     occupied[0, :] = occupied[-1, :] = True
@@ -149,7 +152,7 @@ def sample_preview_plan(scene: dict[str, Any], episode_id: str) -> dict[str, Any
         "robot_profile": robot["profile_id"],
         "sensor_profile": sensor["profile_id"],
         "planner": {"type": "privileged_grid_astar", "grid_resolution_m": grid.resolution, "smoothing": "greedy_line_of_sight"},
-        "controller": {"type": "pure_pursuit", "lookahead_m": 0.55, "goal_tolerance_m": 0.18},
+        "controller": {"type": "pure_pursuit", "lookahead_m": 0.32, "goal_tolerance_m": 0.18},
         "target_route_length_bucket": "medium",
         "start_pose_xyzyaw": [round(start[0], 6), round(start[1], 6), path[0][2], round(start_yaw, 6)],
         "goal_pose_xyz": [round(goal[0], 6), round(goal[1], 6), path[-1][2]],
@@ -171,4 +174,3 @@ def write_preview_plan(scene: dict[str, Any], output: Path) -> dict[str, Any]:
     plan = sample_preview_plan(scene, "train_scene_000_episode_000")
     dump_yaml(output, plan)
     return plan
-

@@ -16,20 +16,25 @@ device_capability:
   imu:
     type: 6DoF
     coordinates: {x: right, y: down, z: forward}
+    accelerometer_supported_rates_hz: [62.5, 250]
+    gyroscope_supported_rates_hz: [200, 400]
+    acceleration_range_g: 4
+    gyroscope_range_degps: 1000
 application_profile:
   logging_rate_hz: 10
   rgb:
-    resolution: [640, 480]
+    resolution: [640, 360]
     encoding: rgb8
-    fov_deg: {horizontal: 69.0, vertical: 42.0}
+    fov_deg: {horizontal: 69.0, vertical: 42.2}
     clipping_range_m: [0.10, 20.0]
+    simulated_exposure_compensation_stops: 0.0
   depth_raw:
     resolution: [848, 480]
     encoding: float32_m
-    fov_deg: {horizontal: 87.0, vertical: 58.0}
+    fov_deg: {horizontal: 87.0, vertical: 56.4}
     valid_range_m: [0.20, 10.0]
   depth_aligned_to_rgb:
-    resolution: [640, 480]
+    resolution: [640, 360]
     encoding: float32_m
     policy: z_buffer_reproject_depth_optical_to_rgb_optical
   imu:
@@ -47,4 +52,5 @@ notes:
   - Device capability and Dataset V0 application logging rates are intentionally distinct.
   - Real deployment must read per-device RGB/depth intrinsics and extrinsics from librealsense.
   - V0 models should consume RGB plus depth registered into the RGB optical frame.
-
+  - The unified 100 Hz clean simulator signal is an application schema choice, not a claimed D435i hardware mode.
+  - Isaac V0 uses square-pixel pinholes; application vertical FOV values are the 16:9/848x480 projections of the nominal horizontal FOV, while device nominal FOV remains listed above.

@@ -2429,7 +2429,7 @@ def Xform "World" {
             }
             def Sphere "Foliage" (prepend apiSchemas = ["SemanticsAPI:Semantics"]) {
                 double radius = 1.657426
-                color3f[] primvars:displayColor = [(0.08, 0.34, 0.06)]
+                color3f[] primvars:displayColor = [(0.08, 0.31, 0.05)]
                 uniform token semantics:Semantics:semanticType = "class"
                 uniform string semantics:Semantics:semanticData = "foliage"
                 double3 xformOp:translate = (8.504282, -1.965445, 4.686214)
@@ -2449,7 +2449,7 @@ def Xform "World" {
             }
             def Sphere "Foliage" (prepend apiSchemas = ["SemanticsAPI:Semantics"]) {
                 double radius = 1.236877
-                color3f[] primvars:displayColor = [(0.08, 0.34, 0.06)]
+                color3f[] primvars:displayColor = [(0.08, 0.31, 0.05)]
                 uniform token semantics:Semantics:semanticType = "class"
                 uniform string semantics:Semantics:semanticData = "foliage"
                 double3 xformOp:translate = (8.016168, -6.682286, 3.356754)
@@ -2469,7 +2469,7 @@ def Xform "World" {
             }
             def Sphere "Foliage" (prepend apiSchemas = ["SemanticsAPI:Semantics"]) {
                 double radius = 1.593076
-                color3f[] primvars:displayColor = [(0.08, 0.34, 0.06)]
+                color3f[] primvars:displayColor = [(0.12, 0.38, 0.07)]
                 uniform token semantics:Semantics:semanticType = "class"
                 uniform string semantics:Semantics:semanticData = "foliage"
                 double3 xformOp:translate = (4.865864, -2.958742, 5.34232)
@@ -2489,7 +2489,7 @@ def Xform "World" {
             }
             def Sphere "Foliage" (prepend apiSchemas = ["SemanticsAPI:Semantics"]) {
                 double radius = 1.235858
-                color3f[] primvars:displayColor = [(0.08, 0.34, 0.06)]
+                color3f[] primvars:displayColor = [(0.12, 0.38, 0.07)]
                 uniform token semantics:Semantics:semanticType = "class"
                 uniform string semantics:Semantics:semanticData = "foliage"
                 double3 xformOp:translate = (0.708324, -1.042036, 4.205399)
@@ -2509,7 +2509,7 @@ def Xform "World" {
             }
             def Sphere "Foliage" (prepend apiSchemas = ["SemanticsAPI:Semantics"]) {
                 double radius = 1.505379
-                color3f[] primvars:displayColor = [(0.08, 0.34, 0.06)]
+                color3f[] primvars:displayColor = [(0.08, 0.31, 0.05)]
                 uniform token semantics:Semantics:semanticType = "class"
                 uniform string semantics:Semantics:semanticData = "foliage"
                 double3 xformOp:translate = (3.257988, 6.026021, 4.105532999999999)
@@ -2529,7 +2529,7 @@ def Xform "World" {
             }
             def Sphere "Foliage" (prepend apiSchemas = ["SemanticsAPI:Semantics"]) {
                 double radius = 1.419424
-                color3f[] primvars:displayColor = [(0.08, 0.34, 0.06)]
+                color3f[] primvars:displayColor = [(0.08, 0.31, 0.05)]
                 uniform token semantics:Semantics:semanticType = "class"
                 uniform string semantics:Semantics:semanticData = "foliage"
                 double3 xformOp:translate = (9.137308, 3.542485, 3.9896779999999996)
@@ -2549,7 +2549,7 @@ def Xform "World" {
             }
             def Sphere "Foliage" (prepend apiSchemas = ["SemanticsAPI:Semantics"]) {
                 double radius = 1.070585
-                color3f[] primvars:displayColor = [(0.08, 0.34, 0.06)]
+                color3f[] primvars:displayColor = [(0.12, 0.38, 0.07)]
                 uniform token semantics:Semantics:semanticType = "class"
                 uniform string semantics:Semantics:semanticData = "foliage"
                 double3 xformOp:translate = (-0.621481, 0.476007, 3.652853)
@@ -2569,7 +2569,7 @@ def Xform "World" {
             }
             def Sphere "Foliage" (prepend apiSchemas = ["SemanticsAPI:Semantics"]) {
                 double radius = 1.011874
-                color3f[] primvars:displayColor = [(0.08, 0.34, 0.06)]
+                color3f[] primvars:displayColor = [(0.12, 0.38, 0.07)]
                 uniform token semantics:Semantics:semanticType = "class"
                 uniform string semantics:Semantics:semanticData = "foliage"
                 double3 xformOp:translate = (1.4492, -9.722023, 3.450708)
@@ -2589,7 +2589,7 @@ def Xform "World" {
             }
             def Sphere "Foliage" (prepend apiSchemas = ["SemanticsAPI:Semantics"]) {
                 double radius = 1.706335
-                color3f[] primvars:displayColor = [(0.08, 0.34, 0.06)]
+                color3f[] primvars:displayColor = [(0.08, 0.31, 0.05)]
                 uniform token semantics:Semantics:semanticType = "class"
                 uniform string semantics:Semantics:semanticData = "foliage"
                 double3 xformOp:translate = (-6.439447, -1.954909, 4.685218)
@@ -2609,7 +2609,7 @@ def Xform "World" {
             }
             def Sphere "Foliage" (prepend apiSchemas = ["SemanticsAPI:Semantics"]) {
                 double radius = 1.81317
-                color3f[] primvars:displayColor = [(0.08, 0.34, 0.06)]
+                color3f[] primvars:displayColor = [(0.08, 0.31, 0.05)]
                 uniform token semantics:Semantics:semanticType = "class"
                 uniform string semantics:Semantics:semanticData = "foliage"
                 double3 xformOp:translate = (-3.834448, -6.524624, 5.062632)
@@ -2629,7 +2629,7 @@ def Xform "World" {
             }
             def Sphere "Foliage" (prepend apiSchemas = ["SemanticsAPI:Semantics"]) {
                 double radius = 1.42543
-                color3f[] primvars:displayColor = [(0.08, 0.34, 0.06)]
+                color3f[] primvars:displayColor = [(0.08, 0.31, 0.05)]
                 uniform token semantics:Semantics:semanticType = "class"
                 uniform string semantics:Semantics:semanticData = "foliage"
                 double3 xformOp:translate = (-4.562255, 5.299984, 3.99559)
@@ -2649,7 +2649,7 @@ def Xform "World" {
             }
             def Sphere "Foliage" (prepend apiSchemas = ["SemanticsAPI:Semantics"]) {
                 double radius = 1.49562
-                color3f[] primvars:displayColor = [(0.08, 0.34, 0.06)]
+                color3f[] primvars:displayColor = [(0.08, 0.31, 0.05)]
                 uniform token semantics:Semantics:semanticType = "class"
                 uniform string semantics:Semantics:semanticData = "foliage"
                 double3 xformOp:translate = (-3.572517, -8.625319, 4.124673)
@@ -2669,7 +2669,7 @@ def Xform "World" {
             }
             def Sphere "Foliage" (prepend apiSchemas = ["SemanticsAPI:Semantics"]) {
                 double radius = 1.256442
-                color3f[] primvars:displayColor = [(0.08, 0.34, 0.06)]
+                color3f[] primvars:displayColor = [(0.08, 0.31, 0.05)]
                 uniform token semantics:Semantics:semanticType = "class"
                 uniform string semantics:Semantics:semanticData = "foliage"
                 double3 xformOp:translate = (4.915037, -4.533704, 3.33548)
@@ -2689,7 +2689,7 @@ def Xform "World" {
             }
             def Sphere "Foliage" (prepend apiSchemas = ["SemanticsAPI:Semantics"]) {
                 double radius = 1.901879
-                color3f[] primvars:displayColor = [(0.08, 0.34, 0.06)]
+                color3f[] primvars:displayColor = [(0.08, 0.31, 0.05)]
                 uniform token semantics:Semantics:semanticType = "class"
                 uniform string semantics:Semantics:semanticData = "foliage"
                 double3 xformOp:translate = (3.497857, 7.865628, 5.310512)
@@ -2709,7 +2709,7 @@ def Xform "World" {
             }
             def Sphere "Foliage" (prepend apiSchemas = ["SemanticsAPI:Semantics"]) {
                 double radius = 1.327857
-                color3f[] primvars:displayColor = [(0.08, 0.34, 0.06)]
+                color3f[] primvars:displayColor = [(0.12, 0.38, 0.07)]
                 uniform token semantics:Semantics:semanticType = "class"
                 uniform string semantics:Semantics:semanticData = "foliage"
                 double3 xformOp:translate = (-2.339161, -3.107457, 4.600149)
@@ -2729,7 +2729,7 @@ def Xform "World" {
             }
             def Sphere "Foliage" (prepend apiSchemas = ["SemanticsAPI:Semantics"]) {
                 double radius = 1.407651
-                color3f[] primvars:displayColor = [(0.08, 0.34, 0.06)]
+                color3f[] primvars:displayColor = [(0.08, 0.31, 0.05)]
                 uniform token semantics:Semantics:semanticType = "class"
                 uniform string semantics:Semantics:semanticData = "foliage"
                 double3 xformOp:translate = (-8.616604, 4.982294, 3.82113)
@@ -2749,7 +2749,7 @@ def Xform "World" {
             }
             def Sphere "Foliage" (prepend apiSchemas = ["SemanticsAPI:Semantics"]) {
                 double radius = 1.392995
-                color3f[] primvars:displayColor = [(0.08, 0.34, 0.06)]
+                color3f[] primvars:displayColor = [(0.08, 0.31, 0.05)]
                 uniform token semantics:Semantics:semanticType = "class"
                 uniform string semantics:Semantics:semanticData = "foliage"
                 double3 xformOp:translate = (-6.202756, 4.754976, 3.8515680000000003)
@@ -2769,7 +2769,7 @@ def Xform "World" {
             }
             def Sphere "Foliage" (prepend apiSchemas = ["SemanticsAPI:Semantics"]) {
                 double radius = 1.167387
-                color3f[] primvars:displayColor = [(0.08, 0.34, 0.06)]
+                color3f[] primvars:displayColor = [(0.08, 0.31, 0.05)]
                 uniform token semantics:Semantics:semanticType = "class"
                 uniform string semantics:Semantics:semanticData = "foliage"
                 double3 xformOp:translate = (10.200177, -4.89217, 3.3032150000000002)
@@ -2789,7 +2789,7 @@ def Xform "World" {
             }
             def Sphere "Foliage" (prepend apiSchemas = ["SemanticsAPI:Semantics"]) {
                 double radius = 1.361012
-                color3f[] primvars:displayColor = [(0.08, 0.34, 0.06)]
+                color3f[] primvars:displayColor = [(0.12, 0.38, 0.07)]
                 uniform token semantics:Semantics:semanticType = "class"
                 uniform string semantics:Semantics:semanticData = "foliage"
                 double3 xformOp:translate = (-1.634343, -5.062662, 4.720156)
@@ -2809,7 +2809,7 @@ def Xform "World" {
             }
             def Sphere "Foliage" (prepend apiSchemas = ["SemanticsAPI:Semantics"]) {
                 double radius = 1.710133
-                color3f[] primvars:displayColor = [(0.08, 0.34, 0.06)]
+                color3f[] primvars:displayColor = [(0.08, 0.31, 0.05)]
                 uniform token semantics:Semantics:semanticType = "class"
                 uniform string semantics:Semantics:semanticData = "foliage"
                 double3 xformOp:translate = (4.156867, -5.732472, 4.674546)
@@ -2829,7 +2829,7 @@ def Xform "World" {
             }
             def Sphere "Foliage" (prepend apiSchemas = ["SemanticsAPI:Semantics"]) {
                 double radius = 1.262138
-                color3f[] primvars:displayColor = [(0.08, 0.34, 0.06)]
+                color3f[] primvars:displayColor = [(0.08, 0.31, 0.05)]
                 uniform token semantics:Semantics:semanticType = "class"
                 uniform string semantics:Semantics:semanticData = "foliage"
                 double3 xformOp:translate = (6.690224, 10.948802, 3.529885)
@@ -2849,7 +2849,7 @@ def Xform "World" {
             }
             def Sphere "Foliage" (prepend apiSchemas = ["SemanticsAPI:Semantics"]) {
                 double radius = 1.077112
-                color3f[] primvars:displayColor = [(0.08, 0.34, 0.06)]
+                color3f[] primvars:displayColor = [(0.12, 0.38, 0.07)]
                 uniform token semantics:Semantics:semanticType = "class"
                 uniform string semantics:Semantics:semanticData = "foliage"
                 double3 xformOp:translate = (-8.160671, -5.525004, 3.473847)
@@ -2869,7 +2869,7 @@ def Xform "World" {
             }
             def Sphere "Foliage" (prepend apiSchemas = ["SemanticsAPI:Semantics"]) {
                 double radius = 1.118644
-                color3f[] primvars:displayColor = [(0.08, 0.34, 0.06)]
+                color3f[] primvars:displayColor = [(0.12, 0.38, 0.07)]
                 uniform token semantics:Semantics:semanticType = "class"
                 uniform string semantics:Semantics:semanticData = "foliage"
                 double3 xformOp:translate = (3.88465, 4.314522, 3.662932)
@@ -2889,7 +2889,7 @@ def Xform "World" {
             }
             def Sphere "Foliage" (prepend apiSchemas = ["SemanticsAPI:Semantics"]) {
                 double radius = 1.450143
-                color3f[] primvars:displayColor = [(0.08, 0.34, 0.06)]
+                color3f[] primvars:displayColor = [(0.08, 0.31, 0.05)]
                 uniform token semantics:Semantics:semanticType = "class"
                 uniform string semantics:Semantics:semanticData = "foliage"
                 double3 xformOp:translate = (-0.821686, 8.839287, 3.9861519999999997)
@@ -2909,7 +2909,7 @@ def Xform "World" {
             }
             def Sphere "Foliage" (prepend apiSchemas = ["SemanticsAPI:Semantics"]) {
                 double radius = 1.653467
-                color3f[] primvars:displayColor = [(0.08, 0.34, 0.06)]
+                color3f[] primvars:displayColor = [(0.08, 0.31, 0.05)]
                 uniform token semantics:Semantics:semanticType = "class"
                 uniform string semantics:Semantics:semanticData = "foliage"
                 double3 xformOp:translate = (0.940915, 3.043725, 4.571977)
@@ -2929,7 +2929,7 @@ def Xform "World" {
             }
             def Sphere "Foliage" (prepend apiSchemas = ["SemanticsAPI:Semantics"]) {
                 double radius = 1.068885
-                color3f[] primvars:displayColor = [(0.08, 0.34, 0.06)]
+                color3f[] primvars:displayColor = [(0.12, 0.38, 0.07)]
                 uniform token semantics:Semantics:semanticType = "class"
                 uniform string semantics:Semantics:semanticData = "foliage"
                 double3 xformOp:translate = (-2.712209, 4.507416, 3.631647)
@@ -2949,7 +2949,7 @@ def Xform "World" {
             }
             def Sphere "Foliage" (prepend apiSchemas = ["SemanticsAPI:Semantics"]) {
                 double radius = 1.440038
-                color3f[] primvars:displayColor = [(0.08, 0.34, 0.06)]
+                color3f[] primvars:displayColor = [(0.08, 0.31, 0.05)]
                 uniform token semantics:Semantics:semanticType = "class"
                 uniform string semantics:Semantics:semanticData = "foliage"
                 double3 xformOp:translate = (3.438035, 0.644912, 3.8944170000000007)
@@ -2969,7 +2969,7 @@ def Xform "World" {
             }
             def Sphere "Foliage" (prepend apiSchemas = ["SemanticsAPI:Semantics"]) {
                 double radius = 1.366321
-                color3f[] primvars:displayColor = [(0.08, 0.34, 0.06)]
+                color3f[] primvars:displayColor = [(0.12, 0.38, 0.07)]
                 uniform token semantics:Semantics:semanticType = "class"
                 uniform string semantics:Semantics:semanticData = "foliage"
                 double3 xformOp:translate = (-5.859365, -7.035197, 4.497311000000001)
@@ -2989,7 +2989,7 @@ def Xform "World" {
             }
             def Sphere "Foliage" (prepend apiSchemas = ["SemanticsAPI:Semantics"]) {
                 double radius = 1.021214
-                color3f[] primvars:displayColor = [(0.08, 0.34, 0.06)]
+                color3f[] primvars:displayColor = [(0.12, 0.38, 0.07)]
                 uniform token semantics:Semantics:semanticType = "class"
                 uniform string semantics:Semantics:semanticData = "foliage"
                 double3 xformOp:translate = (3.04695, 10.600555, 3.39916)
@@ -3009,7 +3009,7 @@ def Xform "World" {
             }
             def Sphere "Foliage" (prepend apiSchemas = ["SemanticsAPI:Semantics"]) {
                 double radius = 1.425203
-                color3f[] primvars:displayColor = [(0.08, 0.34, 0.06)]
+                color3f[] primvars:displayColor = [(0.08, 0.31, 0.05)]
                 uniform token semantics:Semantics:semanticType = "class"
                 uniform string semantics:Semantics:semanticData = "foliage"
                 double3 xformOp:translate = (-10.072536, -1.515162, 3.8898480000000006)
@@ -3029,7 +3029,7 @@ def Xform "World" {
             }
             def Sphere "Foliage" (prepend apiSchemas = ["SemanticsAPI:Semantics"]) {
                 double radius = 1.423865
-                color3f[] primvars:displayColor = [(0.08, 0.34, 0.06)]
+                color3f[] primvars:displayColor = [(0.12, 0.38, 0.07)]
                 uniform token semantics:Semantics:semanticType = "class"
                 uniform string semantics:Semantics:semanticData = "foliage"
                 double3 xformOp:translate = (-10.19153, 6.016765, 4.759406)
@@ -3049,7 +3049,7 @@ def Xform "World" {
             }
             def Sphere "Foliage" (prepend apiSchemas = ["SemanticsAPI:Semantics"]) {
                 double radius = 0.941588
-                color3f[] primvars:displayColor = [(0.08, 0.34, 0.06)]
+                color3f[] primvars:displayColor = [(0.12, 0.38, 0.07)]
                 uniform token semantics:Semantics:semanticType = "class"
                 uniform string semantics:Semantics:semanticData = "foliage"
                 double3 xformOp:translate = (6.241381, 0.562224, 3.07647)
@@ -3069,7 +3069,7 @@ def Xform "World" {
             }
             def Sphere "Foliage" (prepend apiSchemas = ["SemanticsAPI:Semantics"]) {
                 double radius = 1.710819
-                color3f[] primvars:displayColor = [(0.08, 0.34, 0.06)]
+                color3f[] primvars:displayColor = [(0.08, 0.31, 0.05)]
                 uniform token semantics:Semantics:semanticType = "class"
                 uniform string semantics:Semantics:semanticData = "foliage"
                 double3 xformOp:translate = (-7.760643, -8.564399, 4.676075)
@@ -3089,7 +3089,7 @@ def Xform "World" {
             }
             def Sphere "Foliage" (prepend apiSchemas = ["SemanticsAPI:Semantics"]) {
                 double radius = 1.107753
-                color3f[] primvars:displayColor = [(0.08, 0.34, 0.06)]
+                color3f[] primvars:displayColor = [(0.08, 0.31, 0.05)]
                 uniform token semantics:Semantics:semanticType = "class"
                 uniform string semantics:Semantics:semanticData = "foliage"
                 double3 xformOp:translate = (-6.168479, 6.920079, 3.024262)
@@ -3109,7 +3109,7 @@ def Xform "World" {
             }
             def Sphere "Foliage" (prepend apiSchemas = ["SemanticsAPI:Semantics"]) {
                 double radius = 1.715086
-                color3f[] primvars:displayColor = [(0.08, 0.34, 0.06)]
+                color3f[] primvars:displayColor = [(0.08, 0.31, 0.05)]
                 uniform token semantics:Semantics:semanticType = "class"
                 uniform string semantics:Semantics:semanticData = "foliage"
                 double3 xformOp:translate = (-3.173191, 3.237834, 4.878252)
@@ -3129,7 +3129,7 @@ def Xform "World" {
             }
             def Sphere "Foliage" (prepend apiSchemas = ["SemanticsAPI:Semantics"]) {
                 double radius = 1.010819
-                color3f[] primvars:displayColor = [(0.08, 0.34, 0.06)]
+                color3f[] primvars:displayColor = [(0.12, 0.38, 0.07)]
                 uniform token semantics:Semantics:semanticType = "class"
                 uniform string semantics:Semantics:semanticData = "foliage"
                 double3 xformOp:translate = (-0.525582, -2.746116, 3.471039)
@@ -3149,7 +3149,7 @@ def Xform "World" {
             }
             def Sphere "Foliage" (prepend apiSchemas = ["SemanticsAPI:Semantics"]) {
                 double radius = 1.46156
-                color3f[] primvars:displayColor = [(0.08, 0.34, 0.06)]
+                color3f[] primvars:displayColor = [(0.08, 0.31, 0.05)]
                 uniform token semantics:Semantics:semanticType = "class"
                 uniform string semantics:Semantics:semanticData = "foliage"
                 double3 xformOp:translate = (-1.264672, 7.301887, 4.039361)
@@ -3169,7 +3169,7 @@ def Xform "World" {
             }
             def Sphere "Foliage" (prepend apiSchemas = ["SemanticsAPI:Semantics"]) {
                 double radius = 1.414671
-                color3f[] primvars:displayColor = [(0.08, 0.34, 0.06)]
+                color3f[] primvars:displayColor = [(0.08, 0.31, 0.05)]
                 uniform token semantics:Semantics:semanticType = "class"
                 uniform string semantics:Semantics:semanticData = "foliage"
                 double3 xformOp:translate = (7.840148, 4.49275, 3.96286)
@@ -3189,7 +3189,7 @@ def Xform "World" {
             }
             def Sphere "Foliage" (prepend apiSchemas = ["SemanticsAPI:Semantics"]) {
                 double radius = 1.396382
-                color3f[] primvars:displayColor = [(0.08, 0.34, 0.06)]
+                color3f[] primvars:displayColor = [(0.08, 0.31, 0.05)]
                 uniform token semantics:Semantics:semanticType = "class"
                 uniform string semantics:Semantics:semanticData = "foliage"
                 double3 xformOp:translate = (-5.118352, 1.098775, 3.8884860000000003)
@@ -3209,7 +3209,7 @@ def Xform "World" {
             }
             def Sphere "Foliage" (prepend apiSchemas = ["SemanticsAPI:Semantics"]) {
                 double radius = 1.710409
-                color3f[] primvars:displayColor = [(0.08, 0.34, 0.06)]
+                color3f[] primvars:displayColor = [(0.08, 0.31, 0.05)]
                 uniform token semantics:Semantics:semanticType = "class"
                 uniform string semantics:Semantics:semanticData = "foliage"
                 double3 xformOp:translate = (6.271697, -7.139125, 4.654026)
@@ -3229,7 +3229,7 @@ def Xform "World" {
             }
             def Sphere "Foliage" (prepend apiSchemas = ["SemanticsAPI:Semantics"]) {
                 double radius = 1.313493
-                color3f[] primvars:displayColor = [(0.08, 0.34, 0.06)]
+                color3f[] primvars:displayColor = [(0.08, 0.31, 0.05)]
                 uniform token semantics:Semantics:semanticType = "class"
                 uniform string semantics:Semantics:semanticData = "foliage"
                 double3 xformOp:translate = (-3.531789, -1.599176, 3.6917039999999997)
@@ -3249,7 +3249,7 @@ def Xform "World" {
             }
             def Sphere "Foliage" (prepend apiSchemas = ["SemanticsAPI:Semantics"]) {
                 double radius = 1.214452
-                color3f[] primvars:displayColor = [(0.08, 0.34, 0.06)]
+                color3f[] primvars:displayColor = [(0.12, 0.38, 0.07)]
                 uniform token semantics:Semantics:semanticType = "class"
                 uniform string semantics:Semantics:semanticData = "foliage"
                 double3 xformOp:translate = (3.154122, -9.165409, 4.053743)

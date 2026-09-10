@@ -1,9 +1,9 @@
 SHELL := /bin/bash
 
-.PHONY: lint test validate build robotics-image robotics-ml-image simulation-image gpu-preflight isaac-compatibility isaac-minimal model-source models test-models probe-go2-upstream phase1 phase1-diffusion uav-mapping phase2 phase1-synthetic phase1-synthetic-diffusion phase2-synthetic accept-isaac-sensors accept-go2-motion accept-phase1 accept-uav accept-phase2 inspect-hydra
+.PHONY: lint test validate build robotics-image robotics-ml-image simulation-image gpu-preflight isaac-compatibility isaac-minimal model-source models test-models probe-go2-upstream phase1 phase1-diffusion uav-mapping phase2 phase1-synthetic phase1-synthetic-diffusion phase2-synthetic accept-isaac-sensors accept-go2-motion accept-phase1 accept-uav accept-phase2 inspect-hydra dataset-v0-scene-preview dataset-v0-episode-preview dataset-v0-validate dataset-v0-visualize
 
 lint:
-	python3 -m compileall -q ros_ws/src tools tests
+	python3 -m compileall -q ros_ws/src research_data tools tests
 	python3 tools/validate_repository.py
 
 test:
@@ -89,3 +89,22 @@ accept-phase2:
 
 inspect-hydra:
 	python3 tools/inspect_hydra_artifacts.py "$${MNS_HYDRA_DIR:?set MNS_HYDRA_DIR to a finalized Hydra output directory}"
+
+dataset-v0-scene-preview:
+	python3 -m research_data.cli generate-scene --scene-id train_scene_000
+	python3 -m research_data.cli plan-preview
+
+dataset-v0-episode-preview: dataset-v0-scene-preview
+	docker compose --profile simulation run --rm --entrypoint /mns/containers/simulation/dataset_entrypoint.sh simulation \
+		--scene /mns/research_scenes/dataset_v0/train_scene_000/scene.yaml \
+		--plan /mns/artifacts/dataset_v0_preview/train_scene_000_episode_000/episode_plan.yaml \
+		--output /mns/artifacts/dataset_v0_preview/train_scene_000_episode_000/episode.h5 \
+		--headless --enable_cameras
+
+dataset-v0-validate:
+	docker compose --profile simulation run --rm --entrypoint /mns/containers/simulation/dataset_entrypoint.sh simulation \
+		--tool validate --with-episode
+
+dataset-v0-visualize:
+	docker compose --profile simulation run --rm --entrypoint /mns/containers/simulation/dataset_entrypoint.sh simulation \
+		--tool visualize
