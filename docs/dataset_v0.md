@@ -23,8 +23,10 @@ medium (5–8 m) and 21 long (8–10 m) targets. The final bucket is determined 
 expert path length; a sampled task is rejected if its actual planned route is
 outside its bucket or materially exceeds 10 m.
 
-Only `train_scene_000` and `train_scene_000_episode_000` have been generated.
-Generating the other 69 episodes is intentionally deferred for human review.
+Only `train_scene_000` has been rebuilt as the formal visual-scene candidate.
+All episode generation is blocked until this scene passes human visual review.
+The earlier `train_scene_000_episode_000` is retained as historical evidence
+but is explicitly rejected for training in its `review_status.yaml`.
 
 ## Research Forest
 
@@ -33,24 +35,31 @@ remains the fast ROS/Hydra integration regression scene. The research scene is
 24×24 m: large enough for several distinct 3–10 m tasks but cheaper to render
 than the old 40×40 m prototype.
 
-`research_data/forest.py` uses one NumPy PCG64 stream per scene seed. Terrain
-waves, tree positions/types/radii/heights/scales/yaw, ground appearance and
-lighting are all derived from that stream or the selected profile. Generated
-`scene.yaml` contains every realized parameter and a content hash;
-`scene.usda` is a deterministic, diffable scene representation. Rebuilding the
-same profile and seed must reproduce both files exactly.
+`research_data/forest.py` uses one NumPy PCG64 stream per scene seed, but now
+produces only a scene specification. It does not draw terrain or trees. The
+shared Isaac builder in `mns_simulation.research_forest_scene` maps that
+specification to `TerrainImporterCfg` / `TerrainGeneratorCfg`, official height
+field generators, `UsdFileCfg` vegetation references, an MDL ground material,
+and HDR dome plus sun lighting. `scene.yaml` records all selected IDs,
+placements, scales, yaw, collision proxies, semantic policy and version pins.
+The compact `scene.usda` snapshot is exported from the authored Isaac root
+layer and preserves external asset references rather than flattening them.
 
-V0 factors are deliberately limited to flat/gentle/moderate terrain,
-bare-soil/grass ground, normal/bright/dim lighting and low/medium/high tree
-density with two procedural broadleaf shapes. Tree trunks are both rendered
-geometry and collision sources. Semantic classes remain `unknown`, `ground`,
-`tree_trunk`, `foliage`, `robot` and `other`.
+V0 factors remain limited to flat/gentle/moderate terrain, bare-soil/grass
+ground, normal/bright/dim lighting and low/medium/high tree density. The formal
+tree visuals are NVIDIA simulation-ready `Blue_Berry_Elder.usd` and
+`Gray_Birch.usd`; no Cylinder or Sphere is visible to a camera. Invisible
+conservative cylinders remain as collision proxies. The two assets expose
+stable `trunk` and `leaves` prims, so roots are tagged `vegetation` while those
+children remain `tree_trunk` and `foliage`. The parent fallback maps to the
+existing Hydra-compatible `other_object` ID 7; `robot` remains ID 6. No label
+number was reassigned.
 
-No external vegetation asset is redistributed, so the preview has no asset
-license or availability dependency. It was informed by ForestNavigation's
-Isaac Lab TerrainImporter, terrain scale and trunk collision approach, but
-does not copy its prototype script, unseeded random calls, hard-coded assets or
-experimental execution loop.
+`config/research_forests/assets.yaml` is the asset registry. It references the
+Isaac Sim 5.1 NVIDIA cloud asset root, `Grass_Countryside.mdl`, `Dirt.mdl`, and
+the Kloofendal Poly Haven HDR shipped through the Isaac asset library. NVIDIA
+binaries and textures are not copied into this repository. Their stable logical
+IDs, source, expected scale, collision and semantic policy are versioned.
 
 ## Robot target and surrogate
 
@@ -116,41 +125,51 @@ This is not fixed to the legacy five frames, 128×96 input or 32 waypoints.
 template; future model architecture, history, resize, normalization, horizon
 and training parameters remain version-controlled configuration.
 
-## Preview evidence
+## Current scene-review evidence
 
-`train_scene_000` uses seed 41001, gentle grass terrain, normal lighting and
-42 medium-density trees. It starts near (-0.86, 4.72), ends near
-(-6.99, 2.80), and has a blocked 6.42 m direct line. The planned detour is
-7.187 m. Isaac executes 7.051 m, ends 0.170 m from the goal, and does not
-intersect a conservatively checked trunk.
+`train_scene_000` keeps seed 41001, a 24×24 m gentle grass terrain, normal
+lighting and 42 medium-density trees. Its fixed realization contains 23 Blue
+Berry Elder and 19 Gray Birch instances. Tree roots are sampled from the actual
+Isaac-imported height field; scale and yaw are recorded in `scene.yaml`.
 
-The 12.22 s episode has 122 RGB frames, 122 raw/registered depth frames, 1,224
-IMU samples and 612 states. RGB spans 16–252; registered depth has 56.1% valid
-pixels. The machine report is
-`artifacts/dataset_v0_preview/train_scene_000_episode_000/validation_report.json`.
-Review artifacts are `scene_overview.png`, `trajectory_overview.png`,
-`camera_samples.png`, `executed_trajectory.csv`, `preview_summary.json` and
-the Git-LFS-managed `episode.h5`.
+The formal review directory is
+`artifacts/dataset_v0_scene_review/train_scene_000/`. `scene_layout.png` is
+explicitly a schematic XY/collision overview. `isaac_aerial.png`,
+`isaac_ground_view.png` (0.5 m camera height), `isaac_mid_height.png`, and
+`isaac_tree_closeup.png` are actual 1280×720 Isaac RTX outputs. The machine
+report records zero missing registry assets, a 17.68 s scene load, about 5,132
+MiB VRAM, and 15.29 rendered frames/s during the final fixed-view capture.
+
+The older episode directory remains unchanged except for a rejection marker.
+Its primitive-domain camera image, expert path and HDF5 are not valid Dataset
+V0 training evidence and must not be regenerated before this visual gate.
 
 ## Reproduction, validation and Git
 
 ```bash
-make dataset-v0-scene-preview    # CPU scene + expert plan
-make dataset-v0-episode-preview  # GPU Isaac execution + collection
-make dataset-v0-validate         # split/schema/geometry/data gates
-make dataset-v0-visualize        # stable review PNG/CSV/JSON
+make dataset-v0-scene-preview         # deterministic spec + XY schematic only
+make dataset-v0-capture-scene-review  # four fixed Isaac RTX review images
+make dataset-v0-view-scene            # interactive non-headless Isaac viewer
+make dataset-v0-validate              # split/spec/stage/reference gates
 ```
 
-Validation covers the 14/70 plan, bucket counts, leakage, semantics, geometry,
-content hashes, exact scene regeneration, timestamps, required calibration,
-NaNs, image freshness/range, depth validity, goal error, route limit and
-executed footprint clearance.
+`make dataset-v0-view-scene` must be run from the NVIDIA host's X11 desktop
+session. It opens the same builder and `train_scene_000` used for fixed capture,
+starts no robot, ROS, navigation, collector or Hydra process, and remains open
+for free viewport inspection. The Xauthority cookie is mounted read-only.
+
+Current validation covers the frozen 14/70 plan, bucket counts, leakage,
+semantic concepts, registry membership, the official terrain builder,
+primitive-visual exclusion, content hash, deterministic scene-spec
+regeneration and the Isaac-authored stage snapshot. Episode validation remains
+implemented but is not part of the current acceptance gate.
 
 Source, profiles, manifests, YAML/USDA, CSV/JSON and review PNGs use normal
 Git. HDF5, binary USD, videos and future checkpoints are covered by Git LFS.
 Generated work, bags, caches and unreviewed runtime outputs remain ignored.
 
-Before expanding to all 70 episodes, human reviewers must decide whether the
-0.50 m camera height/FOV, stylized procedural forest, density/lighting and the
-single-detour 7.2 m task represent the target field study adequately.
-
+Before any episode is regenerated, human reviewers must decide whether the two
+tree assets resemble the intended woodland, density and corridor openness are
+appropriate, the grass/terrain is credible, the 0.5 m view has the right scale,
+and normal lighting is neither overexposed nor too dark. D435i geometry and
+task difficulty return to review only after the scene itself passes.

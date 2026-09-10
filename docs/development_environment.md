@@ -92,6 +92,19 @@ The simulation entrypoint sources Isaac's Python environment and then `exec`s
 the runtime, so Python is container PID 1. Docker SIGINT therefore stops the
 physics loop cleanly instead of killing a wrapper shell after its grace period.
 
+Dataset scene review has a separate GUI boundary:
+
+```bash
+make dataset-v0-view-scene
+```
+
+Run it from the NVIDIA host's active X11 desktop, with `DISPLAY` and a readable
+`XAUTHORITY` present. Compose mounts the X socket and cookie read-only; it does
+not disable host access control. The command loads only the Research Forest
+builder and leaves the Isaac viewport open for orbit/pan/ground-level review.
+For remote or headless sessions use `make dataset-v0-capture-scene-review`
+instead; that produces the four versioned RTX views without opening a window.
+
 For real message inspection, run the normal simulation process and then:
 
 ```bash

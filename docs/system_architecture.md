@@ -23,13 +23,20 @@ robotics image contains ROS 2 Jazzy, Hydra and project nodes. The simulation
 image contains Isaac Sim/Lab and uses Isaac's internal Jazzy ROS bridge to
 exchange standard DDS messages over host networking.
 
-Dataset V0 is a separate offline research-data consumer of Isaac:
+Dataset V0 is a separate offline research-data consumer of Isaac. Its current
+scene-review gate stops before the lower navigation/collection branch:
 
 ```text
 deterministic Research Forest + privileged map
   ├── A* + LOS smoothing ─► Pure Pursuit ─► kinematic surrogate
   └── moving D435i-like rig ─► RGB + raw/registered depth + IMU ─► HDF5
 ```
+
+The Research Forest specification is rendered only by the shared Isaac scene
+builder: official TerrainImporter/TerrainGenerator APIs provide terrain,
+NVIDIA USD references provide visible vegetation, MDL provides ground and an
+HDR dome plus sun provide lighting. Until the current scene is human-approved,
+the expert, surrogate and HDF5 path above remains disabled by the Make target.
 
 It reuses the simulation image but is not a ROS package and does not make
 Hydra a collection dependency. `research_data/` owns deterministic scene,

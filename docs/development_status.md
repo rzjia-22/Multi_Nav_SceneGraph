@@ -16,26 +16,29 @@ RTX 4060 Laptop / 16 GB RAM machine. All four cameras remain exactly 10 Hz in
 simulation time, but wall throughput is about 2.4 Hz (RTF about 0.24). This is
 reported as a performance warning, not hidden as a functional failure.
 
-The current milestone is Dataset V0 pilot infrastructure for future
-standing-mode DIABLO + D435i local navigation. Its 14-scene/70-episode
-scene-level split is frozen. One deterministic Research Forest and one real
-GPU Isaac expert episode are generated, validated and ready for Git/LFS review.
-The remaining 69 episodes are deliberately withheld until a human reviews the
-mounting, appearance and task difficulty.
+The current milestone is the Dataset V0 Research Forest visual-domain gate.
+The 14-scene/70-episode scene-level split is still frozen, but robot,
+navigation, D435i collection and HDF5 generation are deliberately paused.
+`train_scene_000` has been rebuilt with the Isaac Lab 2.3.1 terrain pipeline,
+two real NVIDIA vegetation USDs, Grass Countryside MDL and an Isaac HDR sky.
+Four RTX views plus a separate schematic are ready for human inspection. The
+previous primitive-domain episode is retained but explicitly rejected for
+training; no further data may be generated before scene approval.
 
 ## Dataset V0 milestone state
 
 | Capability | State | Evidence |
 | --- | --- | --- |
 | Dataset plan | source complete, validated | 10/2/2 scene split; 21/28/21 short/medium/long; no leakage |
-| Research Forest | CPU deterministic validated | `train_scene_000`, seed 41001, YAML/USDA exact regeneration |
+| Research Forest specification | deterministic validated | `train_scene_000`, seed 41001; official terrain config and 42 realized asset placements; content hash stable |
+| Research Forest rendering | GPU Isaac validated, awaiting human acceptance | Blue Berry Elder/Gray Birch USD, Grass MDL, HDR sky; four 1280×720 RTX views; zero missing registry assets |
 | DIABLO profile | provisional V0 assumptions | non-holonomic surrogate; mount/footprint/limits isolated in config |
 | D435i profile | official capabilities documented; V0 approximation validated | separate 640×360 RGB and 848×480 depth; actual Isaac intrinsics saved; registered depth |
-| Expert/recorder | GPU Isaac validated | privileged A* + LOS + Pure Pursuit wrote model-independent HDF5 |
-| Preview episode | PASS, awaiting human review | 12.22 s; 7.187 m planned / 7.051 m executed; 0.170 m goal error; collision-free map check |
-| Preview sensors | GPU Isaac validated | 122 RGB/depth, 1,224 IMU, 612 states; RGB 16–252; 56.1% valid registered depth |
-| Validation/review | PASS | schema/time/image/depth/path/split gates and stable PNG/CSV/JSON evidence |
-| Bulk generation | deferred by scope | remaining 69 episodes are not generated |
+| Expert/recorder | source retained; current execution blocked | prior primitive-domain run is historical only; Make target stops before planner/collector |
+| Historical preview episode | superseded / rejected visual domain | `review_status.yaml`; HDF5 remains only as provenance, not training data |
+| Scene visualization | GPU Isaac validated | aerial, 0.5 m ground, mid-height and close vegetation RTX views; interactive X11 viewer reached ready state |
+| Scene validation | PASS | 14/70 split, no leakage, registry/spec semantics, no primitive tree visuals, deterministic regeneration |
+| Bulk generation | blocked pending human scene review | remaining 69 episodes and replacement episode 000 are not generated |
 
 ## Milestone state
 
@@ -86,6 +89,15 @@ mounting, appearance and task difficulty.
 - `make build`: all 8 ROS packages built; 10 package tests passed, with zero
   errors, failures or skips.
 - `make validate`: repository validation and 20 pure Python tests passed.
+- Dataset V0 scene capture: Isaac Lab generated the 24×24 m seeded terrain,
+  loaded 23 Blue Berry Elder and 19 Gray Birch assets, resolved the Grass MDL
+  and Kloofendal HDR, and reported zero missing registry assets. Cached scene
+  load was 17.68 s; final fixed 1280×720 review rendering averaged 15.29 FPS
+  and used about 5,132 MiB of 8,188 MiB VRAM. Earlier warm-cache runs were
+  faster, so this measurement is evidence of usability rather than a benchmark.
+- `make dataset-v0-view-scene` reached `MNS_RESEARCH_FOREST_READY` through the
+  host Xauthority path, opened the non-headless Isaac renderer and was then
+  stopped manually. It launched no robot, ROS graph, navigator or collector.
 - `make gpu-preflight`, `make isaac-compatibility`, `make isaac-minimal`: RTX
   4060 Laptop GPU, 8,188 MiB VRAM, driver 550.144.03, CUDA container and Vulkan
   pass; frozen Isaac Lab 2.3.1 GPU PhysX steps and shuts down cleanly.
@@ -159,6 +171,11 @@ Stop bringup with Ctrl-C or `docker compose stop`; SIGINT reaches Python PID 1
 and Hydra saves all artifacts before both containers exit.
 
 ## Known remaining issues
+
+- `train_scene_000` still requires human visual acceptance. Reviewers must
+  judge the two tree species, orchard-like openness/density, Grass MDL,
+  terrain variation, normal lighting and the provisional 0.5 m viewpoint.
+  This is an intentional gate, not a source-completeness claim.
 
 - The current 8 GB VRAM / 16 GB RAM laptop cannot run the four-camera/four-Hydra
   graph at wall-clock real time with the default 320×240, 10 Hz configuration.

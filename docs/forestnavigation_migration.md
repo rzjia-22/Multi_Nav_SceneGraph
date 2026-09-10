@@ -22,7 +22,7 @@ Responsibilities were moved into stable packages instead of copying the old
 | Single UAV collector | `mns_simulation` | kinematic aerial sensor abstraction with live RGB-D/semantic ROS topics; no bag prerequisite |
 | Go2 + UAV and two-team runners | `mns_bringup`, `mns_multi_robot` | YAML roster and one shared simulation instead of experiment-specific entry scripts |
 | Two-team partition | `mns_multi_robot.partition` | deterministic general quadrant primitive used by configuration, not a coupled runner |
-| Forest generator design reference | `research_data.forest`, `config/research_forests` | retained meter scale, gentle procedural terrain and conservative trunk collision concepts; replaced unseeded prototype, hard-coded assets and script loop with deterministic manifests/USDA |
+| Forest generator design reference | `research_data.forest`, `mns_simulation.research_forest_scene`, `config/research_forests` | replaced custom sine/primitive visuals with seeded Isaac Lab terrain, current Isaac 5.1 NVIDIA Blue Berry Elder/Gray Birch USDs, MDL ground, HDR sky and hidden conservative colliders; no old script loop copied |
 
 The source files that retain adapted coverage/partition behavior include the
 audited revision in their module header. The exact upstream `navdiffusion`
@@ -30,6 +30,15 @@ Python package is copied only from a locally verified checkout into the ML
 image because checkpoint compatibility depends on that model definition.
 No source from `scripts/forest_generator/forest_generator_isaaclab.py` or
 `scripts/forest_generator/test.py` is copied into the Dataset V0 generator.
+
+For the current visual-scene gate, the old `Collected_forest_v2` and
+`Collected_forest_v5` mapping records were also audited. They identify Blue
+Berry Elder, Natural/Dirt MDL and their bark/leaf/ground textures; v5 additionally
+contains Holly and an unrelated farmhouse. The new registry resolves assets
+through the versioned Isaac Sim 5.1 cloud root, adds Gray Birch from that same
+official tree directory, and intentionally excludes Holly (a shrub) and the
+farmhouse. External NVIDIA assets remain URI references and are not copied from
+the upstream LFS collection into this repository.
 
 ## Checkpoint handling
 
