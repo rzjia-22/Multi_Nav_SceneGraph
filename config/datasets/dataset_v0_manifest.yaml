@@ -1,0 +1,355 @@
+dataset_version: dataset_v0
+status: pilot_plan
+split_policy: scene_level_only
+scene_size_m: 24.0
+route_length_buckets_m:
+  short:
+  - 3.0
+  - 5.0
+  medium:
+  - 5.0
+  - 8.0
+  long:
+  - 8.0
+  - 10.0
+profiles:
+  robot: config/robots/diablo_standing.yaml
+  sensor: config/sensors/d435i_navigation_v0.yaml
+  forest: config/research_forests/profiles.yaml
+scenes:
+- scene_id: train_scene_000
+  scene_seed: 41001
+  split: train
+  factors:
+    terrain: gentle
+    ground: grass
+    lighting: normal
+    tree_density: medium
+  planned_episodes:
+  - episode_id: train_scene_000_episode_000
+    episode_type: nominal_expert
+    target_route_length_bucket: short
+  - episode_id: train_scene_000_episode_001
+    episode_type: nominal_expert
+    target_route_length_bucket: medium
+  - episode_id: train_scene_000_episode_002
+    episode_type: nominal_expert
+    target_route_length_bucket: medium
+  - episode_id: train_scene_000_episode_003
+    episode_type: nominal_expert
+    target_route_length_bucket: long
+  - episode_id: train_scene_000_episode_004
+    episode_type: nominal_expert
+    target_route_length_bucket: long
+- scene_id: train_scene_001
+  scene_seed: 41017
+  split: train
+  factors:
+    terrain: flat
+    ground: bare_soil
+    lighting: bright
+    tree_density: low
+  planned_episodes:
+  - episode_id: train_scene_001_episode_000
+    episode_type: nominal_expert
+    target_route_length_bucket: short
+  - episode_id: train_scene_001_episode_001
+    episode_type: nominal_expert
+    target_route_length_bucket: short
+  - episode_id: train_scene_001_episode_002
+    episode_type: nominal_expert
+    target_route_length_bucket: medium
+  - episode_id: train_scene_001_episode_003
+    episode_type: nominal_expert
+    target_route_length_bucket: medium
+  - episode_id: train_scene_001_episode_004
+    episode_type: nominal_expert
+    target_route_length_bucket: long
+- scene_id: train_scene_002
+  scene_seed: 41039
+  split: train
+  factors:
+    terrain: moderate
+    ground: grass
+    lighting: dim
+    tree_density: medium
+  planned_episodes:
+  - episode_id: train_scene_002_episode_000
+    episode_type: nominal_expert
+    target_route_length_bucket: short
+  - episode_id: train_scene_002_episode_001
+    episode_type: nominal_expert
+    target_route_length_bucket: medium
+  - episode_id: train_scene_002_episode_002
+    episode_type: nominal_expert
+    target_route_length_bucket: medium
+  - episode_id: train_scene_002_episode_003
+    episode_type: nominal_expert
+    target_route_length_bucket: long
+  - episode_id: train_scene_002_episode_004
+    episode_type: nominal_expert
+    target_route_length_bucket: long
+- scene_id: train_scene_003
+  scene_seed: 41057
+  split: train
+  factors:
+    terrain: gentle
+    ground: bare_soil
+    lighting: bright
+    tree_density: high
+  planned_episodes:
+  - episode_id: train_scene_003_episode_000
+    episode_type: nominal_expert
+    target_route_length_bucket: short
+  - episode_id: train_scene_003_episode_001
+    episode_type: nominal_expert
+    target_route_length_bucket: short
+  - episode_id: train_scene_003_episode_002
+    episode_type: nominal_expert
+    target_route_length_bucket: medium
+  - episode_id: train_scene_003_episode_003
+    episode_type: nominal_expert
+    target_route_length_bucket: medium
+  - episode_id: train_scene_003_episode_004
+    episode_type: nominal_expert
+    target_route_length_bucket: long
+- scene_id: train_scene_004
+  scene_seed: 41077
+  split: train
+  factors:
+    terrain: flat
+    ground: grass
+    lighting: normal
+    tree_density: high
+  planned_episodes:
+  - episode_id: train_scene_004_episode_000
+    episode_type: nominal_expert
+    target_route_length_bucket: short
+  - episode_id: train_scene_004_episode_001
+    episode_type: nominal_expert
+    target_route_length_bucket: medium
+  - episode_id: train_scene_004_episode_002
+    episode_type: nominal_expert
+    target_route_length_bucket: medium
+  - episode_id: train_scene_004_episode_003
+    episode_type: nominal_expert
+    target_route_length_bucket: long
+  - episode_id: train_scene_004_episode_004
+    episode_type: nominal_expert
+    target_route_length_bucket: long
+- scene_id: train_scene_005
+  scene_seed: 41101
+  split: train
+  factors:
+    terrain: moderate
+    ground: bare_soil
+    lighting: normal
+    tree_density: low
+  planned_episodes:
+  - episode_id: train_scene_005_episode_000
+    episode_type: nominal_expert
+    target_route_length_bucket: short
+  - episode_id: train_scene_005_episode_001
+    episode_type: nominal_expert
+    target_route_length_bucket: short
+  - episode_id: train_scene_005_episode_002
+    episode_type: nominal_expert
+    target_route_length_bucket: medium
+  - episode_id: train_scene_005_episode_003
+    episode_type: nominal_expert
+    target_route_length_bucket: medium
+  - episode_id: train_scene_005_episode_004
+    episode_type: nominal_expert
+    target_route_length_bucket: long
+- scene_id: train_scene_006
+  scene_seed: 41131
+  split: train
+  factors:
+    terrain: gentle
+    ground: grass
+    lighting: dim
+    tree_density: high
+  planned_episodes:
+  - episode_id: train_scene_006_episode_000
+    episode_type: nominal_expert
+    target_route_length_bucket: short
+  - episode_id: train_scene_006_episode_001
+    episode_type: nominal_expert
+    target_route_length_bucket: medium
+  - episode_id: train_scene_006_episode_002
+    episode_type: nominal_expert
+    target_route_length_bucket: medium
+  - episode_id: train_scene_006_episode_003
+    episode_type: nominal_expert
+    target_route_length_bucket: long
+  - episode_id: train_scene_006_episode_004
+    episode_type: nominal_expert
+    target_route_length_bucket: long
+- scene_id: train_scene_007
+  scene_seed: 41149
+  split: train
+  factors:
+    terrain: flat
+    ground: bare_soil
+    lighting: normal
+    tree_density: medium
+  planned_episodes:
+  - episode_id: train_scene_007_episode_000
+    episode_type: nominal_expert
+    target_route_length_bucket: short
+  - episode_id: train_scene_007_episode_001
+    episode_type: nominal_expert
+    target_route_length_bucket: short
+  - episode_id: train_scene_007_episode_002
+    episode_type: nominal_expert
+    target_route_length_bucket: medium
+  - episode_id: train_scene_007_episode_003
+    episode_type: nominal_expert
+    target_route_length_bucket: medium
+  - episode_id: train_scene_007_episode_004
+    episode_type: nominal_expert
+    target_route_length_bucket: long
+- scene_id: train_scene_008
+  scene_seed: 41183
+  split: train
+  factors:
+    terrain: moderate
+    ground: grass
+    lighting: bright
+    tree_density: low
+  planned_episodes:
+  - episode_id: train_scene_008_episode_000
+    episode_type: nominal_expert
+    target_route_length_bucket: short
+  - episode_id: train_scene_008_episode_001
+    episode_type: nominal_expert
+    target_route_length_bucket: medium
+  - episode_id: train_scene_008_episode_002
+    episode_type: nominal_expert
+    target_route_length_bucket: medium
+  - episode_id: train_scene_008_episode_003
+    episode_type: nominal_expert
+    target_route_length_bucket: long
+  - episode_id: train_scene_008_episode_004
+    episode_type: nominal_expert
+    target_route_length_bucket: long
+- scene_id: train_scene_009
+  scene_seed: 41201
+  split: train
+  factors:
+    terrain: gentle
+    ground: bare_soil
+    lighting: dim
+    tree_density: medium
+  planned_episodes:
+  - episode_id: train_scene_009_episode_000
+    episode_type: nominal_expert
+    target_route_length_bucket: short
+  - episode_id: train_scene_009_episode_001
+    episode_type: nominal_expert
+    target_route_length_bucket: short
+  - episode_id: train_scene_009_episode_002
+    episode_type: nominal_expert
+    target_route_length_bucket: medium
+  - episode_id: train_scene_009_episode_003
+    episode_type: nominal_expert
+    target_route_length_bucket: medium
+  - episode_id: train_scene_009_episode_004
+    episode_type: nominal_expert
+    target_route_length_bucket: long
+- scene_id: validation_scene_000
+  scene_seed: 51011
+  split: validation
+  factors:
+    terrain: flat
+    ground: grass
+    lighting: dim
+    tree_density: medium
+  planned_episodes:
+  - episode_id: validation_scene_000_episode_000
+    episode_type: nominal_expert
+    target_route_length_bucket: short
+  - episode_id: validation_scene_000_episode_001
+    episode_type: nominal_expert
+    target_route_length_bucket: medium
+  - episode_id: validation_scene_000_episode_002
+    episode_type: nominal_expert
+    target_route_length_bucket: medium
+  - episode_id: validation_scene_000_episode_003
+    episode_type: nominal_expert
+    target_route_length_bucket: long
+  - episode_id: validation_scene_000_episode_004
+    episode_type: nominal_expert
+    target_route_length_bucket: long
+- scene_id: validation_scene_001
+  scene_seed: 51047
+  split: validation
+  factors:
+    terrain: moderate
+    ground: bare_soil
+    lighting: bright
+    tree_density: high
+  planned_episodes:
+  - episode_id: validation_scene_001_episode_000
+    episode_type: nominal_expert
+    target_route_length_bucket: short
+  - episode_id: validation_scene_001_episode_001
+    episode_type: nominal_expert
+    target_route_length_bucket: short
+  - episode_id: validation_scene_001_episode_002
+    episode_type: nominal_expert
+    target_route_length_bucket: medium
+  - episode_id: validation_scene_001_episode_003
+    episode_type: nominal_expert
+    target_route_length_bucket: medium
+  - episode_id: validation_scene_001_episode_004
+    episode_type: nominal_expert
+    target_route_length_bucket: long
+- scene_id: test_scene_000
+  scene_seed: 61001
+  split: test
+  factors:
+    terrain: gentle
+    ground: grass
+    lighting: bright
+    tree_density: low
+  planned_episodes:
+  - episode_id: test_scene_000_episode_000
+    episode_type: nominal_expert
+    target_route_length_bucket: short
+  - episode_id: test_scene_000_episode_001
+    episode_type: nominal_expert
+    target_route_length_bucket: medium
+  - episode_id: test_scene_000_episode_002
+    episode_type: nominal_expert
+    target_route_length_bucket: medium
+  - episode_id: test_scene_000_episode_003
+    episode_type: nominal_expert
+    target_route_length_bucket: long
+  - episode_id: test_scene_000_episode_004
+    episode_type: nominal_expert
+    target_route_length_bucket: long
+- scene_id: test_scene_001
+  scene_seed: 61043
+  split: test
+  factors:
+    terrain: moderate
+    ground: bare_soil
+    lighting: normal
+    tree_density: high
+  planned_episodes:
+  - episode_id: test_scene_001_episode_000
+    episode_type: nominal_expert
+    target_route_length_bucket: short
+  - episode_id: test_scene_001_episode_001
+    episode_type: nominal_expert
+    target_route_length_bucket: short
+  - episode_id: test_scene_001_episode_002
+    episode_type: nominal_expert
+    target_route_length_bucket: medium
+  - episode_id: test_scene_001_episode_003
+    episode_type: nominal_expert
+    target_route_length_bucket: medium
+  - episode_id: test_scene_001_episode_004
+    episode_type: nominal_expert
+    target_route_length_bucket: long

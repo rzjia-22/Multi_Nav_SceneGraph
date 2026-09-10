@@ -1,0 +1,40 @@
+profile_id: diablo_standing_v0
+target_platform: DIABLO standing mode
+status: provisional_simulation_assumptions
+surrogate:
+  type: kinematic_nonholonomic
+  collision_shape: capsule
+  footprint:
+    length_m: 0.70
+    width_m: 0.46
+    planning_radius_m: 0.40
+  body_height_m: 0.72
+motion:
+  max_forward_speed_mps: 0.65
+  max_reverse_speed_mps: 0.20
+  max_yaw_rate_radps: 1.00
+  max_linear_acceleration_mps2: 0.80
+  max_yaw_acceleration_radps2: 1.50
+  controller_rate_hz: 50
+  nonholonomic: true
+camera_mount:
+  nominal_height_m: 0.50
+  provisional_height_range_m: [0.40, 0.60]
+  forward_offset_m: 0.16
+  lateral_offset_m: 0.0
+  nominal_pitch_deg: -4.0
+  nominal_roll_deg: 0.0
+  episode_variation:
+    height_m: [-0.025, 0.025]
+    pitch_deg: [-1.5, 1.5]
+    roll_deg: [-1.0, 1.0]
+  correlated_motion:
+    enabled: true
+    vertical_amplitude_m: 0.006
+    pitch_amplitude_deg: 0.7
+    roll_amplitude_deg: 0.5
+    frequency_hz: 1.2
+notes:
+  - Values are Dataset V0 simulation assumptions, not measured DIABLO hardware facts.
+  - Real footprint, limits and camera transform must replace only this profile after calibration.
+

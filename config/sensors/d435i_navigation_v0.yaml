@@ -1,0 +1,50 @@
+profile_id: d435i_navigation_v0
+noise_profile: d435i_clean
+reference:
+  product_family_datasheet: https://www.intelrealsense.com/wp-content/uploads/2023/03/Intel-RealSense-D400-Series-Datasheet-March-2023.pdf
+  imu_documentation: https://github.com/realsenseai/librealsense/blob/master/doc/d435i.md
+device_capability:
+  rgb:
+    maximum_resolution: [1920, 1080]
+    maximum_rate_hz: 30
+    nominal_fov_deg: {horizontal: 69.0, vertical: 42.0}
+  depth:
+    maximum_resolution: [1280, 720]
+    maximum_rate_hz: 90
+    nominal_hd_fov_deg: {horizontal: 87.0, vertical: 58.0}
+    nominal_operating_range_m: [0.2, 3.0]
+  imu:
+    type: 6DoF
+    coordinates: {x: right, y: down, z: forward}
+application_profile:
+  logging_rate_hz: 10
+  rgb:
+    resolution: [640, 480]
+    encoding: rgb8
+    fov_deg: {horizontal: 69.0, vertical: 42.0}
+    clipping_range_m: [0.10, 20.0]
+  depth_raw:
+    resolution: [848, 480]
+    encoding: float32_m
+    fov_deg: {horizontal: 87.0, vertical: 58.0}
+    valid_range_m: [0.20, 10.0]
+  depth_aligned_to_rgb:
+    resolution: [640, 480]
+    encoding: float32_m
+    policy: z_buffer_reproject_depth_optical_to_rgb_optical
+  imu:
+    logging_rate_hz: 100
+    signal: clean_simulator_camera_rig_state
+  state_logging_rate_hz: 50
+calibration:
+  intrinsics_policy: derived_from_resolution_and_nominal_fov
+  distortion_model: none_v0
+  depth_to_rgb:
+    translation_m: [0.015, 0.0, 0.0]
+    rotation_xyzw: [0.0, 0.0, 0.0, 1.0]
+    status: provisional_not_device_calibration
+notes:
+  - Device capability and Dataset V0 application logging rates are intentionally distinct.
+  - Real deployment must read per-device RGB/depth intrinsics and extrinsics from librealsense.
+  - V0 models should consume RGB plus depth registered into the RGB optical frame.
+

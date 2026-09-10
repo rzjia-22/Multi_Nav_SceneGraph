@@ -11,7 +11,7 @@ __pycache__/
 # Runtime artifacts and large model files
 runs/
 bags/
-models/
+/models/
 *.bag
 *.db3
 *.mcap
@@ -19,6 +19,12 @@ models/
 *.pt
 *.pth
 *.onnx
+
+# Keep reviewed Dataset V0 evidence, but ignore transient generation output.
+research_data/work/
+artifacts/dataset_v0_preview/*.tmp
+artifacts/dataset_v0_preview/**/*.tmp
+
 
 # Isaac / NVIDIA caches
 .isaac-cache/
@@ -30,4 +36,3 @@ models/
 .env.local
 .vscode/
 .idea/
-
