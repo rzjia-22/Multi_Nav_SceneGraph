@@ -32,23 +32,25 @@ only standard message types; project ROS nodes run in the robotics image.
 ## Dataset V0 pilot
 
 A separate model-agnostic research-data path targets future standing-mode
-DIABLO + RealSense D435i local visual navigation. The fixed manifest still
-plans 14 scene-level-split scenes and 70 episodes. Dataset production is now
-paused at the visual-scene gate: only `train_scene_000` is the current formal
-candidate, while the earlier primitive-domain episode is rejected for training.
+DIABLO + RealSense D435i local visual navigation. The fixed manifest plans 14
+scene-level-split scenes and 70 episodes. The Research Forest visual domain is
+approved, its official terrain profiles are geometry-calibrated, and exactly
+one formal candidate (`train_scene_000_episode_000`) has been collected. The
+remaining 69 episodes are intentionally absent pending review of this pilot.
 
 ```bash
 make dataset-v0-scene-preview
 make dataset-v0-capture-scene-review
 make dataset-v0-view-scene       # interactive Isaac window; no robot/navigation
+make dataset-v0-episode-benchmark # exactly one versioned short episode
 make dataset-v0-validate
 ```
 
-The scene uses Isaac Lab 2.3.1 terrain generation, NVIDIA vegetation USDs,
-Grass Countryside MDL and the Isaac Kloofendal HDR sky. Four fixed RTX images
-and one separate geometry schematic are versioned for review. No robot,
-navigation, collector or Hydra process is started by the scene-review path.
-The integration forest remains independent.
+Scene review and collection use the same Isaac Lab 2.3.1 builder, NVIDIA
+vegetation USDs, Grass Countryside MDL, and Kloofendal HDR sky. The HDF5 v2
+episode stores lossless RGB, calibrated Z16 raw depth, pose/state, IMU and the
+expert path; registered depth is reproducibly derived offline. The integration
+forest remains independent and Hydra is not part of data collection.
 See [Dataset V0](docs/dataset_v0.md).
 
 ## CPU-only quick start

@@ -1,0 +1,135 @@
+{
+  "app_startup_time_s": 27.336862060939893,
+  "benchmark_version": 1,
+  "collector_version": "research_forest_collector_v2",
+  "dataset_v0_projection": {
+    "basis": {
+      "episodes": 70,
+      "scenes": 14,
+      "single_episode_warning": true,
+      "total_planned_expert_path_m": 455.0
+    },
+    "dataset_size_bytes_conservative_range": [
+      4385718159.005817,
+      10024498649.156155
+    ],
+    "dataset_size_bytes_point": 6265311655.722596,
+    "git_lfs_workspace_plus_local_object_bytes_point": 12530623311.445192,
+    "naive_wall_time_s_conservative_range": [
+      3532.8293686697766,
+      8243.268526896145
+    ],
+    "naive_wall_time_s_point": 4710.439158226369,
+    "recommended_free_disk_bytes": 25061246622.890385,
+    "scene_batched_wall_time_s_conservative_range": [
+      1854.4187401074491,
+      4326.977060250714
+    ],
+    "scene_batched_wall_time_s_point": 2472.5583201432655
+  },
+  "episode": {
+    "alignment_round_trip": {
+      "common_valid_pixels": 11050380,
+      "maximum_depth_difference_m": 0.0,
+      "mean_depth_difference_m": 0.0,
+      "pixel_count": 16128000,
+      "registration_coverage": 0.6851674107142857,
+      "valid_pixel_agreement": 1.0
+    },
+    "depth_frames": 70,
+    "depth_quantization": {
+      "depth_scale_m": 0.001,
+      "invalid_convention": "zero_is_invalid",
+      "maximum_absolute_error_m": 0.0005006790161132812,
+      "mean_absolute_error_m": 0.0002500286791473627,
+      "p95_absolute_error_m": 0.0004749298095703125,
+      "saturation_count": 0,
+      "valid_range_m": [
+        0.2,
+        10.0
+      ]
+    },
+    "episode_id": "train_scene_000_episode_000",
+    "episode_path": "/mns/artifacts/dataset_v0_preview/train_scene_000_episode_000/episode.h5",
+    "executed_path_length_m": 3.6525667983487833,
+    "imu_samples": 703,
+    "plan_path": "/mns/artifacts/dataset_v0_preview/train_scene_000_episode_000/episode_plan.yaml",
+    "planned_path_length_m": 3.766314,
+    "real_time_factor": 0.48770394018959823,
+    "rgb_frames": 70,
+    "simulated_duration_s": 7.000000000000001,
+    "state_samples": 351,
+    "status": "PASS",
+    "storage": {
+      "compressed_dataset_contributions_bytes": {
+        "depth": 19073847,
+        "hdf5_metadata_overhead": 125625,
+        "rgb": 31046857,
+        "state_imu_expert_calibration": 49208
+      },
+      "disk_write_throughput_bytes_per_s": 28134078.241303157,
+      "file_size_bytes": 50295537,
+      "write_time_s": 1.7877087199594826
+    },
+    "success": true,
+    "surface_following": {
+      "body_pitch_range_deg": [
+        -2.6884658564667343,
+        -0.9978624260509664
+      ],
+      "body_roll_range_deg": [
+        -1.425611047507776,
+        1.8304462231664076
+      ],
+      "maximum_height_error_m": 0.0,
+      "pose_composition": "terrain_normal_then_navigation_yaw_then_camera_mount_then_correlated_motion"
+    },
+    "wall_execution_time_s": 14.352969954023138
+  },
+  "episode_schema_version": 2,
+  "hardware_recommendation": {
+    "RTX 4060 Laptop": "SUFFICIENT"
+  },
+  "resources": {
+    "gpu_memory_total_mib": 8188.0,
+    "gpu_memory_total_mib_average": 8188.0,
+    "gpu_memory_total_mib_peak": 8188.0,
+    "gpu_memory_used_mib_average": 4002.3382352941176,
+    "gpu_memory_used_mib_peak": 5217.0,
+    "gpu_name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+    "gpu_power_w_average": 10.089852941176465,
+    "gpu_power_w_peak": 12.61,
+    "gpu_temperature_c_average": 46.48529411764706,
+    "gpu_temperature_c_peak": 48.0,
+    "gpu_utilization_percent_average": 5.676470588235294,
+    "gpu_utilization_percent_peak": 19.0,
+    "host_memory_used_mib_average": 9743.951171875,
+    "host_memory_used_mib_peak": 11464.80078125,
+    "process_cpu_percent_average": 962.594117647059,
+    "process_cpu_percent_peak": 2788.7,
+    "process_rss_mib_average": 8150.523092830882,
+    "process_rss_mib_peak": 10101.0,
+    "samples": 68
+  },
+  "scene_content_hash": "07d75706a35ad4a7e02f696d2ce6ff5e0c1eae4e659651922a96e039e8e158f4",
+  "scene_id": "train_scene_000",
+  "scene_load_time_s": 12.625295761972666,
+  "scene_schema_version": 3,
+  "status": "PASS",
+  "terrain_statistics": {
+    "elevation_max_m": 0.15600000321865082,
+    "elevation_min_m": -0.15600000321865082,
+    "elevation_range_m": 0.31200000643730164,
+    "elevation_std_m": 0.07804359189812853,
+    "sample_count": 27748,
+    "slope_max_deg": 3.6413915277214315,
+    "slope_mean_deg": 2.258428162596288,
+    "slope_median_deg": 2.361018570448284,
+    "slope_p90_deg": 3.0424526785009944,
+    "slope_p95_deg": 3.2376871532953504
+  },
+  "throughput": {
+    "bytes_per_simulated_second": 7185076.714285714,
+    "bytes_per_trajectory_meter": 13769915.72686285
+  }
+}

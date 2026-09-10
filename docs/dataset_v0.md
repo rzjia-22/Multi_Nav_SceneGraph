@@ -1,175 +1,177 @@
 # Dataset V0 pilot
 
-Dataset V0 is the pilot data contract for future goal-directed local visual
-navigation on a standing-mode DIABLO carrying an Intel RealSense D435i. It is
-not a final training corpus. Its purpose is to review the simulation domain,
-expert generation, camera geometry and model-independent storage before
-authorizing the remaining episodes.
+Dataset V0 is the model-independent pilot contract for future goal-directed
+local visual navigation by a standing-mode DIABLO carrying an Intel RealSense
+D435i. It validates the research-forest domain, privileged expert, camera
+geometry, storage, and held-out-scene split before bulk collection. It is not a
+final training corpus and no navigation model is trained by this workflow.
 
-## Fixed plan and split
+## Frozen plan
 
-`config/datasets/dataset_v0_manifest.yaml` is the only authoritative plan.
-It assigns immutable IDs and seeds to 14 scenes and five episodes per scene:
+`config/datasets/dataset_v0_manifest.yaml` is authoritative: 10 training,
+2 validation, and 2 test scene seeds, with five episodes per scene. A scene ID
+belongs to exactly one split. The 70 planned episodes contain 21 short (3–5 m),
+28 medium (5–8 m), and 21 long (8–10 m) expert-route buckets. The collector
+reads each episode's bucket from this manifest; it never invents a split or
+silently changes a bucket at runtime. Only `train_scene_000_episode_000` has
+been collected. The remaining 69 episodes are intentionally not generated.
 
-| Split | Scenes | Episodes |
-| --- | ---: | ---: |
-| train | 10 | 50 |
-| validation | 2 | 10 |
-| test | 2 | 10 |
+## One Research Forest path
 
-The split is scene-level. A validator fails if one `scene_id` appears in more
-than one split. The 70 planned routes contain exactly 21 short (3–5 m), 28
-medium (5–8 m) and 21 long (8–10 m) targets. The final bucket is determined by
-expert path length; a sampled task is rejected if its actual planned route is
-outside its bucket or materially exceeds 10 m.
+The Research Forest is independent of `config/simulation/forest.yaml`, which
+remains the fast ROS/Hydra integration regression scene. All Dataset V0 scene
+review and collection now call the same builder:
 
-Only `train_scene_000` has been rebuilt as the formal visual-scene candidate.
-All episode generation is blocked until this scene passes human visual review.
-The earlier `train_scene_000_episode_000` is retained as historical evidence
-but is explicitly rejected for training in its `review_status.yaml`.
-
-## Research Forest
-
-The Research Forest is separate from `config/simulation/forest.yaml`, which
-remains the fast ROS/Hydra integration regression scene. The research scene is
-24×24 m: large enough for several distinct 3–10 m tasks but cheaper to render
-than the old 40×40 m prototype.
-
-`research_data/forest.py` uses one NumPy PCG64 stream per scene seed, but now
-produces only a scene specification. It does not draw terrain or trees. The
-shared Isaac builder in `mns_simulation.research_forest_scene` maps that
-specification to `TerrainImporterCfg` / `TerrainGeneratorCfg`, official height
-field generators, `UsdFileCfg` vegetation references, an MDL ground material,
-and HDR dome plus sun lighting. `scene.yaml` records all selected IDs,
-placements, scales, yaw, collision proxies, semantic policy and version pins.
-The compact `scene.usda` snapshot is exported from the authored Isaac root
-layer and preserves external asset references rather than flattening them.
-
-V0 factors remain limited to flat/gentle/moderate terrain, bare-soil/grass
-ground, normal/bright/dim lighting and low/medium/high tree density. The formal
-tree visuals are NVIDIA simulation-ready `Blue_Berry_Elder.usd` and
-`Gray_Birch.usd`; no Cylinder or Sphere is visible to a camera. Invisible
-conservative cylinders remain as collision proxies. The two assets expose
-stable `trunk` and `leaves` prims, so roots are tagged `vegetation` while those
-children remain `tree_trunk` and `foliage`. The parent fallback maps to the
-existing Hydra-compatible `other_object` ID 7; `robot` remains ID 6. No label
-number was reassigned.
-
-`config/research_forests/assets.yaml` is the asset registry. It references the
-Isaac Sim 5.1 NVIDIA cloud asset root, `Grass_Countryside.mdl`, `Dirt.mdl`, and
-the Kloofendal Poly Haven HDR shipped through the Isaac asset library. NVIDIA
-binaries and textures are not copied into this repository. Their stable logical
-IDs, source, expected scale, collision and semantic policy are versioned.
-
-## Robot target and surrogate
-
-`config/robots/diablo_standing.yaml` is a target profile, not a DIABLO hardware
-specification. The preview uses a stable kinematic, non-holonomic box surrogate
-with a 0.70×0.46 m provisional footprint, 0.42 m collision-check radius,
-0.58 m planning radius, 0.65 m/s forward limit and 1.0 rad/s yaw limit. It
-separates visual-navigation data quality from wheel-legged locomotion failure.
-
-It differs from real DIABLO dynamics, suspension, appearance, slip and camera
-vibration. Camera height 0.50 m, its allowed 0.40–0.60 m range, the 0.40 m
-forward mount, motion limits and footprint are provisional simulation values.
-They must be replaced with physical measurements only in the profile.
-Episode-level mount ranges and continuous vertical/pitch/roll motion are
-configured; the preview uses small correlated amplitudes, never per-frame
-independent randomization.
-
-## D435i navigation profile
-
-`config/sensors/d435i_navigation_v0.yaml` separates device capability from its
-10 Hz application profile. Sources are the official
-[D400 family datasheet](https://www.intelrealsense.com/wp-content/uploads/2023/03/Intel-RealSense-D400-Series-Datasheet-March-2023.pdf)
-and [D435i librealsense note](https://github.com/realsenseai/librealsense/blob/master/doc/d435i.md).
-Relevant capabilities are maximum 1920×1080/30 Hz RGB with nominal 69°×42°
-FOV, maximum 1280×720/90 Hz depth with nominal 87°×58° HD FOV, and a 6DoF
-IMU (accelerometer 62.5/250 Hz; gyro 200/400 Hz). The optical/IMU convention
-is x right, y down, z forward.
-
-V0 logs 640×360 RGB and 848×480 raw metric depth at 10 Hz. Isaac 5.1 uses
-square-pixel pinholes, so these aspect ratios approximate the nominal FOV pair;
-exact rendered matrices are read from Isaac and stored. Raw depth is z-buffer
-reprojected through separate intrinsics and a provisional extrinsic into a
-640×360 RGB-aligned image. The 15 mm translation is an assumption: real
-collection must read factory calibration and distortion from librealsense.
-
-The preview records one clean 100 Hz simulator IMU stream. This is an
-application schema choice, not a D435i hardware mode. A future real collector
-should preserve native asynchronous timestamps. `d435i_randomized` remains an
-extension point for dropout, range noise, exposure and outdoor stereo failure;
-no complex noise model is synthesized here.
-
-## Expert and raw schema
-
-The deterministic privileged-map expert is 8-connected 0.10 m grid A* with
-conservative trunk inflation and line-of-sight smoothing. A non-holonomic Pure
-Pursuit controller executes the route at 50 Hz inside Isaac. This is training
-demonstration generation, not a deployment planner. The schema reserves
-`nominal_expert` and future `perturbed_recovery`; only nominal is generated.
-
-Each episode is an independent HDF5 file:
-
-| Group | Content |
-| --- | --- |
-| root attributes | schema/dataset version and complete JSON metadata |
-| `state/` | timestamps, pose, velocities and executed command |
-| `imu/` | timestamps, linear acceleration and angular velocity |
-| `sensors/` | timestamps, RGB, raw depth, RGB-aligned depth and optical pose |
-| `calibration/` | actual intrinsics and provisional RGB-depth extrinsic |
-| `expert/` | global privileged expert path |
-
-This is not fixed to the legacy five frames, 128×96 input or 32 waypoints.
-`config/models/navigation_input_v0.yaml` is a model-agnostic preprocessing
-template; future model architecture, history, resize, normalization, horizon
-and training parameters remain version-controlled configuration.
-
-## Current scene-review evidence
-
-`train_scene_000` keeps seed 41001, a 24×24 m gentle grass terrain, normal
-lighting and 42 medium-density trees. Its fixed realization contains 23 Blue
-Berry Elder and 19 Gray Birch instances. Tree roots are sampled from the actual
-Isaac-imported height field; scale and yaw are recorded in `scene.yaml`.
-
-The formal review directory is
-`artifacts/dataset_v0_scene_review/train_scene_000/`. `scene_layout.png` is
-explicitly a schematic XY/collision overview. `isaac_aerial.png`,
-`isaac_ground_view.png` (0.5 m camera height), `isaac_mid_height.png`, and
-`isaac_tree_closeup.png` are actual 1280×720 Isaac RTX outputs. The machine
-report records zero missing registry assets, a 17.68 s scene load, about 5,132
-MiB VRAM, and 15.29 rendered frames/s during the final fixed-view capture.
-
-The older episode directory remains unchanged except for a rejection marker.
-Its primitive-domain camera image, expert path and HDF5 are not valid Dataset
-V0 training evidence and must not be regenerated before this visual gate.
-
-## Reproduction, validation and Git
-
-```bash
-make dataset-v0-scene-preview         # deterministic spec + XY schematic only
-make dataset-v0-capture-scene-review  # four fixed Isaac RTX review images
-make dataset-v0-view-scene            # interactive non-headless Isaac viewer
-make dataset-v0-validate              # split/spec/stage/reference gates
+```text
+scene.yaml
+  -> mns_simulation.research_forest_scene.build_research_forest
+     -> Isaac Lab TerrainImporter / TerrainGenerator
+     -> NVIDIA vegetation USD references
+     -> NVIDIA MDL ground
+     -> HDR dome and sun
+     -> actual mesh TerrainSurfaceQuery
+        -> tree Z
+        -> review cameras
+        -> surrogate Z/normal
+        -> camera pose
 ```
 
-`make dataset-v0-view-scene` must be run from the NVIDIA host's X11 desktop
-session. It opens the same builder and `train_scene_000` used for fixed capture,
-starts no robot, ROS, navigation, collector or Hydra process, and remains open
-for free viewport inspection. The Xauthority cookie is mounted read-only.
+There is no active sine terrain, project-authored formal terrain mesh, or
+Cylinder/Sphere tree visual. Hidden conservative cylinder colliders remain an
+intentional physical/planning proxy; the camera sees the referenced Blue Berry
+Elder and Gray Birch meshes. The source/config/stage snapshot is reproducible,
+while NVIDIA assets are referenced rather than redistributed.
 
-Current validation covers the frozen 14/70 plan, bucket counts, leakage,
-semantic concepts, registry membership, the official terrain builder,
-primitive-visual exclusion, content hash, deterministic scene-spec
-regeneration and the Isaac-authored stage snapshot. Episode validation remains
-implemented but is not part of the current acceptance gate.
+The scene schema is version 3. `train_scene_000` remains seed 41001, 24×24 m,
+grass, normal light, and medium density. Its 42 unchanged XY realizations are
+23 Blue Berry Elder and 19 Gray Birch instances. Its content hash is
+`07d75706a35ad4a7e02f696d2ce6ff5e0c1eae4e659651922a96e039e8e158f4`.
 
-Source, profiles, manifests, YAML/USDA, CSV/JSON and review PNGs use normal
-Git. HDF5, binary USD, videos and future checkpoints are covered by Git LFS.
-Generated work, bags, caches and unreviewed runtime outputs remain ignored.
+## Terrain calibration
 
-Before any episode is regenerated, human reviewers must decide whether the two
-tree assets resemble the intended woodland, density and corridor openness are
-appropriate, the grass/terrain is credible, the 0.5 m view has the right scale,
-and normal lighting is neither overexposed nor too dark. D435i geometry and
-task difficulty return to review only after the scene itself passes.
+`config/research_forests/profiles.yaml` maps only to Isaac Lab 2.3.1 official
+height-field generators. `config/research_forests/terrain_calibration.yaml`
+records measurements from `TerrainGenerator.terrain_mesh` using seed 41001 and
+the 24×24 m extent. These are geometry measurements, not theoretical design
+limits:
+
+| Profile | Generator | Elevation range / std | Slope mean / median | p90 / p95 / max |
+| --- | --- | --- | --- | --- |
+| flat | `HfRandomUniformTerrainCfg`, zero noise | 0 / 0 m | 0 / 0° | 0 / 0 / 0° |
+| gentle | `HfWaveTerrainCfg`, amplitude 0.12–0.22 m, 2 waves | 0.312 / 0.078 m | 2.258 / 2.361° | 3.042 / 3.238 / 3.641° |
+| moderate | `HfWaveTerrainCfg`, amplitude 0.15–0.27 m, 3 waves | 0.408 / 0.102 m | 4.414 / 4.609° | 6.054 / 6.258 / 6.855° |
+
+The 0.001 m vertical scale on wave profiles prevents quantization plateaus.
+Flat, gentle, and moderate are consequently distinct and remain provisional
+until measured DIABLO field data are available.
+
+The shared `TerrainSurfaceQuery` interpolates the actual imported USD mesh
+triangles and returns both `height(x,y)` and the upward surface normal. The
+surrogate's x/y motion follows its navigation yaw projected onto this surface;
+its body z-axis follows the normal. Camera pose is composed from that body
+frame, the configured DIABLO mount, one deterministic episode-level offset,
+and small continuous correlated motion. Terrain tilt is not treated as random
+camera vibration.
+
+## DIABLO and D435i assumptions
+
+`config/robots/diablo_standing.yaml` remains a provisional target profile. The
+stable kinematic non-holonomic surrogate has a 0.70×0.46 m footprint, 0.42 m
+collision-check radius, 0.58 m planning radius, 0.65 m/s forward limit, and
+1.0 rad/s yaw limit. It isolates visual-data quality from wheel-legged dynamic
+failures. Its dynamics, suspension, slip, geometry, and vibration are not a
+high-fidelity DIABLO model. The 0.50 m camera height and all mount values must
+eventually be replaced by physical calibration in the profile, not code.
+
+The official capability references remain the Intel
+[D400 family datasheet](https://www.intelrealsense.com/wp-content/uploads/2023/03/Intel-RealSense-D400-Series-Datasheet-March-2023.pdf)
+and [D435i librealsense note](https://github.com/realsenseai/librealsense/blob/master/doc/d435i.md).
+Dataset V0 logs 640×360 RGB and 848×480 depth at an application rate of 10 Hz,
+plus clean 100 Hz simulator IMU and 50 Hz state. Rendered intrinsics are read
+from Isaac. RGB and depth retain separate FOV/intrinsics and a provisional
+extrinsic. Real collection must read each device's intrinsics, distortion,
+extrinsic, and depth scale from librealsense.
+
+## HDF5 schema version 2
+
+Each episode is an independent HDF5 file. It remains raw and model-independent;
+five-frame histories, resized images, and future-waypoint labels are derived by
+offline model preprocessing.
+
+| Group | Stored content |
+| --- | --- |
+| root attributes | schema/dataset version and complete JSON metadata, including scene hash and collector version |
+| `state/` | timestamps, terrain-following pose quaternion, 3D velocities, and executed command |
+| `imu/` | timestamps, clean acceleration, and angular velocity |
+| `sensors/` | RGB `uint8`, raw depth `uint16`, timestamps, and RGB camera pose |
+| `calibration/` | rendered intrinsics, depth-to-RGB extrinsic, resolutions, depth scale, alignment algorithm/version, invalid convention |
+| `expert/` | global privileged expert path |
+
+Raw simulated depth is encoded as RealSense-style Z16 with a Dataset V0 scale
+of 0.001 m/unit; zero means invalid. This is a simulation storage choice, not a
+claim that every physical D435i has the same scale. No value in the configured
+0.2–10 m range saturates. RGB remains losslessly compressed `uint8`.
+
+Aligned depth is deliberately absent from the file. `research_data.depth`
+reconstructs it from raw Z16 plus calibration using the versioned z-buffer
+reprojection. During the formal collection the persisted episode reproduced
+the in-memory aligned reference with 100% valid-pixel agreement and zero depth
+difference. Z16 quantization measured 0.250 mm mean, 0.475 mm p95, and
+0.501 mm maximum absolute error, with zero saturation.
+
+## Formal candidate and measured cost
+
+The current and only valid preview is
+`artifacts/dataset_v0_preview/train_scene_000_episode_000/`. The manifest marks
+it short. Its blocked direct line is resolved by 0.10 m grid A*, greedy
+line-of-sight smoothing, and the same Pure Pursuit controller used previously.
+The planned 3D route is 3.766 m; execution covered 3.653 m, reached the goal
+with 0.124 m error, and was collision-free in the conservative privileged map.
+It contains 70 RGB/depth frames, 703 IMU samples, and 351 states over 7.0 s.
+
+The 50,295,537-byte HDF5 took 1.788 s to write. Compressed contributions are
+31,046,857 bytes RGB, 19,073,847 bytes depth, 49,208 bytes state/IMU/expert/
+calibration, and 125,625 bytes HDF5 metadata overhead. RTX execution took
+14.353 s (RTF 0.488) after 27.337 s application startup and 12.625 s scene
+load. The machine report in `benchmark_report.json` is authoritative.
+
+Extrapolating this single short episode across the manifest's approximately
+455 m gives a deliberately uncertain 6.27 GB point estimate (4.39–10.02 GB).
+Naively restarting for every episode projects 78.5 minutes (58.9–137.4), while
+loading each of 14 scenes once and executing five plans projects 41.2 minutes
+(30.9–72.1). A local Git LFS checkout plus its object copy is about 12.53 GB at
+the point estimate; 25.1 GB free is recommended. These are planning estimates,
+not promises: depth/RGB compressibility and route visibility differ by scene.
+
+On the RTX 4060 Laptop, peak VRAM was 5,217/8,188 MiB, process RAM 10,101 MiB,
+GPU utilization 5.7% average/19% peak, 46.5°C average/48°C peak, and
+10.1 W average/12.6 W peak during the sampled interval. The current conclusion
+is **RTX 4060 Laptop: SUFFICIENT** for a single-worker Dataset V0 collection;
+no server or parallel Isaac workers are justified by this pilot.
+
+The earlier primitive-domain preview is rejected and removed from current
+`main`; it remains recoverable at Git commit `85d3fe6` and is not supported by
+the current schema.
+
+## Commands and validation
+
+```bash
+make dataset-v0-calibrate-terrain       # measure all three official profiles
+make dataset-v0-scene-preview           # deterministic YAML + schematic
+make dataset-v0-capture-scene-review    # four fixed RTX views
+make dataset-v0-view-scene              # interactive Isaac, no navigation
+make dataset-v0-episode-benchmark       # exactly episode_000; not bulk
+make dataset-v0-validate                # scene/split/runtime/HDF5/registration
+```
+
+The collector accepts repeated `--episode-id` arguments within one Isaac scene
+lifecycle, which is the future scene-batched path. No Make target generates all
+70 episodes. Validation checks the 14/70 scene-level split, manifest bucket,
+deterministic scene specification, actual terrain statistics, scene hash,
+shared builder call, absence of primitive collector construction, HDF5 v2,
+Z16 calibration, offline registration, strictly increasing timestamps,
+terrain-induced body tilt, collision-free execution, and non-stale RGB.
+
+Sources, YAML/JSON/CSV, the compact USDA, and review images use ordinary Git.
+The formal HDF5 is Git LFS. NVIDIA assets remain external URI references.
+Caches, Isaac logs, ROS bags, and temporary collection output are ignored.

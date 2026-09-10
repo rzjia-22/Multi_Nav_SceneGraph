@@ -31,7 +31,7 @@ image because checkpoint compatibility depends on that model definition.
 No source from `scripts/forest_generator/forest_generator_isaaclab.py` or
 `scripts/forest_generator/test.py` is copied into the Dataset V0 generator.
 
-For the current visual-scene gate, the old `Collected_forest_v2` and
+For the accepted Research Forest visual domain, the old `Collected_forest_v2` and
 `Collected_forest_v5` mapping records were also audited. They identify Blue
 Berry Elder, Natural/Dirt MDL and their bark/leaf/ground textures; v5 additionally
 contains Holly and an unrelated farmhouse. The new registry resolves assets

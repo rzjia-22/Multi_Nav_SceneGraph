@@ -16,29 +16,30 @@ RTX 4060 Laptop / 16 GB RAM machine. All four cameras remain exactly 10 Hz in
 simulation time, but wall throughput is about 2.4 Hz (RTF about 0.24). This is
 reported as a performance warning, not hidden as a functional failure.
 
-The current milestone is the Dataset V0 Research Forest visual-domain gate.
-The 14-scene/70-episode scene-level split is still frozen, but robot,
-navigation, D435i collection and HDF5 generation are deliberately paused.
-`train_scene_000` has been rebuilt with the Isaac Lab 2.3.1 terrain pipeline,
-two real NVIDIA vegetation USDs, Grass Countryside MDL and an Isaac HDR sky.
-Four RTX views plus a separate schematic are ready for human inspection. The
-previous primitive-domain episode is retained but explicitly rejected for
-training; no further data may be generated before scene approval.
+The current milestone is the completed Dataset V0 single-episode pilot. The
+Research Forest visual domain was accepted by the user. The active viewer,
+fixed-view capture and collector now share one Isaac builder and the actual
+imported terrain surface. Flat/gentle/moderate profiles have measured geometry
+statistics. HDF5 schema v2 stores raw Z16 rather than float plus duplicated
+aligned depth. `train_scene_000_episode_000` is the sole formal candidate and
+has passed execution, storage, registration and resource validation. The other
+69 episodes remain intentionally ungenerated pending review of this evidence.
 
 ## Dataset V0 milestone state
 
 | Capability | State | Evidence |
 | --- | --- | --- |
 | Dataset plan | source complete, validated | 10/2/2 scene split; 21/28/21 short/medium/long; no leakage |
-| Research Forest specification | deterministic validated | `train_scene_000`, seed 41001; official terrain config and 42 realized asset placements; content hash stable |
-| Research Forest rendering | GPU Isaac validated, awaiting human acceptance | Blue Berry Elder/Gray Birch USD, Grass MDL, HDR sky; four 1280×720 RTX views; zero missing registry assets |
+| Research Forest specification | deterministic validated | scene schema v3; seed 41001; one shared builder; hash `07d75706...` |
+| Research Forest rendering | GPU Isaac validated, human accepted | 23 Blue Berry Elder + 19 Gray Birch, Grass MDL, HDR sky; four updated RTX views; zero missing assets |
+| Terrain profiles | GPU Isaac geometry validated | flat median/p90 0/0°; gentle 2.361/3.042°; moderate 4.609/6.054° |
 | DIABLO profile | provisional V0 assumptions | non-holonomic surrogate; mount/footprint/limits isolated in config |
-| D435i profile | official capabilities documented; V0 approximation validated | separate 640×360 RGB and 848×480 depth; actual Isaac intrinsics saved; registered depth |
-| Expert/recorder | source retained; current execution blocked | prior primitive-domain run is historical only; Make target stops before planner/collector |
-| Historical preview episode | superseded / rejected visual domain | `review_status.yaml`; HDF5 remains only as provenance, not training data |
+| D435i profile | official capabilities documented; HDF5 v2 validated | 640×360 RGB, 848×480 Z16 depth at 0.001 m scale; offline registration exact against runtime reference |
+| Expert/recorder | GPU Isaac validated | manifest short route; A* + LOS + Pure Pursuit; 3.653 m executed, collision-free, goal reached |
+| Historical primitive preview | removed from current tree | rejected implementation and artifacts remain available at commit `85d3fe6` only |
 | Scene visualization | GPU Isaac validated | aerial, 0.5 m ground, mid-height and close vegetation RTX views; interactive X11 viewer reached ready state |
-| Scene validation | PASS | 14/70 split, no leakage, registry/spec semantics, no primitive tree visuals, deterministic regeneration |
-| Bulk generation | blocked pending human scene review | remaining 69 episodes and replacement episode 000 are not generated |
+| Scene/episode validation | PASS | split/bucket/no leakage, shared builder, actual terrain, HDF5 v2, hash, timestamps, RGB, Z16 and alignment |
+| Bulk generation | intentionally stopped after pilot | remaining 69 episodes are not generated; no bulk Make target exists |
 
 ## Milestone state
 
@@ -88,13 +89,25 @@ training; no further data may be generated before scene approval.
 
 - `make build`: all 8 ROS packages built; 10 package tests passed, with zero
   errors, failures or skips.
-- `make validate`: repository validation and 20 pure Python tests passed.
-- Dataset V0 scene capture: Isaac Lab generated the 24×24 m seeded terrain,
-  loaded 23 Blue Berry Elder and 19 Gray Birch assets, resolved the Grass MDL
-  and Kloofendal HDR, and reported zero missing registry assets. Cached scene
-  load was 17.68 s; final fixed 1280×720 review rendering averaged 15.29 FPS
-  and used about 5,132 MiB of 8,188 MiB VRAM. Earlier warm-cache runs were
-  faster, so this measurement is evidence of usability rather than a benchmark.
+- `make validate`: repository validation and 23 pure Python tests passed.
+- Dataset V0 scene capture: Isaac Lab regenerated the 24×24 m terrain, loaded
+  the unchanged 23 Blue Berry Elder and 19 Gray Birch placements, resolved the
+  Grass MDL and Kloofendal HDR, and reported zero missing assets. The updated
+  gentle mesh has 0.312 m elevation range, 2.361° median and 3.042° p90 slope.
+  Scene load took 11.80 s; 1280×720 fixed-view rendering averaged 19.70 FPS and
+  used about 5,132 MiB of 8,188 MiB VRAM.
+- Formal Dataset V0 episode: the manifest-defined short expert planned 3.766 m
+  and executed 3.653 m in 7.0 simulated seconds, reached the goal with 0.124 m
+  error, and passed conservative collision checks. It recorded 70 RGB/depth,
+  703 IMU and 351 state samples. Wall execution was 14.353 s (RTF 0.488), with
+  27.337 s app startup, 12.625 s scene load and 1.788 s HDF5 write.
+- HDF5 v2 is 50,295,537 bytes. Z16 at 0.001 m/unit had 0 saturation,
+  0.250/0.475/0.501 mm mean/p95/max absolute error. Offline registration had
+  100% valid-pixel agreement and zero depth difference from the in-memory
+  reference. Peak GPU memory was 5,217 MiB and peak process RAM 10,101 MiB.
+- A single-episode extrapolation projects about 6.27 GB for 455 m. Per-episode
+  restart is about 78.5 min; loading 14 scenes once is about 41.2 min. The
+  conclusion is **RTX 4060 Laptop: SUFFICIENT** for one Isaac worker.
 - `make dataset-v0-view-scene` reached `MNS_RESEARCH_FOREST_READY` through the
   host Xauthority path, opened the non-headless Isaac renderer and was then
   stopped manually. It launched no robot, ROS graph, navigator or collector.
