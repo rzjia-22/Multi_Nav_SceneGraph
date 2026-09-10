@@ -1,0 +1,30 @@
+{
+  "aligned_depth_valid_fraction": 0.6889550426652142,
+  "collision_free_in_privileged_map": true,
+  "depth_dtype": "uint16",
+  "depth_frames": 153,
+  "depth_scale_m": 0.001,
+  "duration_s": 15.32,
+  "episode_id": "train_scene_006_episode_003",
+  "episode_schema_version": 2,
+  "executed_path_length_m": 9.04879379272461,
+  "goal_error_m": 0.16692372762035776,
+  "hdf5_sha256": "76670a8f19c4b0b02a5813317994f12c3569776ad393cb1f758aed85293385aa",
+  "imu_samples": 1534,
+  "plan_hash": "e224f95690a16f1fa8cd4a5d2be933b78b8cdc457049ab0eabede3e865fd34b9",
+  "planned_path_collision_free": true,
+  "planned_path_length_m": 9.195982,
+  "planner_type": "privileged_grid_astar",
+  "planner_version": 2,
+  "pose_samples": 767,
+  "rgb_frames": 153,
+  "rgb_value_range": [
+    0,
+    227
+  ],
+  "route_bucket": "long",
+  "smoothed_waypoint_count": 7,
+  "status": "PASS",
+  "strict_corner_cut_validation": true,
+  "success": true
+}
