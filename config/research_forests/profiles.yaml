@@ -1,44 +1,95 @@
-schema_version: 1
+schema_version: 2
 scene_size_m: 24.0
+
+# These profiles map directly to official Isaac Lab 2.3.1 terrain configs.
 terrain:
   flat:
-    amplitude_m: 0.0
-    wavelength_m: 12.0
-    roughness_m: 0.0
-    max_slope_deg: 1.0
+    subterrain_type: hf_random_uniform
+    horizontal_scale_m: 0.20
+    vertical_scale_m: 0.005
+    noise_range_m: [0.0, 0.0]
+    noise_step_m: 0.005
+    downsampled_scale_m: 1.0
+    difficulty_range: [0.0, 0.0]
+    maximum_design_slope_deg: 1.0
   gentle:
-    amplitude_m: 0.16
-    wavelength_m: 11.0
-    roughness_m: 0.015
-    max_slope_deg: 7.0
+    subterrain_type: hf_wave
+    horizontal_scale_m: 0.20
+    vertical_scale_m: 0.005
+    amplitude_range_m: [0.035, 0.080]
+    num_waves: 2
+    difficulty_range: [0.35, 0.65]
+    maximum_design_slope_deg: 7.0
   moderate:
-    amplitude_m: 0.30
-    wavelength_m: 9.0
-    roughness_m: 0.025
-    max_slope_deg: 12.0
-ground:
-  bare_soil: {rgb: [0.30, 0.20, 0.10], roughness: 0.92}
-  grass: {rgb: [0.16, 0.30, 0.08], roughness: 0.88}
+    subterrain_type: hf_wave
+    horizontal_scale_m: 0.20
+    vertical_scale_m: 0.005
+    amplitude_range_m: [0.080, 0.150]
+    num_waves: 3
+    difficulty_range: [0.45, 0.80]
+    maximum_design_slope_deg: 12.0
+
 lighting:
-  normal: {sun_elevation_deg: 48.0, sun_azimuth_deg: 135.0, intensity: 2800.0, ambient_intensity: 2500.0}
-  bright: {sun_elevation_deg: 62.0, sun_azimuth_deg: 110.0, intensity: 4200.0, ambient_intensity: 3500.0}
-  dim: {sun_elevation_deg: 24.0, sun_azimuth_deg: 210.0, intensity: 1450.0, ambient_intensity: 1000.0}
+  normal:
+    sky_asset_id: kloofendal_clear_4k
+    dome_intensity: 750.0
+    sun_elevation_deg: 48.0
+    sun_azimuth_deg: 135.0
+    sun_intensity: 2800.0
+    exposure_stops: 0.0
+  bright:
+    sky_asset_id: kloofendal_clear_4k
+    dome_intensity: 1000.0
+    sun_elevation_deg: 62.0
+    sun_azimuth_deg: 110.0
+    sun_intensity: 4200.0
+    exposure_stops: 0.25
+  dim:
+    sky_asset_id: kloofendal_clear_4k
+    dome_intensity: 350.0
+    sun_elevation_deg: 24.0
+    sun_azimuth_deg: 210.0
+    sun_intensity: 1450.0
+    exposure_stops: -0.5
+
 trees:
-  low: {count: 28, minimum_spacing_m: 1.55}
-  medium: {count: 42, minimum_spacing_m: 1.35}
-  high: {count: 56, minimum_spacing_m: 1.15}
-  boundary_margin_m: 1.0
-  trunk_radius_m: [0.18, 0.34]
-  trunk_height_m: [3.4, 5.4]
-  scale: [0.85, 1.15]
-  types:
-    broadleaf_round: {weight: 0.65, foliage_radius_ratio: 0.34, foliage_color: [0.08, 0.31, 0.05]}
-    broadleaf_tall: {weight: 0.35, foliage_radius_ratio: 0.28, foliage_color: [0.12, 0.38, 0.07]}
+  low: {count: 28, minimum_spacing_m: 1.70}
+  medium: {count: 42, minimum_spacing_m: 1.50}
+  high: {count: 56, minimum_spacing_m: 1.30}
+  boundary_margin_m: 1.25
+  assets:
+    nvidia_blue_berry_elder:
+      weight: 0.45
+      scale_multiplier_range: [0.88, 1.08]
+    nvidia_gray_birch:
+      weight: 0.55
+      scale_multiplier_range: [0.95, 1.18]
+
 physics: {static_friction: 0.85, dynamic_friction: 0.70, restitution: 0.0}
 semantics:
   unknown: 0
   ground: 1
   tree_trunk: 2
   foliage: 3
-  robot: 4
-  other: 5
+  rock: 4
+  building: 5
+  robot: 6
+  other_object: 7
+  # Parent/root fallback. Rendered trunk/leaves receive the specific IDs above.
+  vegetation: 7
+
+review_views:
+  aerial:
+    eye_m: [0.0, -0.5, 30.0]
+    target_m: [0.0, 0.0, 0.0]
+  ground:
+    eye_xy_height_m: [-9.0, -8.0, 0.5]
+    target_xy_height_m: [-2.0, -1.0, 1.1]
+  mid_height:
+    eye_xy_height_m: [10.0, -10.0, 1.8]
+    target_xy_height_m: [0.0, 0.0, 2.2]
+  closeup:
+    anchor_tree_id: tree_002
+    distance_m: 4.0
+    camera_height_m: 1.6
+    target_height_m: 2.2

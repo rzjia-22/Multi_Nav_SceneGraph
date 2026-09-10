@@ -1,0 +1,54 @@
+schema_version: 1
+asset_root_policy:
+  provider: NVIDIA Isaac Sim cloud assets
+  isaac_sim_version: 5.1.0
+  resolution: Isaac Lab runtime constants NVIDIA_NUCLEUS_DIR and ISAAC_NUCLEUS_DIR
+  redistribution: URI references only; NVIDIA binary assets are not vendored
+
+trees:
+  nvidia_blue_berry_elder:
+    display_name: Blue Berry Elder
+    provider: NVIDIA Omniverse simulation-ready vegetation
+    uri: "{NVIDIA_NUCLEUS_DIR}/Assets/Vegetation/Trees/Blue_Berry_Elder.usd"
+    source_reference: ForestNavigation Collected_forest_v2 and Isaac 5.1 NVIDIA asset library
+    authored_meters_per_unit: 0.01
+    spawn_scale: [0.01, 0.01, 0.01]
+    nominal_bounds_m: {width: 4.09, depth: 3.80, height: 4.63}
+    collision_policy: hidden_cylinder
+    collision_proxy: {radius_m: 0.27, height_m: 4.2}
+    semantic_policy:
+      root: vegetation
+      prim_overrides: {trunk: tree_trunk, leaves: foliage}
+  nvidia_gray_birch:
+    display_name: Gray Birch
+    provider: NVIDIA Omniverse simulation-ready vegetation
+    uri: "{NVIDIA_NUCLEUS_DIR}/Assets/Vegetation/Trees/Gray_Birch.usd"
+    source_reference: Isaac 5.1 NVIDIA asset library
+    authored_meters_per_unit: 0.01
+    spawn_scale: [0.01, 0.01, 0.01]
+    nominal_bounds_m: {width: 2.68, depth: 2.57, height: 3.33}
+    collision_policy: hidden_cylinder
+    collision_proxy: {radius_m: 0.22, height_m: 3.2}
+    semantic_policy:
+      root: vegetation
+      prim_overrides: {trunk: tree_trunk, leaves: foliage}
+
+ground_materials:
+  grass:
+    display_name: Grass Countryside
+    provider: NVIDIA MDL material library
+    uri: "{NVIDIA_NUCLEUS_DIR}/Materials/Base/Natural/Grass_Countryside.mdl"
+    texture_scale: [0.35, 0.35]
+  bare_soil:
+    display_name: Natural Dirt
+    provider: NVIDIA MDL material library
+    uri: "{NVIDIA_NUCLEUS_DIR}/Materials/Base/Natural/Dirt.mdl"
+    source_reference: ForestNavigation used the preceding 2023_1 Natural/Dirt material
+    texture_scale: [0.35, 0.35]
+
+sky:
+  kloofendal_clear_4k:
+    display_name: Kloofendal clear pure sky 4K
+    provider: NVIDIA Isaac asset library / Poly Haven HDRI
+    uri: "{ISAAC_NUCLEUS_DIR}/Materials/Textures/Skies/PolyHaven/kloofendal_43d_clear_puresky_4k.hdr"
+    source_reference: ForestNavigation forestnavigation_env_cfg.py

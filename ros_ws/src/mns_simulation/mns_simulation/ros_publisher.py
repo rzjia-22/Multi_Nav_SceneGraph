@@ -16,6 +16,9 @@ PROJECT_SEMANTIC_LABELS = {
     "building": 5,
     "robot": 6,
     "other_object": 7,
+    # Composite vegetation roots fall back to the existing generic object ID;
+    # supported tree assets override their rendered trunk and leaf prims.
+    "vegetation": 7,
 }
 
 

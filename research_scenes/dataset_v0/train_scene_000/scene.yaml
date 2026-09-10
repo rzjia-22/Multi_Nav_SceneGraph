@@ -1,12 +1,14 @@
-schema_version: 1
+schema_version: 2
 dataset_version: dataset_v0
 scene_id: train_scene_000
 scene_seed: 41001
 split: train
 generator:
   name: mns_research_forest
-  version: 1
+  version: 2
   rng: numpy.PCG64
+  isaac_sim: 5.1.0
+  isaac_lab: 2.3.1
 extent_m:
 - 24.0
 - 24.0
@@ -15,37 +17,39 @@ factors:
   ground: grass
   lighting: normal
   tree_density: medium
+asset_registry: config/research_forests/assets.yaml
 terrain:
   profile: gentle
-  waves:
-  - amplitude_m: 0.0992
-    wavelength_m: 11.822138
-    direction_deg: 14.777871
-    phase_rad: 3.108549
-  - amplitude_m: 0.0448
-    wavelength_m: 12.408003
-    direction_deg: 181.933554
-    phase_rad: 1.796758
-  - amplitude_m: 0.016
-    wavelength_m: 12.523695
-    direction_deg: 251.976621
-    phase_rad: 1.034232
-  roughness_m: 0.015
-  max_slope_deg: 7.0
-  mesh_resolution_m: 0.5
+  builder: isaaclab.terrains.TerrainImporter
+  generator:
+    subterrain_type: hf_wave
+    horizontal_scale_m: 0.2
+    vertical_scale_m: 0.005
+    amplitude_range_m:
+    - 0.035
+    - 0.08
+    num_waves: 2
+    difficulty_range:
+    - 0.35
+    - 0.65
+    maximum_design_slope_deg: 7.0
+  seed: 41001
 ground:
   profile: grass
-  rgb:
-  - 0.16
-  - 0.3
-  - 0.08
-  roughness: 0.88
+  material_asset_id: grass
+  material_uri: '{NVIDIA_NUCLEUS_DIR}/Materials/Base/Natural/Grass_Countryside.mdl'
+  texture_scale:
+  - 0.35
+  - 0.35
 lighting:
   profile: normal
+  sky_asset_id: kloofendal_clear_4k
+  dome_intensity: 750.0
   sun_elevation_deg: 48.0
   sun_azimuth_deg: 135.0
-  intensity: 2800.0
-  ambient_intensity: 2500.0
+  sun_intensity: 2800.0
+  exposure_stops: 0.0
+  sky_uri: '{ISAAC_NUCLEUS_DIR}/Materials/Textures/Skies/PolyHaven/kloofendal_43d_clear_puresky_4k.hdr'
 physics:
   static_friction: 0.85
   dynamic_friction: 0.7
@@ -55,679 +59,716 @@ semantics:
   ground: 1
   tree_trunk: 2
   foliage: 3
-  robot: 4
-  other: 5
+  rock: 4
+  building: 5
+  robot: 6
+  other_object: 7
+  vegetation: 7
+tree_count: 42
 trees:
 - tree_id: tree_000
-  type: broadleaf_round
+  asset_id: nvidia_gray_birch
   position_m:
-  - 8.504282
-  - -1.965445
-  ground_height_m: 0.061432
-  trunk_radius_m: 0.246703
-  trunk_height_m: 4.874782
-  foliage_radius_m: 1.657426
-  foliage_color:
-  - 0.08
-  - 0.31
-  - 0.05
-  yaw_deg: 195.208821
-  scale: 1.067703
-  asset_id: procedural/broadleaf_round/v0
+  - 5.356354
+  - -9.867433
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 114.933554
+  scale_multiplier: 1.163134
+  spawn_scale:
+  - 0.01163134
+  - 0.01163134
+  - 0.01163134
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.255889
+    height_m: 3.722027
 - tree_id: tree_001
-  type: broadleaf_round
+  asset_id: nvidia_blue_berry_elder
   position_m:
-  - 8.016168
-  - -6.682286
-  ground_height_m: -0.03112
-  trunk_radius_m: 0.184105
-  trunk_height_m: 3.637874
-  foliage_radius_m: 1.236877
-  foliage_color:
-  - 0.08
-  - 0.31
-  - 0.05
-  yaw_deg: 58.538452
-  scale: 0.968604
-  asset_id: procedural/broadleaf_round/v0
+  - -4.601796
+  - 9.927102
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 319.160974
+  scale_multiplier: 0.912921
+  spawn_scale:
+  - 0.00912921
+  - 0.00912921
+  - 0.00912921
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.246489
+    height_m: 3.834267
 - tree_id: tree_002
-  type: broadleaf_tall
+  asset_id: nvidia_blue_berry_elder
   position_m:
-  - 4.865864
-  - -2.958742
-  ground_height_m: -0.097236
-  trunk_radius_m: 0.311705
-  trunk_height_m: 5.689556
-  foliage_radius_m: 1.593076
-  foliage_color:
-  - 0.12
-  - 0.38
-  - 0.07
-  yaw_deg: 233.182117
-  scale: 1.063304
-  asset_id: procedural/broadleaf_tall/v0
+  - -1.920776
+  - -3.208274
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 261.243516
+  scale_multiplier: 0.996567
+  spawn_scale:
+  - 0.00996567
+  - 0.00996567
+  - 0.00996567
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.269073
+    height_m: 4.185582
 - tree_id: tree_003
-  type: broadleaf_tall
+  asset_id: nvidia_blue_berry_elder
   position_m:
-  - 0.708324
-  - -1.042036
-  ground_height_m: 0.041622
-  trunk_radius_m: 0.275862
-  trunk_height_m: 4.413777
-  foliage_radius_m: 1.235858
-  foliage_color:
-  - 0.12
-  - 0.38
-  - 0.07
-  yaw_deg: 216.405023
-  scale: 0.869225
-  asset_id: procedural/broadleaf_tall/v0
+  - 0.908305
+  - 7.833982
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 22.663245
+  scale_multiplier: 0.964997
+  spawn_scale:
+  - 0.00964997
+  - 0.00964997
+  - 0.00964997
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.260549
+    height_m: 4.052989
 - tree_id: tree_004
-  type: broadleaf_round
+  asset_id: nvidia_blue_berry_elder
   position_m:
-  - 3.257988
-  - 6.026021
-  ground_height_m: -0.072053
-  trunk_radius_m: 0.25413
-  trunk_height_m: 4.427586
-  foliage_radius_m: 1.505379
-  foliage_color:
-  - 0.08
-  - 0.31
-  - 0.05
-  yaw_deg: 297.757156
-  scale: 0.901692
-  asset_id: procedural/broadleaf_round/v0
+  - -6.925227
+  - -2.250075
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 131.584224
+  scale_multiplier: 1.024235
+  spawn_scale:
+  - 0.01024235
+  - 0.01024235
+  - 0.01024235
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.276543
+    height_m: 4.301788
 - tree_id: tree_005
-  type: broadleaf_round
+  asset_id: nvidia_gray_birch
   position_m:
-  - 9.137308
-  - 3.542485
-  ground_height_m: 0.064901
-  trunk_radius_m: 0.211668
-  trunk_height_m: 4.174777
-  foliage_radius_m: 1.419424
-  foliage_color:
-  - 0.08
-  - 0.31
-  - 0.05
-  yaw_deg: 179.7393
-  scale: 1.110617
-  asset_id: procedural/broadleaf_round/v0
+  - 7.650718
+  - 4.45426
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 233.182117
+  scale_multiplier: 1.113533
+  spawn_scale:
+  - 0.01113533
+  - 0.01113533
+  - 0.01113533
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.244977
+    height_m: 3.563305
 - tree_id: tree_006
-  type: broadleaf_tall
+  asset_id: nvidia_gray_birch
   position_m:
-  - -0.621481
-  - 0.476007
-  ground_height_m: 0.079335
-  trunk_radius_m: 0.245331
-  trunk_height_m: 3.823518
-  foliage_radius_m: 1.070585
-  foliage_color:
-  - 0.12
-  - 0.38
-  - 0.07
-  yaw_deg: 335.636758
-  scale: 0.875298
-  asset_id: procedural/broadleaf_tall/v0
+  - 0.692226
+  - -1.018353
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 302.009851
+  scale_multiplier: 1.147463
+  spawn_scale:
+  - 0.01147463
+  - 0.01147463
+  - 0.01147463
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.252442
+    height_m: 3.671883
 - tree_id: tree_007
-  type: broadleaf_tall
+  asset_id: nvidia_gray_birch
   position_m:
-  - 1.4492
-  - -9.722023
-  ground_height_m: 0.086872
-  trunk_radius_m: 0.244431
-  trunk_height_m: 3.613836
-  foliage_radius_m: 1.011874
-  foliage_color:
-  - 0.12
-  - 0.38
-  - 0.07
-  yaw_deg: 34.628123
-  scale: 1.024342
-  asset_id: procedural/broadleaf_tall/v0
+  - -9.372231
+  - 2.174189
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 20.32988
+  scale_multiplier: 1.127999
+  spawn_scale:
+  - 0.01127999
+  - 0.01127999
+  - 0.01127999
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.24816
+    height_m: 3.609598
 - tree_id: tree_008
-  type: broadleaf_round
+  asset_id: nvidia_blue_berry_elder
   position_m:
-  - -6.439447
-  - -1.954909
-  ground_height_m: -0.083414
-  trunk_radius_m: 0.202183
-  trunk_height_m: 5.018632
-  foliage_radius_m: 1.706335
-  foliage_color:
-  - 0.08
-  - 0.31
-  - 0.05
-  yaw_deg: 266.387098
-  scale: 1.014831
-  asset_id: procedural/broadleaf_round/v0
+  - 2.934271
+  - 5.485812
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 329.519584
+  scale_multiplier: 1.045421
+  spawn_scale:
+  - 0.01045421
+  - 0.01045421
+  - 0.01045421
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.282264
+    height_m: 4.390767
 - tree_id: tree_009
-  type: broadleaf_round
+  asset_id: nvidia_blue_berry_elder
   position_m:
-  - -3.834448
-  - -6.524624
-  ground_height_m: -0.020219
-  trunk_radius_m: 0.240028
-  trunk_height_m: 5.332851
-  foliage_radius_m: 1.81317
-  foliage_color:
-  - 0.08
-  - 0.31
-  - 0.05
-  yaw_deg: 5.015492
-  scale: 1.076122
-  asset_id: procedural/broadleaf_round/v0
+  - 3.461974
+  - 1.508009
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 312.740596
+  scale_multiplier: 0.915897
+  spawn_scale:
+  - 0.00915897
+  - 0.00915897
+  - 0.00915897
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.247292
+    height_m: 3.846768
 - tree_id: tree_010
-  type: broadleaf_round
+  asset_id: nvidia_gray_birch
   position_m:
-  - -4.562255
-  - 5.299984
-  ground_height_m: 0.053148
-  trunk_radius_m: 0.252713
-  trunk_height_m: 4.192442
-  foliage_radius_m: 1.42543
-  foliage_color:
-  - 0.08
-  - 0.31
-  - 0.05
-  yaw_deg: 4.120296
-  scale: 1.059495
-  asset_id: procedural/broadleaf_round/v0
+  - 0.465189
+  - 9.42394
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 30.357671
+  scale_multiplier: 1.061348
+  spawn_scale:
+  - 0.01061348
+  - 0.01061348
+  - 0.01061348
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.233497
+    height_m: 3.396315
 - tree_id: tree_011
-  type: broadleaf_round
+  asset_id: nvidia_blue_berry_elder
   position_m:
-  - -3.572517
-  - -8.625319
-  ground_height_m: -0.02421
-  trunk_radius_m: 0.186994
-  trunk_height_m: 4.398883
-  foliage_radius_m: 1.49562
-  foliage_color:
-  - 0.08
-  - 0.31
-  - 0.05
-  yaw_deg: 176.188782
-  scale: 0.98876
-  asset_id: procedural/broadleaf_round/v0
+  - 9.294973
+  - 1.416264
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 131.900242
+  scale_multiplier: 1.055947
+  spawn_scale:
+  - 0.01055947
+  - 0.01055947
+  - 0.01055947
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.285106
+    height_m: 4.434977
 - tree_id: tree_012
-  type: broadleaf_round
+  asset_id: nvidia_blue_berry_elder
   position_m:
-  - 4.915037
-  - -4.533704
-  ground_height_m: -0.109937
-  trunk_radius_m: 0.284007
-  trunk_height_m: 3.695417
-  foliage_radius_m: 1.256442
-  foliage_color:
-  - 0.08
-  - 0.31
-  - 0.05
-  yaw_deg: 121.475278
-  scale: 0.913956
-  asset_id: procedural/broadleaf_round/v0
+  - -8.681932
+  - -6.293096
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 43.26383
+  scale_multiplier: 0.895609
+  spawn_scale:
+  - 0.00895609
+  - 0.00895609
+  - 0.00895609
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.241814
+    height_m: 3.761558
 - tree_id: tree_013
-  type: broadleaf_round
+  asset_id: nvidia_gray_birch
   position_m:
-  - 3.497857
-  - 7.865628
-  ground_height_m: -0.03325
-  trunk_radius_m: 0.257686
-  trunk_height_m: 5.593762
-  foliage_radius_m: 1.901879
-  foliage_color:
-  - 0.08
-  - 0.31
-  - 0.05
-  yaw_deg: 110.676268
-  scale: 1.095596
-  asset_id: procedural/broadleaf_round/v0
+  - 5.861862
+  - 1.062874
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 73.233424
+  scale_multiplier: 1.024913
+  spawn_scale:
+  - 0.01024913
+  - 0.01024913
+  - 0.01024913
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.225481
+    height_m: 3.27972
 - tree_id: tree_014
-  type: broadleaf_tall
+  asset_id: nvidia_gray_birch
   position_m:
-  - -2.339161
-  - -3.107457
-  ground_height_m: 0.107802
-  trunk_radius_m: 0.209123
-  trunk_height_m: 4.742347
-  foliage_radius_m: 1.327857
-  foliage_color:
-  - 0.12
-  - 0.38
-  - 0.07
-  yaw_deg: 169.248759
-  scale: 0.970341
-  asset_id: procedural/broadleaf_tall/v0
+  - 1.331958
+  - -4.965338
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 5.015492
+  scale_multiplier: 1.12336
+  spawn_scale:
+  - 0.0112336
+  - 0.0112336
+  - 0.0112336
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.247139
+    height_m: 3.594753
 - tree_id: tree_015
-  type: broadleaf_round
+  asset_id: nvidia_blue_berry_elder
   position_m:
-  - -8.616604
-  - 4.982294
-  ground_height_m: -0.06902
-  trunk_radius_m: 0.267393
-  trunk_height_m: 4.14015
-  foliage_radius_m: 1.407651
-  foliage_color:
-  - 0.08
-  - 0.31
-  - 0.05
-  yaw_deg: 287.915579
-  scale: 0.873655
-  asset_id: procedural/broadleaf_round/v0
+  - -4.458567
+  - 5.17953
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 100.263396
+  scale_multiplier: 0.953153
+  spawn_scale:
+  - 0.00953153
+  - 0.00953153
+  - 0.00953153
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.257351
+    height_m: 4.003242
 - tree_id: tree_016
-  type: broadleaf_round
+  asset_id: nvidia_blue_berry_elder
   position_m:
-  - -6.202756
-  - 4.754976
-  ground_height_m: 0.004525
-  trunk_radius_m: 0.248479
-  trunk_height_m: 4.097043
-  foliage_radius_m: 1.392995
-  foliage_color:
-  - 0.08
-  - 0.31
-  - 0.05
-  yaw_deg: 25.894328
-  scale: 0.96387
-  asset_id: procedural/broadleaf_round/v0
+  - -3.491324
+  - -8.429289
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 188.800415
+  scale_multiplier: 0.8914
+  spawn_scale:
+  - 0.008914
+  - 0.008914
+  - 0.008914
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.240678
+    height_m: 3.74388
 - tree_id: tree_017
-  type: broadleaf_round
+  asset_id: nvidia_gray_birch
   position_m:
-  - 10.200177
-  - -4.89217
-  ground_height_m: 0.119723
-  trunk_radius_m: 0.216072
-  trunk_height_m: 3.433492
-  foliage_radius_m: 1.167387
-  foliage_color:
-  - 0.08
-  - 0.31
-  - 0.05
-  yaw_deg: 336.731604
-  scale: 0.901162
-  asset_id: procedural/broadleaf_round/v0
+  - -0.805569
+  - -0.227614
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 88.014773
+  scale_multiplier: 1.065197
+  spawn_scale:
+  - 0.01065197
+  - 0.01065197
+  - 0.01065197
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.234343
+    height_m: 3.408631
 - tree_id: tree_018
-  type: broadleaf_tall
+  asset_id: nvidia_blue_berry_elder
   position_m:
-  - -1.634343
-  - -5.062662
-  ground_height_m: 0.109397
-  trunk_radius_m: 0.258625
-  trunk_height_m: 4.860759
-  foliage_radius_m: 1.361012
-  foliage_color:
-  - 0.12
-  - 0.38
-  - 0.07
-  yaw_deg: 324.979692
-  scale: 1.118037
-  asset_id: procedural/broadleaf_tall/v0
+  - -2.918768
+  - 4.803331
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 294.174412
+  scale_multiplier: 0.965362
+  spawn_scale:
+  - 0.00965362
+  - 0.00965362
+  - 0.00965362
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.260648
+    height_m: 4.054521
 - tree_id: tree_019
-  type: broadleaf_round
+  asset_id: nvidia_blue_berry_elder
   position_m:
-  - 4.156867
-  - -5.732472
-  ground_height_m: -0.105257
-  trunk_radius_m: 0.336225
-  trunk_height_m: 5.029803
-  foliage_radius_m: 1.710133
-  foliage_color:
-  - 0.08
-  - 0.31
-  - 0.05
-  yaw_deg: 121.511425
-  scale: 1.06832
-  asset_id: procedural/broadleaf_round/v0
+  - -3.834316
+  - -6.166479
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 308.710279
+  scale_multiplier: 1.011799
+  spawn_scale:
+  - 0.01011799
+  - 0.01011799
+  - 0.01011799
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.273186
+    height_m: 4.249555
 - tree_id: tree_020
-  type: broadleaf_round
+  asset_id: nvidia_blue_berry_elder
   position_m:
-  - 6.690224
-  - 10.948802
-  ground_height_m: 0.067715
-  trunk_radius_m: 0.192676
-  trunk_height_m: 3.71217
-  foliage_radius_m: 1.262138
-  foliage_color:
-  - 0.08
-  - 0.31
-  - 0.05
-  yaw_deg: 109.335785
-  scale: 0.906947
-  asset_id: procedural/broadleaf_round/v0
+  - 7.58605
+  - 6.85106
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 129.150701
+  scale_multiplier: 0.958735
+  spawn_scale:
+  - 0.00958735
+  - 0.00958735
+  - 0.00958735
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.258858
+    height_m: 4.026687
 - tree_id: tree_021
-  type: broadleaf_tall
+  asset_id: nvidia_gray_birch
   position_m:
-  - -8.160671
-  - -5.525004
-  ground_height_m: -0.12298
-  trunk_radius_m: 0.261827
-  trunk_height_m: 3.846827
-  foliage_radius_m: 1.077112
-  foliage_color:
-  - 0.12
-  - 0.38
-  - 0.07
-  yaw_deg: 152.932719
-  scale: 0.922045
-  asset_id: procedural/broadleaf_tall/v0
+  - 5.446654
+  - -5.977619
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 169.248759
+  scale_multiplier: 1.042261
+  spawn_scale:
+  - 0.01042261
+  - 0.01042261
+  - 0.01042261
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.229297
+    height_m: 3.335236
 - tree_id: tree_022
-  type: broadleaf_tall
+  asset_id: nvidia_blue_berry_elder
   position_m:
-  - 3.88465
-  - 4.314522
-  ground_height_m: -0.082226
-  trunk_radius_m: 0.211006
-  trunk_height_m: 3.995158
-  foliage_radius_m: 1.118644
-  foliage_color:
-  - 0.12
-  - 0.38
-  - 0.07
-  yaw_deg: 341.169009
-  scale: 0.965055
-  asset_id: procedural/broadleaf_tall/v0
+  - -8.420773
+  - 4.86906
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 240.999127
+  scale_multiplier: 1.037578
+  spawn_scale:
+  - 0.01037578
+  - 0.01037578
+  - 0.01037578
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.280146
+    height_m: 4.357827
 - tree_id: tree_023
-  type: broadleaf_round
+  asset_id: nvidia_blue_berry_elder
   position_m:
-  - -0.821686
-  - 8.839287
-  ground_height_m: -0.028975
-  trunk_radius_m: 0.254079
-  trunk_height_m: 4.265127
-  foliage_radius_m: 1.450143
-  foliage_color:
-  - 0.08
-  - 0.31
-  - 0.05
-  yaw_deg: 214.135796
-  scale: 0.972998
-  asset_id: procedural/broadleaf_round/v0
+  - -9.054721
+  - 6.444958
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 181.300807
+  scale_multiplier: 1.023227
+  spawn_scale:
+  - 0.01023227
+  - 0.01023227
+  - 0.01023227
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.276271
+    height_m: 4.297554
 - tree_id: tree_024
-  type: broadleaf_round
+  asset_id: nvidia_gray_birch
   position_m:
-  - 0.940915
-  - 3.043725
-  ground_height_m: -0.041162
-  trunk_radius_m: 0.255298
-  trunk_height_m: 4.863139
-  foliage_radius_m: 1.653467
-  foliage_color:
-  - 0.08
-  - 0.31
-  - 0.05
-  yaw_deg: 269.048446
-  scale: 1.074764
-  asset_id: procedural/broadleaf_round/v0
+  - 7.835108
+  - -2.093398
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 212.990776
+  scale_multiplier: 1.013855
+  spawn_scale:
+  - 0.01013855
+  - 0.01013855
+  - 0.01013855
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.223048
+    height_m: 3.244335
 - tree_id: tree_025
-  type: broadleaf_tall
+  asset_id: nvidia_blue_berry_elder
   position_m:
-  - -2.712209
-  - 4.507416
-  ground_height_m: 0.0642
-  trunk_radius_m: 0.363261
-  trunk_height_m: 3.817447
-  foliage_radius_m: 1.068885
-  foliage_color:
-  - 0.12
-  - 0.38
-  - 0.07
-  yaw_deg: 347.944821
-  scale: 1.092819
-  asset_id: procedural/broadleaf_tall/v0
+  - -7.083386
+  - 9.36036
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 357.638911
+  scale_multiplier: 0.933976
+  spawn_scale:
+  - 0.00933976
+  - 0.00933976
+  - 0.00933976
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.252173
+    height_m: 3.922698
 - tree_id: tree_026
-  type: broadleaf_round
+  asset_id: nvidia_gray_birch
   position_m:
-  - 3.438035
-  - 0.644912
-  ground_height_m: -0.09099
-  trunk_radius_m: 0.254116
-  trunk_height_m: 4.235407
-  foliage_radius_m: 1.440038
-  foliage_color:
-  - 0.08
-  - 0.31
-  - 0.05
-  yaw_deg: 211.409587
-  scale: 1.106734
-  asset_id: procedural/broadleaf_round/v0
+  - -3.853745
+  - -0.563474
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 352.363491
+  scale_multiplier: 1.157626
+  spawn_scale:
+  - 0.01157626
+  - 0.01157626
+  - 0.01157626
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.254678
+    height_m: 3.704403
 - tree_id: tree_027
-  type: broadleaf_tall
+  asset_id: nvidia_gray_birch
   position_m:
-  - -5.859365
-  - -7.035197
-  ground_height_m: -0.132406
-  trunk_radius_m: 0.298794
-  trunk_height_m: 4.879717
-  foliage_radius_m: 1.366321
-  foliage_color:
-  - 0.12
-  - 0.38
-  - 0.07
-  yaw_deg: 167.651785
-  scale: 1.125068
-  asset_id: procedural/broadleaf_tall/v0
+  - -5.602189
+  - 2.902704
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 261.984398
+  scale_multiplier: 1.100436
+  spawn_scale:
+  - 0.01100436
+  - 0.01100436
+  - 0.01100436
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.242096
+    height_m: 3.521396
 - tree_id: tree_028
-  type: broadleaf_tall
+  asset_id: nvidia_gray_birch
   position_m:
-  - 3.04695
-  - 10.600555
-  ground_height_m: 0.001967
-  trunk_radius_m: 0.208744
-  trunk_height_m: 3.647193
-  foliage_radius_m: 1.021214
-  foliage_color:
-  - 0.12
-  - 0.38
-  - 0.07
-  yaw_deg: 113.237421
-  scale: 0.907307
-  asset_id: procedural/broadleaf_tall/v0
+  - -3.493068
+  - 6.538173
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 73.000836
+  scale_multiplier: 1.023954
+  spawn_scale:
+  - 0.01023954
+  - 0.01023954
+  - 0.01023954
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.22527
+    height_m: 3.276654
 - tree_id: tree_029
-  type: broadleaf_round
+  asset_id: nvidia_blue_berry_elder
   position_m:
-  - -10.072536
-  - -1.515162
-  ground_height_m: -0.051925
-  trunk_radius_m: 0.184867
-  trunk_height_m: 4.191773
-  foliage_radius_m: 1.425203
-  foliage_color:
-  - 0.08
-  - 0.31
-  - 0.05
-  yaw_deg: 142.01166
-  scale: 1.012892
-  asset_id: procedural/broadleaf_round/v0
+  - 7.499258
+  - -7.975201
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 233.918829
+  scale_multiplier: 1.056283
+  spawn_scale:
+  - 0.01056283
+  - 0.01056283
+  - 0.01056283
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.285196
+    height_m: 4.436387
 - tree_id: tree_030
-  type: broadleaf_tall
+  asset_id: nvidia_blue_berry_elder
   position_m:
-  - -10.19153
-  - 6.016765
-  ground_height_m: -0.075826
-  trunk_radius_m: 0.220277
-  trunk_height_m: 5.085232
-  foliage_radius_m: 1.423865
-  foliage_color:
-  - 0.12
-  - 0.38
-  - 0.07
-  yaw_deg: 230.951811
-  scale: 1.022003
-  asset_id: procedural/broadleaf_tall/v0
+  - -2.450348
+  - -5.586788
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 250.601277
+  scale_multiplier: 1.015315
+  spawn_scale:
+  - 0.01015315
+  - 0.01015315
+  - 0.01015315
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.274135
+    height_m: 4.264323
 - tree_id: tree_031
-  type: broadleaf_tall
+  asset_id: nvidia_blue_berry_elder
   position_m:
-  - 6.241381
-  - 0.562224
-  ground_height_m: -0.036345
-  trunk_radius_m: 0.28953
-  trunk_height_m: 3.362815
-  foliage_radius_m: 0.941588
-  foliage_color:
-  - 0.12
-  - 0.38
-  - 0.07
-  yaw_deg: 216.159965
-  scale: 0.916527
-  asset_id: procedural/broadleaf_tall/v0
+  - 10.643373
+  - -5.556908
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 341.169009
+  scale_multiplier: 0.956703
+  spawn_scale:
+  - 0.00956703
+  - 0.00956703
+  - 0.00956703
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.25831
+    height_m: 4.018153
 - tree_id: tree_032
-  type: broadleaf_round
+  asset_id: nvidia_gray_birch
   position_m:
-  - -7.760643
-  - -8.564399
-  ground_height_m: -0.105744
-  trunk_radius_m: 0.235836
-  trunk_height_m: 5.031819
-  foliage_radius_m: 1.710819
-  foliage_color:
-  - 0.08
-  - 0.31
-  - 0.05
-  yaw_deg: 270.118553
-  scale: 0.946157
-  asset_id: procedural/broadleaf_round/v0
+  - 2.038666
+  - 0.919531
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 129.462785
+  scale_multiplier: 1.072131
+  spawn_scale:
+  - 0.01072131
+  - 0.01072131
+  - 0.01072131
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.235869
+    height_m: 3.430821
 - tree_id: tree_033
-  type: broadleaf_round
+  asset_id: nvidia_gray_birch
   position_m:
-  - -6.168479
-  - 6.920079
-  ground_height_m: 0.016165
-  trunk_radius_m: 0.16469
-  trunk_height_m: 3.258097
-  foliage_radius_m: 1.107753
-  foliage_color:
-  - 0.08
-  - 0.31
-  - 0.05
-  yaw_deg: 261.043351
-  scale: 0.889567
-  asset_id: procedural/broadleaf_round/v0
+  - 1.342079
+  - 5.358069
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 253.757722
+  scale_multiplier: 1.036645
+  spawn_scale:
+  - 0.01036645
+  - 0.01036645
+  - 0.01036645
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.228062
+    height_m: 3.317264
 - tree_id: tree_034
-  type: broadleaf_round
+  asset_id: nvidia_blue_berry_elder
   position_m:
-  - -3.173191
-  - 3.237834
-  ground_height_m: 0.083881
-  trunk_radius_m: 0.333068
-  trunk_height_m: 5.044371
-  foliage_radius_m: 1.715086
-  foliage_color:
-  - 0.08
-  - 0.31
-  - 0.05
-  yaw_deg: 13.373099
-  scale: 0.996402
-  asset_id: procedural/broadleaf_round/v0
+  - 6.951919
+  - 9.729666
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 347.944821
+  scale_multiplier: 1.041879
+  spawn_scale:
+  - 0.01041879
+  - 0.01041879
+  - 0.01041879
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.281307
+    height_m: 4.375894
 - tree_id: tree_035
-  type: broadleaf_tall
+  asset_id: nvidia_blue_berry_elder
   position_m:
-  - -0.525582
-  - -2.746116
-  ground_height_m: 0.110971
-  trunk_radius_m: 0.167705
-  trunk_height_m: 3.610068
-  foliage_radius_m: 1.010819
-  foliage_color:
-  - 0.12
-  - 0.38
-  - 0.07
-  yaw_deg: 182.370968
-  scale: 0.85001
-  asset_id: procedural/broadleaf_tall/v0
+  - -6.315527
+  - -4.083736
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 211.409587
+  scale_multiplier: 1.051156
+  spawn_scale:
+  - 0.01051156
+  - 0.01051156
+  - 0.01051156
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.283812
+    height_m: 4.414854
 - tree_id: tree_036
-  type: broadleaf_round
+  asset_id: nvidia_gray_birch
   position_m:
-  - -1.264672
-  - 7.301887
-  ground_height_m: -0.009344
-  trunk_radius_m: 0.334991
-  trunk_height_m: 4.298705
-  foliage_radius_m: 1.46156
-  foliage_color:
-  - 0.08
-  - 0.31
-  - 0.05
-  yaw_deg: 160.497609
-  scale: 1.090709
-  asset_id: procedural/broadleaf_round/v0
+  - -5.726198
+  - -6.875306
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 168.707627
+  scale_multiplier: 1.073019
+  spawn_scale:
+  - 0.01073019
+  - 0.01073019
+  - 0.01073019
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.236064
+    height_m: 3.433661
 - tree_id: tree_037
-  type: broadleaf_round
+  asset_id: nvidia_gray_birch
   position_m:
-  - 7.840148
-  - 4.49275
-  ground_height_m: 0.052063
-  trunk_radius_m: 0.177093
-  trunk_height_m: 4.160797
-  foliage_radius_m: 1.414671
-  foliage_color:
-  - 0.08
-  - 0.31
-  - 0.05
-  yaw_deg: 91.713153
-  scale: 0.856302
-  asset_id: procedural/broadleaf_round/v0
+  - 8.963202
+  - -0.737463
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 273.927024
+  scale_multiplier: 1.175824
+  spawn_scale:
+  - 0.01175824
+  - 0.01175824
+  - 0.01175824
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.258681
+    height_m: 3.762637
 - tree_id: tree_038
-  type: broadleaf_round
+  asset_id: nvidia_blue_berry_elder
   position_m:
-  - -5.118352
-  - 1.098775
-  ground_height_m: 0.03148
-  trunk_radius_m: 0.215355
-  trunk_height_m: 4.107006
-  foliage_radius_m: 1.396382
-  foliage_color:
-  - 0.08
-  - 0.31
-  - 0.05
-  yaw_deg: 351.938289
-  scale: 0.983074
-  asset_id: procedural/broadleaf_round/v0
+  - -4.021907
+  - -4.087162
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 15.176676
+  scale_multiplier: 0.94291
+  spawn_scale:
+  - 0.0094291
+  - 0.0094291
+  - 0.0094291
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.254586
+    height_m: 3.960221
 - tree_id: tree_039
-  type: broadleaf_round
+  asset_id: nvidia_blue_berry_elder
   position_m:
-  - 6.271697
-  - -7.139125
-  ground_height_m: -0.12659
-  trunk_radius_m: 0.26404
-  trunk_height_m: 5.030616
-  foliage_radius_m: 1.710409
-  foliage_color:
-  - 0.08
-  - 0.31
-  - 0.05
-  yaw_deg: 211.70436
-  scale: 0.97033
-  asset_id: procedural/broadleaf_round/v0
+  - -1.480726
+  - -7.344045
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 195.470834
+  scale_multiplier: 0.953842
+  spawn_scale:
+  - 0.00953842
+  - 0.00953842
+  - 0.00953842
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.257537
+    height_m: 4.006136
 - tree_id: tree_040
-  type: broadleaf_round
+  asset_id: nvidia_gray_birch
   position_m:
-  - -3.531789
-  - -1.599176
-  ground_height_m: 0.078489
-  trunk_radius_m: 0.283935
-  trunk_height_m: 3.863215
-  foliage_radius_m: 1.313493
-  foliage_color:
-  - 0.08
-  - 0.31
-  - 0.05
-  yaw_deg: 11.301411
-  scale: 0.929026
-  asset_id: procedural/broadleaf_round/v0
+  - -2.268748
+  - -1.690651
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 278.456156
+  scale_multiplier: 0.958452
+  spawn_scale:
+  - 0.00958452
+  - 0.00958452
+  - 0.00958452
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.210859
+    height_m: 3.067047
 - tree_id: tree_041
-  type: broadleaf_tall
+  asset_id: nvidia_gray_birch
   position_m:
-  - 3.154122
-  - -9.165409
-  ground_height_m: -0.033587
-  trunk_radius_m: 0.270757
-  trunk_height_m: 4.33733
-  foliage_radius_m: 1.214452
-  foliage_color:
-  - 0.12
-  - 0.38
-  - 0.07
-  yaw_deg: 28.260113
-  scale: 1.014106
-  asset_id: procedural/broadleaf_tall/v0
-content_hash: f8889a16e59be574de207bf66a061ab56cc9a68f006104d04b28721babf74ed7
+  - 7.168337
+  - -5.975092
+  ground_height_policy: terrain_raycast_top_surface
+  yaw_deg: 230.951811
+  scale_multiplier: 1.081869
+  spawn_scale:
+  - 0.01081869
+  - 0.01081869
+  - 0.01081869
+  collision_proxy:
+    shape: hidden_cylinder
+    radius_m: 0.238011
+    height_m: 3.46198
+review_views:
+  aerial:
+    eye_m:
+    - 0.0
+    - -0.5
+    - 30.0
+    target_m:
+    - 0.0
+    - 0.0
+    - 0.0
+  ground:
+    eye_xy_height_m:
+    - -9.0
+    - -8.0
+    - 0.5
+    target_xy_height_m:
+    - -2.0
+    - -1.0
+    - 1.1
+  mid_height:
+    eye_xy_height_m:
+    - 10.0
+    - -10.0
+    - 1.8
+    target_xy_height_m:
+    - 0.0
+    - 0.0
+    - 2.2
+  closeup:
+    anchor_tree_id: tree_002
+    distance_m: 4.0
+    camera_height_m: 1.6
+    target_height_m: 2.2
+content_hash: 252374c6c0fe1881ee138351baf746caa15ee09d3a4a070098d74ce72b060c7c
