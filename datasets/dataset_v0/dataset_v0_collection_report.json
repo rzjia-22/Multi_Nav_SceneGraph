@@ -1,81 +1,81 @@
 {
   "dataset": {
-    "episode_count": 35,
+    "episode_count": 50,
     "route_bucket_counts": {
-      "long": 11,
-      "medium": 14,
-      "short": 10
+      "long": 15,
+      "medium": 20,
+      "short": 15
     },
     "split_counts": {
-      "train": 35
+      "train": 50
     },
-    "total_depth_frames": 3914,
-    "total_executed_path_m": 224.28792595863342,
-    "total_hdf5_bytes": 2285217567,
-    "total_imu_samples": 39338,
-    "total_planned_path_m": 230.7014710000001,
-    "total_rgb_frames": 3914,
-    "total_simulated_duration_s": 392.5,
-    "total_state_samples": 19660
+    "total_depth_frames": 5557,
+    "total_executed_path_m": 317.9843306541443,
+    "total_hdf5_bytes": 3340237086,
+    "total_imu_samples": 55811,
+    "total_planned_path_m": 327.4142950000001,
+    "total_rgb_frames": 5557,
+    "total_simulated_duration_s": 556.9,
+    "total_state_samples": 27895
   },
   "dataset_version": "dataset_v0",
   "expert": {
     "bucket_compliance": true,
     "collision_count": 0,
     "executed_to_planned_ratio": {
-      "maximum": 0.9851928799670543,
-      "mean": 0.9690252079614388,
-      "median": 0.9712741113014393,
-      "minimum": 0.94241512883233,
-      "p95": 0.9827400085932776
+      "maximum": 0.985292028456032,
+      "mean": 0.9676420686177675,
+      "median": 0.970678283042558,
+      "minimum": 0.9381492179156941,
+      "p95": 0.9831879667737783
     },
     "goal_error_m": {
       "maximum": 0.2352085381594709,
-      "mean": 0.1783517413957982,
-      "median": 0.1741725091250119,
+      "mean": 0.17743836663204554,
+      "median": 0.1732306442212904,
       "minimum": 0.13089304342173838,
-      "p95": 0.22901998541577315
+      "p95": 0.22430858612309224
     },
     "success_rate": 1.0
   },
   "report_version": 1,
   "resources": {
-    "collection_session_count": 8,
+    "collection_session_count": 11,
     "memory_leak_sessions": [],
     "peak_gpu_temperature_c": 51.0,
     "peak_process_rss_mib": 11202.14453125,
-    "peak_vram_mib": 5217.0,
+    "peak_vram_mib": 5333.0,
     "rtf": {
       "maximum": 0.6471035883536275,
-      "mean": 0.4628374963641757,
-      "median": 0.4600436221138751,
+      "mean": 0.46711310741563833,
+      "median": 0.46160690541223004,
       "minimum": 0.3190103225378959,
-      "p95": 0.5289410077831445
+      "p95": 0.5262099254793184
     },
-    "total_app_startup_time_s": 202.74033963587135,
-    "total_reported_wall_time_s": 1929.0371112548746,
-    "total_scene_load_time_s": 86.44137531728484
+    "total_app_startup_time_s": 277.55766395200044,
+    "total_reported_wall_time_s": 2681.6057601831853,
+    "total_scene_load_time_s": 114.53177879028954
   },
   "retries": [],
   "scene_factor_episode_counts": {
     "ground": {
-      "bare_soil": 15,
-      "grass": 20
+      "bare_soil": 25,
+      "grass": 25
     },
     "lighting": {
-      "bright": 10,
-      "dim": 10,
-      "normal": 15
+      "bright": 15,
+      "dim": 15,
+      "normal": 20
     },
     "terrain_profile": {
-      "flat": 10,
-      "gentle": 15,
-      "moderate": 10
+      "flat": 15,
+      "gentle": 20,
+      "moderate": 15
     },
     "tree_density": {
       "high": 15,
-      "low": 10,
-      "medium": 10
+      "low": 15,
+      "medium": 20
     }
   },
   "scene_reports": [

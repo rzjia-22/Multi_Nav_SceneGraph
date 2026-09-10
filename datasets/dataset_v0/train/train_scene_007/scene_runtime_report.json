@@ -8,7 +8,7 @@
   "missing_registry_assets": [],
   "scene_content_hash": "3c92917e3f4325af90471a995baa7566ab1260249dfb8f7617e1cbbd9273f1ae",
   "scene_id": "train_scene_007",
-  "scene_load_time_s": 9.664283488178626,
+  "scene_load_time_s": 10.618229292100295,
   "scene_seed": 41149,
   "split": "train",
   "stage_snapshot": "research_scenes/dataset_v0/train_scene_007/scene.usda",
