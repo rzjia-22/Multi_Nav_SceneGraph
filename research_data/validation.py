@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import math
 from pathlib import Path
 import tempfile
 from typing import Any
@@ -11,6 +10,8 @@ from typing import Any
 import numpy as np
 
 from .common import ROOT, load_yaml, scene_paths, stable_hash
+from .depth import ALIGNMENT_ALGORITHM, ALIGNMENT_VERSION, align_depth_to_rgb
+from .episode import COLLECTOR_VERSION, EPISODE_SCHEMA_VERSION
 from .expert import occupancy_grid, path_length
 from .forest import generate_scene
 
@@ -44,8 +45,12 @@ def validate_scene(scene_path: Path, deterministic: bool = True) -> dict[str, An
         "semantics", "trees", "asset_registry", "content_hash",
     }
     assert required <= set(scene), f"scene keys missing: {required - set(scene)}"
-    assert scene["schema_version"] == 2
+    assert scene["schema_version"] == 3
     assert scene["terrain"]["builder"] == "isaaclab.terrains.TerrainImporter"
+    assert "waves" not in scene["terrain"]
+    statistics = scene["terrain"]["actual_geometry_statistics"]
+    assert statistics and statistics["sample_count"] > 0
+    assert statistics["slope_max_deg"] >= statistics["slope_p95_deg"] >= statistics["slope_median_deg"]
     assert {"unknown", "ground", "tree_trunk", "foliage", "robot", "other_object", "vegetation"} <= set(scene["semantics"])
     assert scene["semantics"]["robot"] == 6
     assert scene["semantics"]["vegetation"] == scene["semantics"]["other_object"] == 7
@@ -78,6 +83,7 @@ def validate_scene(scene_path: Path, deterministic: bool = True) -> dict[str, An
         "tree_count": len(scene["trees"]),
         "tree_asset_ids": sorted({tree["asset_id"] for tree in scene["trees"]}),
         "content_hash": stored_hash,
+        "terrain_statistics": statistics,
         "deterministic_regeneration": deterministic_match,
         "stage_snapshot": str(stage_snapshot.relative_to(ROOT)),
         "primitive_tree_visuals": False,
@@ -93,20 +99,28 @@ def validate_episode(path: Path, plan_path: Path) -> dict[str, Any]:
     robot = load_yaml(ROOT / "config/robots/diablo_standing.yaml")
     manifest = load_yaml(ROOT / "config/datasets/dataset_v0_manifest.yaml")
     manifest_scene = next(item for item in manifest["scenes"] if item["scene_id"] == plan["scene_id"])
+    manifest_episode = next(item for item in manifest_scene["planned_episodes"] if item["episode_id"] == plan["episode_id"])
     assert plan["split"] == scene["split"] == manifest_scene["split"], "episode/scene split mismatch"
+    assert plan["target_route_length_bucket"] == manifest_episode["target_route_length_bucket"], "episode length bucket differs from manifest"
     with h5py.File(path, "r") as episode:
+        assert int(episode.attrs["schema_version"]) == EPISODE_SCHEMA_VERSION
         metadata = json.loads(str(episode.attrs["metadata_json"]))
+        assert metadata["schema_version"] == EPISODE_SCHEMA_VERSION
+        assert metadata["collector_version"] == COLLECTOR_VERSION
         assert metadata["episode_id"] == plan["episode_id"]
         assert metadata["success"] is True
+        assert metadata["scene_schema_version"] == scene["schema_version"]
+        assert metadata["scene_content_hash"] == scene["content_hash"] == plan["scene_content_hash"]
         required = (
             "state/timestamp_s", "state/position_xyz", "state/orientation_xyzw",
             "state/linear_velocity_xyz", "state/angular_velocity_xyz", "state/command_vw",
             "imu/timestamp_s", "imu/linear_acceleration_xyz", "imu/angular_velocity_xyz",
-            "sensors/timestamp_s", "sensors/rgb", "sensors/depth_raw_m",
-            "sensors/depth_aligned_to_rgb_m", "sensors/camera_pose_xyz_xyzw",
+            "sensors/timestamp_s", "sensors/rgb", "sensors/depth_raw_z16",
+            "sensors/camera_pose_xyz_xyzw",
             "calibration/rgb_intrinsics", "calibration/depth_intrinsics",
             "calibration/depth_to_rgb_translation_m", "calibration/depth_to_rgb_rotation_xyzw",
             "expert/global_path_xyz",
+            "calibration/depth_scale_m", "calibration/rgb_resolution_wh",
         )
         for name in required:
             assert name in episode, f"missing HDF5 dataset: {name}"
@@ -116,10 +130,25 @@ def validate_episode(path: Path, plan_path: Path) -> dict[str, Any]:
         sensor_time = np.asarray(episode["sensors/timestamp_s"])
         assert all(np.all(np.diff(values) > 0.0) for values in (state_time, imu_time, sensor_time)), "timestamps must be strictly increasing"
         rgb_count = episode["sensors/rgb"].shape[0]
-        assert episode["sensors/depth_raw_m"].shape[0] == rgb_count
-        assert episode["sensors/depth_aligned_to_rgb_m"].shape[0] == rgb_count
+        assert "sensors/depth_raw_m" not in episode
+        assert "sensors/depth_aligned_to_rgb_m" not in episode
+        assert episode["sensors/depth_raw_z16"].shape[0] == rgb_count
+        assert episode["sensors/depth_raw_z16"].dtype == np.dtype("uint16")
         rgb = np.asarray(episode["sensors/rgb"])
-        aligned_depth = np.asarray(episode["sensors/depth_aligned_to_rgb_m"])
+        depth_z16 = np.asarray(episode["sensors/depth_raw_z16"])
+        depth_scale = float(np.asarray(episode["calibration/depth_scale_m"]))
+        assert 0.0 < depth_scale <= 0.001
+        assert episode["calibration"].attrs["alignment_algorithm"] == ALIGNMENT_ALGORITHM
+        assert int(episode["calibration"].attrs["alignment_version"]) == ALIGNMENT_VERSION
+        assert episode["calibration"].attrs["invalid_depth_convention"] == "zero_is_invalid"
+        aligned_depth = align_depth_to_rgb(
+            depth_z16, depth_scale,
+            np.asarray(episode["calibration/depth_intrinsics"]),
+            np.asarray(episode["calibration/rgb_intrinsics"]),
+            np.asarray(episode["calibration/depth_to_rgb_translation_m"]),
+            np.asarray(episode["calibration/depth_to_rgb_rotation_xyzw"]),
+            tuple(np.asarray(episode["calibration/rgb_resolution_wh"], dtype=int)),
+        )
         assert int(rgb.max()) - int(rgb.min()) >= 80, "RGB dynamic range is suspiciously low"
         assert float(np.abs(rgb[-1].astype(float) - rgb[0].astype(float)).mean()) >= 2.0, "RGB frames appear stale"
         depth_valid_fraction = float((aligned_depth > 0.0).mean())
@@ -127,7 +156,9 @@ def validate_episode(path: Path, plan_path: Path) -> dict[str, Any]:
         assert episode["calibration/rgb_intrinsics"].shape == (3, 3)
         assert episode["calibration/depth_intrinsics"].shape == (3, 3)
         positions = np.asarray(episode["state/position_xyz"])
-        executed_length = float(np.linalg.norm(np.diff(positions[:, :2], axis=0), axis=1).sum())
+        orientations = np.asarray(episode["state/orientation_xyzw"])
+        assert float(np.max(np.abs(orientations[:, :2]))) > 1.0e-4, "body roll/pitch never followed terrain normal"
+        executed_length = float(np.linalg.norm(np.diff(positions, axis=0), axis=1).sum())
         goal_error = float(np.linalg.norm(positions[-1, :2] - np.asarray(plan["goal_pose_xyz"][:2])))
         assert goal_error <= float(plan["controller"]["goal_tolerance_m"]) + 0.08, f"goal error {goal_error:.3f} m"
         assert executed_length <= 10.5, f"executed path exceeds V0 limit: {executed_length:.3f} m"
@@ -143,7 +174,31 @@ def validate_episode(path: Path, plan_path: Path) -> dict[str, Any]:
             "goal_error_m": goal_error, "collision_free_in_privileged_map": True,
             "rgb_value_range": [int(rgb.min()), int(rgb.max())],
             "aligned_depth_valid_fraction": depth_valid_fraction,
+            "episode_schema_version": EPISODE_SCHEMA_VERSION,
+            "depth_dtype": "uint16",
+            "depth_scale_m": depth_scale,
         }
+
+
+def validate_runtime_contract() -> dict[str, Any]:
+    """Use Python syntax structure to guard the single active scene path."""
+    import ast
+
+    runtime_path = ROOT / "ros_ws/src/mns_simulation/mns_simulation/research_dataset_runtime.py"
+    tree = ast.parse(runtime_path.read_text(encoding="utf-8"))
+    calls = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        if isinstance(node.func, ast.Name):
+            calls.append(node.func.id)
+        elif isinstance(node.func, ast.Attribute):
+            calls.append(node.func.attr)
+    assert "build_research_forest" in calls, "collector does not call the shared Research Forest builder"
+    forbidden = {"terrain_height", "Mesh", "Cylinder", "Sphere"}
+    active_forbidden = sorted(forbidden.intersection(calls))
+    assert not active_forbidden, f"obsolete collector construction calls remain: {active_forbidden}"
+    return {"status": "PASS", "shared_builder_call": True, "obsolete_construction_calls": []}
 
 
 def write_report(path: Path, report: dict[str, Any]) -> None:

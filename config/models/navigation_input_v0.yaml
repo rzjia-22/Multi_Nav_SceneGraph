@@ -3,7 +3,7 @@ status: model_agnostic_template
 raw_source: dataset_v0_hdf5
 inputs:
   rgb: {source: sensors/rgb, color_space: RGB, resize: configurable}
-  depth: {source: sensors/depth_aligned_to_rgb_m, units: m, clipping: sensor_profile}
+  depth: {source: offline_registered_from_sensors/depth_raw_z16, units: m, clipping: sensor_profile}
   history_frames: configurable
   imu: {source: imu, enabled: configurable}
 targets:
@@ -19,4 +19,3 @@ training:
 notes:
   - This file defines version-controlled preprocessing responsibilities without selecting a model.
   - Dataset V0 raw episodes are not fixed to the legacy five-frame/32-waypoint format.
-

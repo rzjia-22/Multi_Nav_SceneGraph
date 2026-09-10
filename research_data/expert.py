@@ -6,11 +6,11 @@ from dataclasses import dataclass
 import heapq
 import math
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 import numpy as np
 
-from .common import ROOT, dump_yaml, load_yaml, stable_hash, terrain_height
+from .common import ROOT, dump_yaml, load_yaml, stable_hash
 
 
 @dataclass(frozen=True)
@@ -45,7 +45,7 @@ def occupancy_grid(
     occupied[:, 0] = occupied[:, -1] = True
     for tree in scene["trees"]:
         tx, ty = tree["position_m"]
-        radius = float(tree["trunk_radius_m"]) + clearance
+        radius = float(tree["collision_proxy"]["radius_m"]) + clearance
         xmask = np.abs(xs - tx) <= radius
         ymask = np.abs(ys - ty) <= radius
         occupied[np.ix_(ymask, xmask)] |= (
@@ -110,20 +110,32 @@ def astar(grid: Grid, start: tuple[float, float], goal: tuple[float, float]) -> 
 
 
 def path_length(path: list[tuple[float, float]] | list[list[float]]) -> float:
-    return sum(math.dist(path[index - 1][:2], path[index][:2]) for index in range(1, len(path)))
+    return sum(math.dist(path[index - 1], path[index]) for index in range(1, len(path)))
 
 
-def sample_preview_plan(scene: dict[str, Any], episode_id: str) -> dict[str, Any]:
+def sample_episode_plan(
+    scene: dict[str, Any], episode_id: str, surface_height: Callable[[float, float], float]
+) -> dict[str, Any]:
     robot = load_yaml(ROOT / "config/robots/diablo_standing.yaml")
     sensor = load_yaml(ROOT / "config/sensors/d435i_navigation_v0.yaml")
+    manifest = load_yaml(ROOT / "config/datasets/dataset_v0_manifest.yaml")
+    manifest_scene = next(item for item in manifest["scenes"] if item["scene_id"] == scene["scene_id"])
+    episode_spec = next(item for item in manifest_scene["planned_episodes"] if item["episode_id"] == episode_id)
+    bucket = episode_spec["target_route_length_bucket"]
+    ranges = {
+        "short": {"route": (3.0, 5.0), "euclidean": (3.0, 4.6)},
+        "medium": {"route": (5.0, 8.0), "euclidean": (4.8, 7.4)},
+        "long": {"route": (8.0, 10.0), "euclidean": (7.2, 9.3)},
+    }[bucket]
     grid = occupancy_grid(scene, robot)
-    rng = np.random.Generator(np.random.PCG64(int(scene["scene_seed"]) + 100_003))
+    episode_index = int(episode_id.rsplit("_", 1)[-1])
+    rng = np.random.Generator(np.random.PCG64(int(scene["scene_seed"]) + 100_003 + episode_index))
     half = grid.half_extent - 1.2
     best = None
     for _ in range(15000):
         start = tuple(float(value) for value in rng.uniform(-half, half, size=2))
         direction = float(rng.uniform(-math.pi, math.pi))
-        euclidean_target = float(rng.uniform(5.2, 7.4))
+        euclidean_target = float(rng.uniform(*ranges["euclidean"]))
         goal = (start[0] + euclidean_target * math.cos(direction), start[1] + euclidean_target * math.sin(direction))
         if not (-half <= goal[0] <= half and -half <= goal[1] <= half):
             continue
@@ -131,29 +143,34 @@ def sample_preview_plan(scene: dict[str, Any], episode_id: str) -> dict[str, Any
             route = astar(grid, start, goal)
         except (ValueError, RuntimeError):
             continue
-        route_length = path_length(route)
+        route_length_xy = path_length(route)
         euclidean = math.dist(start, goal)
-        if 5.0 <= route_length <= 9.0 and route_length / euclidean >= 1.07 and len(route) >= 3 and not line_free(grid, start, goal):
-            best = start, goal, route, route_length, euclidean
+        if ranges["route"][0] <= route_length_xy <= ranges["route"][1] and route_length_xy / euclidean >= 1.07 and len(route) >= 3 and not line_free(grid, start, goal):
+            best = start, goal, route, euclidean
             break
     if best is None:
-        raise RuntimeError("could not sample a medium, non-trivial preview route")
-    start, goal, route, route_length, euclidean = best
+        raise RuntimeError(f"could not sample a non-trivial {bucket} route")
+    start, goal, route, euclidean = best
     start_yaw = math.atan2(route[1][1] - route[0][1], route[1][0] - route[0][0])
-    path = [[round(x, 6), round(y, 6), round(terrain_height(scene, x, y), 6)] for x, y in route]
+    path = [[round(x, 6), round(y, 6), round(surface_height(x, y), 6)] for x, y in route]
+    route_length = path_length(path)
+    if not ranges["route"][0] <= route_length <= ranges["route"][1]:
+        raise RuntimeError(f"surface-following route is outside the {bucket} bucket: {route_length:.3f} m")
     plan = {
-        "schema_version": 1,
+        "schema_version": 2,
         "dataset_version": "dataset_v0",
         "episode_id": episode_id,
         "episode_type": "nominal_expert",
         "split": scene["split"],
         "scene_id": scene["scene_id"],
         "scene_seed": scene["scene_seed"],
+        "scene_schema_version": scene["schema_version"],
+        "scene_content_hash": scene["content_hash"],
         "robot_profile": robot["profile_id"],
         "sensor_profile": sensor["profile_id"],
         "planner": {"type": "privileged_grid_astar", "grid_resolution_m": grid.resolution, "smoothing": "greedy_line_of_sight"},
         "controller": {"type": "pure_pursuit", "lookahead_m": 0.32, "goal_tolerance_m": 0.18},
-        "target_route_length_bucket": "medium",
+        "target_route_length_bucket": bucket,
         "start_pose_xyzyaw": [round(start[0], 6), round(start[1], 6), path[0][2], round(start_yaw, 6)],
         "goal_pose_xyz": [round(goal[0], 6), round(goal[1], 6), path[-1][2]],
         "straight_line_distance_m": round(euclidean, 6),
@@ -170,7 +187,9 @@ def sample_preview_plan(scene: dict[str, Any], episode_id: str) -> dict[str, Any
     return plan
 
 
-def write_preview_plan(scene: dict[str, Any], output: Path) -> dict[str, Any]:
-    plan = sample_preview_plan(scene, "train_scene_000_episode_000")
+def write_episode_plan(
+    scene: dict[str, Any], output: Path, surface_height: Callable[[float, float], float]
+) -> dict[str, Any]:
+    plan = sample_episode_plan(scene, "train_scene_000_episode_000", surface_height)
     dump_yaml(output, plan)
     return plan

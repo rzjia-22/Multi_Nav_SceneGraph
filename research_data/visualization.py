@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from .common import file_hash, load_yaml
+from .depth import align_depth_to_rgb
 
 
 def _draw_forest(axis, scene):
@@ -19,8 +20,7 @@ def _draw_forest(axis, scene):
     axis.set_ylim(-size / 2.0, size / 2.0)
     axis.set_aspect("equal")
     for tree in scene["trees"]:
-        axis.add_patch(plt.Circle(tree["position_m"], tree["trunk_radius_m"], color="#633b1f", alpha=0.95))
-        axis.add_patch(plt.Circle(tree["position_m"], tree["foliage_radius_m"], color="#447d32", alpha=0.12))
+        axis.add_patch(plt.Circle(tree["position_m"], tree["collision_proxy"]["radius_m"], color="#633b1f", alpha=0.95))
     axis.grid(alpha=0.15)
     axis.set_xlabel("x [m]")
     axis.set_ylabel("y [m]")
@@ -41,7 +41,7 @@ def visualize(scene_path: Path, plan_path: Path, episode_path: Path, output_dir:
     axis.plot([start[0], goal[0]], [start[1], goal[1]], ":", color="gray", label="blocked direct line")
     axis.set_title(f"{scene['scene_id']} — {scene['factors']['tree_density']} forest / {scene['factors']['terrain']} terrain")
     axis.legend(loc="upper right")
-    scene_output = output_dir / "scene_overview.png"
+    scene_output = output_dir / "episode_layout.png"
     figure.savefig(scene_output, dpi=150)
     plt.close(figure)
     created.append(scene_output)
@@ -56,7 +56,15 @@ def visualize(scene_path: Path, plan_path: Path, episode_path: Path, output_dir:
         commands = np.asarray(episode["state/command_vw"])
         planned = np.asarray(episode["expert/global_path_xyz"])
         rgb = np.asarray(episode["sensors/rgb"])
-        depth = np.asarray(episode["sensors/depth_aligned_to_rgb_m"])
+        depth = align_depth_to_rgb(
+            np.asarray(episode["sensors/depth_raw_z16"]),
+            float(np.asarray(episode["calibration/depth_scale_m"])),
+            np.asarray(episode["calibration/depth_intrinsics"]),
+            np.asarray(episode["calibration/rgb_intrinsics"]),
+            np.asarray(episode["calibration/depth_to_rgb_translation_m"]),
+            np.asarray(episode["calibration/depth_to_rgb_rotation_xyzw"]),
+            tuple(np.asarray(episode["calibration/rgb_resolution_wh"], dtype=int)),
+        )
     figure, axis = plt.subplots(figsize=(8, 8), constrained_layout=True)
     _draw_forest(axis, scene)
     axis.plot(planned[:, 0], planned[:, 1], "--", linewidth=2.2, color="#ff7f0e", label="planned A* + LOS")

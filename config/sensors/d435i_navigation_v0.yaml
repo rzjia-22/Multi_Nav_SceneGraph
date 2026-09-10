@@ -30,13 +30,18 @@ application_profile:
     simulated_exposure_compensation_stops: 0.0
   depth_raw:
     resolution: [848, 480]
-    encoding: float32_m
+    simulator_source_encoding: float32_m
+    storage_encoding: uint16_z16
+    depth_scale_m: 0.001
+    invalid_value: 0
     fov_deg: {horizontal: 87.0, vertical: 56.4}
     valid_range_m: [0.20, 10.0]
   depth_aligned_to_rgb:
     resolution: [640, 360]
     encoding: float32_m
     policy: z_buffer_reproject_depth_optical_to_rgb_optical
+    algorithm_version: 1
+    persistence: derived_offline_not_stored
   imu:
     logging_rate_hz: 100
     signal: clean_simulator_camera_rig_state
