@@ -477,12 +477,20 @@ def _write_summary(report: dict, analysis: dict, comparison: dict) -> None:
 def run_test(config: dict, entries: list[dict]) -> dict:
     if (TEST_ARTIFACT_ROOT / "test_report.json").exists():
         raise RuntimeError("the canonical one-pass Dataset V0 test has already been finalized")
+    invalid_attempt_history = []
     if ATTEMPT_RECORD.exists():
         previous = json.loads(ATTEMPT_RECORD.read_text(encoding="utf-8"))
         if previous.get("status") == "started":
             raise RuntimeError("an unfinished final-test attempt exists and must be audited first")
         if previous.get("status") == "invalid" and previous.get("system_git_commit") == _git_commit():
             raise RuntimeError("this code revision already produced an invalid test attempt")
+        if previous.get("status") == "invalid":
+            invalid_attempt_history = list(previous.get("invalid_attempt_history", []))
+            invalid_attempt_history.append({
+                "system_git_commit": previous.get("system_git_commit"),
+                "reason": previous.get("reason"),
+                "executed_episode_count": previous.get("executed_episode_count", 0),
+            })
     _write_json(ATTEMPT_RECORD, {
         "status": "started",
         "evaluation_split": "test",
@@ -491,6 +499,7 @@ def run_test(config: dict, entries: list[dict]) -> dict:
         "checkpoint_sha256": CHECKPOINT_SHA256,
         "mid_test_tuning_allowed": False,
         "per_episode_rerun_allowed": False,
+        "invalid_attempt_history": invalid_attempt_history,
     })
     episodes = [item["episode_id"] for item in entries]
     report = _run_group(
@@ -518,6 +527,8 @@ def run_test(config: dict, entries: list[dict]) -> dict:
             "report": report,
             "system_git_commit": _git_commit(),
             "checkpoint_sha256": CHECKPOINT_SHA256,
+            "executed_episode_count": report.get("episode_count", 0),
+            "invalid_attempt_history": invalid_attempt_history,
         })
         raise RuntimeError("test infrastructure did not execute all ten missions; the attempt is invalid")
     analysis = _analyze_test(report)
@@ -536,6 +547,7 @@ def run_test(config: dict, entries: list[dict]) -> dict:
         "checkpoint_sha256": CHECKPOINT_SHA256,
         "mid_test_tuning": False,
         "per_episode_reruns": 0,
+        "invalid_attempt_history": invalid_attempt_history,
     })
     return report
 

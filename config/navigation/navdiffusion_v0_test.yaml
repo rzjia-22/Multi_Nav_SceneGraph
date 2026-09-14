@@ -26,7 +26,7 @@ frozen_file_sha256:
   ros_ws/src/mns_navigation/mns_navigation/navdiffusion_v0/preprocessing.py: f144b8dd22920e7bc0ef5d4d9bc8a39573c7da603ba99ddbc856fe672ceb8999
   ros_ws/src/mns_navigation/mns_navigation/path_follower.py: cf8d84a41363a14a5fce0f1982219099322a57081987a714805f55020649cfa7
   ros_ws/src/mns_navigation/mns_navigation/safety.py: eb1da221de1e78482a91bf97d8ee708bd4caae587860c1afb3b73e150c952e20
-  ros_ws/src/mns_simulation/mns_simulation/research_navigation_runtime.py: 080fcd7c5f58c91a6e30feeb3a811c12516180f0b751a66c91bbaba018290085
+  ros_ws/src/mns_simulation/mns_simulation/research_navigation_runtime.py: 3486fca334fd3eb80674801765692c8edcda20bef31bc5e4b40171594a441659
 artifact_root: artifacts/navdiffusion_v0_test
 run_root: runs/navdiffusion_v0_test
 data_governance:

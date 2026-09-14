@@ -5,7 +5,7 @@ import inspect
 import pytest
 import yaml
 
-from research_data.closed_loop import _group_report, _run_group
+from research_data.closed_loop import _compose_session, _group_report, _run_group
 from research_data.closed_loop_analysis import dataset_index_entries
 from research_data.closed_loop_test import CHECKPOINT_SHA256, _validate_config
 
@@ -72,6 +72,23 @@ def test_shared_group_runner_keeps_explicit_split_and_infrastructure_controls():
         )
 
 
+def test_missing_scene_session_report_is_an_infrastructure_failure(monkeypatch):
+    class Completed:
+        returncode = 0
+
+    monkeypatch.setattr("research_data.closed_loop.subprocess.run", lambda *args, **kwargs: Completed())
+    code, _ = _compose_session(
+        "test",
+        "test_scene_000",
+        ["test_scene_000_episode_000"],
+        capture_review=False,
+        fail_on_episode_failure=False,
+        split="test",
+        run_root=ROOT / "runs/nonexistent_closed_loop_unit_test",
+    )
+    assert code == 1
+
+
 def test_isaac_runtime_rejects_train_and_uses_selected_split_for_plan_path():
     runtime = ROOT / "ros_ws/src/mns_simulation/mns_simulation/research_navigation_runtime.py"
     tree = ast.parse(runtime.read_text(encoding="utf-8"))
@@ -86,6 +103,8 @@ def test_isaac_runtime_rejects_train_and_uses_selected_split_for_plan_path():
     assert '"datasets/dataset_v0" / ARGS.split' in source
     assert 'scene["split"] != ARGS.split' in source
     assert '"test_split_used": ARGS.split == "test"' in source
+    assert 'failure_reason = "model_terrain_exit"' in source
+    assert '"terrain_exit_candidate_xy": terrain_exit_candidate' in source
 
 
 def test_compose_passes_explicit_split_and_separate_test_run_root():

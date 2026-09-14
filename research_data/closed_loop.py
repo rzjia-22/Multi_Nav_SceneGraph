@@ -97,6 +97,11 @@ def _compose_session(
     )
     return_code = completed.returncode
     session_report = run_root / run_id / scene_id / "session_report.json"
+    if not session_report.is_file():
+        # Isaac Kit can normalize an exception to exit code zero while closing
+        # the application.  A completed scene session must always leave its
+        # atomically-written report; absence is an infrastructure failure.
+        return_code = return_code or 1
     if fail_on_episode_failure and session_report.is_file():
         session = json.loads(session_report.read_text(encoding="utf-8"))
         if not session.get("all_pass", False):

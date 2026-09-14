@@ -493,6 +493,7 @@ def main() -> int:
         stop_override_samples = 0
         turn_override_samples = 0
         previous_override = False
+        terrain_exit_candidate = None
         review_frames = {}
         episode_steps = int(math.ceil(ARGS.maximum_duration * ARGS.physics_rate))
         for episode_frame in range(episode_steps):
@@ -508,10 +509,20 @@ def main() -> int:
             previous_v, previous_w = command_v, command_w
             yaw = math.atan2(math.sin(yaw + command_w * physics_dt), math.cos(yaw + command_w * physics_dt))
             _, tangent_frame = surface_frame(built.surface, x, y, yaw)
-            x += command_v * float(tangent_frame[0, 0]) * physics_dt
-            y += command_v * float(tangent_frame[1, 0]) * physics_dt
+            candidate_x = x + command_v * float(tangent_frame[0, 0]) * physics_dt
+            candidate_y = y + command_v * float(tangent_frame[1, 0]) * physics_dt
             episode_elapsed = endpoint.sim_time - episode_start_global
-            rig = place_rig(x, y, yaw, endpoint.sim_time, mount_variation)
+            try:
+                rig = place_rig(
+                    candidate_x, candidate_y, yaw, endpoint.sim_time, mount_variation
+                )
+            except ValueError as error:
+                if "outside the imported terrain surface" not in str(error):
+                    raise
+                terrain_exit_candidate = [candidate_x, candidate_y]
+                failure_reason = "model_terrain_exit"
+                break
+            x, y = candidate_x, candidate_y
             render = (global_frame + 1) % sensor_interval == 0
             simulation.step(render=render)
             rgb_camera.update(physics_dt)
@@ -679,6 +690,7 @@ def main() -> int:
             "collision_tree_id": first_collision_tree,
             "first_collision_timestamp_s": first_collision_time,
             "minimum_clearance_m": minimum_clearance,
+            "terrain_exit_candidate_xy": terrain_exit_candidate,
             "safety_override_count": override_count,
             "safety_override_duration_s": override_samples / state_rate,
             "safety_override_fraction": override_fraction,
