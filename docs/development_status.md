@@ -27,19 +27,22 @@ The project-owned NavDiffusion V0 training milestone is also complete. A
 train/validation-only window pipeline, shared deployment preprocessor,
 ImageNet-pretrained four-channel model, plain-PyTorch trainer and selectable
 ROS backend all pass. Training early-stopped at epoch 120; the selected epoch
-100 checkpoint achieved 0.0901 m validation ADE and 0.1696 m FDE. Test remains
-sealed. Its first matching-domain Isaac deployment gate remains partial: Gate A
+100 checkpoint achieved 0.0901 m validation ADE and 0.1696 m FDE. Its first
+matching-domain Isaac deployment gate remains partial: Gate A
 and one short Gate B mission reached goal without collision, but the long Gate
 B mission collided with a conservative tree proxy. The subsequent exhaustive
 analysis executed all 10 validation missions without experiment-level
-fail-fast: 4 reached goal and 6 collided, with no timeout or stall. Current
-readiness is `NOT_READY`.
+fail-fast: 4 reached goal and 6 collided, with no timeout or stall. The final
+one-pass held-out test then executed 10/10 test missions without tuning: 3
+reached goal, 6 collided, and one left the valid terrain domain under the
+model command. Current readiness remains `NOT_READY`. Dataset V0 test is now
+opened and future V1 work informed by it requires new final-test scenes.
 
 ## NavDiffusion V0 milestone state
 
 | Capability | State | Evidence |
 | --- | --- | --- |
-| Data windows | validated, test sealed | 50/10 train/validation episodes; 5,357/1,081 windows; 1.54 GB disposable hash-keyed cache |
+| Data windows | validated; test sealed through model selection | 50/10 train/validation episodes; 5,357/1,081 windows; 1.54 GB disposable hash-keyed cache |
 | Shared preprocessing | validated | training/runtime tensor maximum difference 0; ImageNet RGB, registered train-normalized depth, 160×90, history 5 |
 | Pretrained initialization | validated | RGB stem copy error 0; depth stem weights 0; 49 EfficientNet BatchNorm layers retained; official weights SHA recorded |
 | Single-batch gate | PASS | finite loss and gradients, optimizer update, bf16, batch 16, 1,140 MiB peak VRAM |
@@ -48,7 +51,7 @@ readiness is `NOT_READY`.
 | Validation | PASS, open-loop only | ADE 0.090123 m; FDE 0.169597 m; test not used |
 | Checkpoint | complete, Git LFS | format v1; 142,598,595 bytes; SHA256 `7b3bca67...a68ae0` |
 | Runtime | load/smoke PASS | CPU/CUDA predictor, 32×2 finite path; ROS retains all 32 diagnostic points from the same sample and controls on the first 8 |
-| Isaac closed loop | exhaustive validation complete; deployment acceptance FAIL | Gate A 1/1; Gate B 1/3 fail-fast; independent full validation 4/10 with 6 collisions, 0 timeout/stall; test sealed, Hydra off, readiness `NOT_READY` |
+| Isaac closed loop | final V0 held-out evaluation complete; deployment acceptance FAIL | validation 4/10 with 6 collisions; one-pass test 3/10 with 6 collisions and 1 terrain exit; no timeout/stall; Hydra off, readiness `NOT_READY` |
 
 ## Dataset V0 milestone state
 
@@ -123,8 +126,18 @@ readiness is `NOT_READY`.
   success and one repeatable long-task collision at `tree_021`. The 32-point
   prediction became conservatively unsafe at 6.97 s and its first eight points
   at 9.47 s, before impact at 9.74 s. Safety was selected for only 0.10 s, so
-  the failure is classified MODEL. Test remains untouched and the 10-mission
-  full validation did not run.
+  the failure is classified MODEL. This deployment gate remains preserved as
+  historical fail-fast evidence; it is separate from the completed exhaustive
+  validation and final test runs.
+- NavDiffusion V0 exhaustive validation executed 10/10 missions: 4 reached
+  goal, 6 collided, and none timed out or stalled. The one-pass final test then
+  executed its independent 10/10 missions under the same frozen system: 3
+  reached goal, 6 collided, one model command left the valid terrain domain,
+  and none timed out or stalled. Test inference mean/p95/max was
+  136.7/303.3/3366.9 ms over 280 planning cycles. All test collisions had both
+  unsafe full-horizon and unsafe first-eight predictions before impact; the
+  successful test missions had zero unsafe first-eight predictions. Hydra was
+  disabled and the checkpoint hash remained `7b3bca67...a68ae0`.
 - NavDiffusion V0 data audit: 5,357 train and 1,081 validation windows; train-only
   depth mean/std 0.586042/0.372821; ±2.5 m trajectory scale with zero clipped
   labels; the disposable cache contains no test episode.
@@ -257,8 +270,14 @@ and Hydra saves all artifacts before both containers exit.
   episode contained unsafe first-eight control predictions; successful
   episodes contained none. Safety intervened in four failed episodes but did
   not avert collision. This is descriptive evidence, not a causal diagnosis.
-  Current readiness is `NOT_READY`; inference-only and real DIABLO motion
-  remain blocked. The held-out test split remains sealed and Hydra was not run.
+  The final held-out test broadly reproduced this result at 3/10 success and 6
+  collisions; five collisions were concentrated in the moderate,
+  high-density `test_scene_001`, while `test_scene_000` reached 3/5. All six
+  test collisions were preceded by unsafe full and control predictions. This
+  remains descriptive evidence because the environment factors co-vary by
+  scene. Current readiness is `NOT_READY`; inference-only and real DIABLO
+  motion remain blocked. Dataset V0 test has now been opened, Hydra was not
+  run, and a V1 informed by these findings needs new held-out final-test scenes.
 
 ## Architecture decisions
 

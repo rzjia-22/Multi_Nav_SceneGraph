@@ -83,16 +83,20 @@ FDE 0.1696 m. It is available at
 select it with `model_backend=mns_v0`; the legacy checkpoint backend remains
 available. The matching-domain Isaac deployment gate reached two short goals
 without collision, but the representative long mission collided with a tree
-and stopped Gate B. A separate non-fail-fast analysis then executed all ten
+and stopped Gate B. A separate non-fail-fast analysis executed all ten
 validation missions under the same frozen system: 4/10 reached goal and 6/10
-ended in conservative tree-proxy collisions. Readiness is therefore
-`NOT_READY`; real inference-only or motion deployment is not authorized. The
-test split remains sealed. Use the fail-fast gate and exhaustive analysis as
-distinct workflows:
+collided. The one-pass final held-out test has now executed all ten test
+missions without tuning: 3/10 reached goal, 6/10 collided, and one
+model-commanded trajectory left the valid terrain domain. All six test
+collisions were preceded by both unsafe full-horizon and unsafe first-eight
+control predictions. Readiness remains `NOT_READY`; real inference-only or
+motion deployment is not authorized. Dataset V0 test is now opened, so a
+future V1 informed by these results requires new held-out final-test scenes.
 
 ```bash
 make navdiffusion-v0-closed-loop-gate
 make navdiffusion-v0-closed-loop-analysis
+make navdiffusion-v0-closed-loop-test  # canonical V0 final test; already finalized
 ```
 
 The existing `make phase1-diffusion` remains the Go2/integration regression
