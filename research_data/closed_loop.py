@@ -224,8 +224,22 @@ def _visualize_episode(run_id: str, group: str, scene_id: str, episode_id: str) 
 def _group_report(group: str, run_ids: list[str], expected_episodes: list[str]) -> dict:
     reports = []
     inference = []
+    sessions = []
     for run_id in run_ids:
-        for trace_path in sorted((RUN_ROOT / run_id).glob("validation_scene_*/*/trace.json")):
+        run_directory = RUN_ROOT / run_id
+        for session_path in sorted(run_directory.glob("validation_scene_*/session_report.json")):
+            session = json.loads(session_path.read_text(encoding="utf-8"))
+            episode_reports = session.get("episodes", [])
+            sessions.append({
+                "run_id": run_id,
+                "scene_id": session["scene_id"],
+                "app_startup_time_s": (
+                    episode_reports[0].get("app_startup_time_s") if episode_reports else None
+                ),
+                "scene_load_time_s": session.get("scene_load_time_s"),
+                "total_wall_time_s": session.get("total_wall_time_s"),
+            })
+        for trace_path in sorted(run_directory.glob("validation_scene_*/*/trace.json")):
             trace = json.loads(trace_path.read_text(encoding="utf-8"))
             reports.append(trace["report"])
             inference.extend(
@@ -290,6 +304,19 @@ def _group_report(group: str, run_ids: list[str], expected_episodes: list[str]) 
         "execution_completed": len(ordered) == len(expected_episodes),
         "total_simulated_duration_s": sum(item["simulated_duration_s"] for item in ordered),
         "total_episode_wall_duration_s": sum(item["wall_duration_s"] for item in ordered),
+        "total_wall_duration_s": sum(
+            float(item["total_wall_time_s"])
+            for item in sessions if item["total_wall_time_s"] is not None
+        ),
+        "total_app_startup_time_s": sum(
+            float(item["app_startup_time_s"])
+            for item in sessions if item["app_startup_time_s"] is not None
+        ),
+        "total_scene_load_time_s": sum(
+            float(item["scene_load_time_s"])
+            for item in sessions if item["scene_load_time_s"] is not None
+        ),
+        "session_summaries": sessions,
         "total_plan_count": sum(item["plan_count"] for item in ordered),
         "route_bucket_summary": {
             key: summarize(values) for key, values in sorted(route_groups.items())
@@ -428,6 +455,8 @@ def _write_final_summary(gate_a: dict, gate_b: dict | None, full: dict | None, r
             f"- Mean goal error: {full['mean_goal_error_m']:.3f} m",
             f"- Mean/p95 inference: {full['inference_ms_mean']:.1f}/{full['inference_ms_p95']:.1f} ms",
             f"- Mean safety override fraction: {full['mean_safety_override_fraction']:.3f}",
+            f"- Simulated / complete session wall time: {full['total_simulated_duration_s']:.2f} / "
+            f"{full['total_wall_duration_s']:.2f} s",
         ])
         lines.extend(
             f"- {bucket}: {value['success_count']}/{value['episode_count']} success, "
@@ -473,6 +502,7 @@ def main() -> int:
         full_episodes = [item["episode_id"] for item in validation_index_entries()]
         full = _run_group("full_validation", full_episodes, fail_fast=False, capture=False)
         readiness = _readiness(gate_a, gate_b, full, config)
+        full["readiness"] = readiness
         analysis = None
         if full["execution_completed"]:
             analysis = analyze_full_validation(full, readiness)

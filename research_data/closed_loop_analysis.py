@@ -118,7 +118,7 @@ def _expert_metrics(scene: dict, expert_xyz: np.ndarray, planning_radius_m: floa
     }
 
 
-def _progress_metrics(state: np.ndarray) -> dict:
+def _progress_metrics(state: np.ndarray, analysis_start_s: float = 0.0) -> dict:
     times = state[:, 0]
     distances = state[:, 10]
     if len(state) < 2:
@@ -130,19 +130,23 @@ def _progress_metrics(state: np.ndarray) -> dict:
             "longest_no_progress_duration_s": 0.0,
             "progress_degradation_start_s": None,
         }
-    monotonic = float(np.mean(np.diff(distances) <= 0.01))
-    best = float(distances[0])
-    last_progress_time = float(times[0])
+    active = state[times >= analysis_start_s]
+    if len(active) < 2:
+        active = state
+    progress_times = active[:, 0]
+    progress_distances = active[:, 10]
+    monotonic = float(np.mean(np.diff(progress_distances) <= 0.01))
+    best = float(progress_distances[0])
+    last_progress_time = float(progress_times[0])
     longest = 0.0
-    degradation = None
-    for timestamp, distance in zip(times[1:], distances[1:]):
+    for timestamp, distance in zip(progress_times[1:], progress_distances[1:]):
         if float(distance) < best - PROGRESS_EPSILON_M:
             best = float(distance)
             last_progress_time = float(timestamp)
         gap = float(timestamp) - last_progress_time
         longest = max(longest, gap)
-        if degradation is None and gap >= PROGRESS_DEGRADATION_S:
-            degradation = last_progress_time
+    final_no_progress = float(progress_times[-1]) - last_progress_time
+    degradation = last_progress_time if final_no_progress >= PROGRESS_DEGRADATION_S else None
     return {
         "initial_goal_distance_m": float(distances[0]),
         "minimum_goal_distance_m": float(distances.min()),
@@ -284,7 +288,7 @@ def _episode_analysis(entry: dict, trace: dict, scene: dict, plan: dict, robot: 
     deviation_time = _first_sustained_time(
         state[:, 0], cross_track > EXPERT_CORRIDOR_THRESHOLD_M, EXPERT_CORRIDOR_SUSTAINED_S
     ) if len(state) else None
-    progress = _progress_metrics(state)
+    progress = _progress_metrics(state, float(report.get("history_ready_time_s") or 0.0))
     robot_radius = float(robot["surrogate"]["footprint"]["collision_check_radius_m"])
     prediction = _prediction_metrics(trace["planning"], scene, robot_radius)
     mount = report["camera_mount_episode_variation"]
@@ -343,9 +347,43 @@ def _summary(items: list[dict]) -> dict:
         "mean_full_prediction_unsafe_fraction": _mean(items, "full_prediction_unsafe_fraction"),
         "mean_control_prediction_unsafe_fraction": _mean(items, "control_prediction_unsafe_fraction"),
         "mean_expert_planning_clearance_m": _mean(items, "expert_minimum_planning_clearance_m"),
+        "mean_expert_turn_burden_rad_per_m": _mean(items, "expert_turn_burden_rad_per_m"),
         "mean_expert_cross_track_error_m": _mean(items, "mean_expert_cross_track_error_m"),
+        "mean_camera_perturbation_extremeness_fraction": _mean(
+            items, "camera_perturbation_extremeness_fraction"
+        ),
+        "mean_monotonic_progress_fraction": _mean(items, "monotonic_progress_fraction"),
+        "mean_longest_no_progress_duration_s": _mean(items, "longest_no_progress_duration_s"),
         "mean_simulated_duration_s": _mean(items, "simulated_duration_s"),
         "mean_plan_count": _mean(items, "plan_count"),
+    }
+
+
+def _risk_summary(items: list[dict]) -> dict:
+    cycles = sum(item["planning_cycle_count"] for item in items)
+    full = sum(item["full_prediction_unsafe_count"] for item in items)
+    control = sum(item["control_prediction_unsafe_count"] for item in items)
+    return {
+        "planning_cycle_count": cycles,
+        "full_prediction_unsafe_event_count": full,
+        "control_prediction_unsafe_event_count": control,
+        "full_prediction_unsafe_fraction": full / cycles if cycles else None,
+        "control_prediction_unsafe_fraction": control / cycles if cycles else None,
+    }
+
+
+def _safety_summary(items: list[dict]) -> dict:
+    intervention_times = [
+        item["timeline_s"]["safety_first_intervention"]
+        for item in items if item["timeline_s"]["safety_first_intervention"] is not None
+    ]
+    return {
+        "episode_count": len(items),
+        "episodes_with_override": sum(item["safety_override_count"] > 0 for item in items),
+        "override_event_count": sum(item["safety_override_count"] for item in items),
+        "override_duration_s": sum(item["safety_override_duration_s"] for item in items),
+        "mean_override_fraction": _mean(items, "safety_override_fraction"),
+        "mean_first_intervention_s": float(np.mean(intervention_times)) if intervention_times else None,
     }
 
 
@@ -432,6 +470,11 @@ def _plot_results(items: list[dict], traces: dict[str, tuple[dict, Path]]) -> No
 
     output = ARTIFACT_ROOT / "plots"
     output.mkdir(parents=True, exist_ok=True)
+    # A fresh exhaustive run replaces the stable failure review set.  Remove
+    # plots from failures that did not recur so artifacts cannot imply that a
+    # current PASS episode failed.
+    for stale in (ARTIFACT_ROOT / "full_validation/episodes").glob("*/failure_trajectory.png"):
+        stale.unlink()
     ordered = sorted(items, key=lambda item: item["planned_expert_length_m"])
     lengths = [item["planned_expert_length_m"] for item in ordered]
     colors = ["#2ca02c" if item["success"] else "#d62728" for item in ordered]
@@ -597,9 +640,26 @@ def _write_markdown(analysis: dict) -> None:
         )
     lines.extend(["", "## Scenes", ""])
     for key, value in analysis["scene_summary"].items():
+        environment = analysis["scene_environment"][key]
         lines.append(
             f"- `{key}`: {value['success_count']}/{value['episode_count']} success, "
-            f"{value['collision_count']} collision(s), mean goal error {number(value['mean_goal_error_m'])} m."
+            f"{value['collision_count']} collision(s), mean goal error {number(value['mean_goal_error_m'])} m; "
+            f"{environment['terrain']} terrain, {environment['tree_density']} density, "
+            f"{environment['ground']}, {environment['lighting']} lighting."
+        )
+    lines.extend(["", "## Prediction risk and Safety", ""])
+    for key in ("PASS", "FAIL"):
+        prediction = analysis["prediction_risk_by_outcome"][key]
+        safety = analysis["safety_by_outcome"][key]
+        lines.append(
+            f"- {key}: {prediction['full_prediction_unsafe_event_count']}/"
+            f"{prediction['planning_cycle_count']} full predictions unsafe "
+            f"({percent(prediction['full_prediction_unsafe_fraction'])}); "
+            f"{prediction['control_prediction_unsafe_event_count']}/"
+            f"{prediction['planning_cycle_count']} control predictions unsafe "
+            f"({percent(prediction['control_prediction_unsafe_fraction'])}); "
+            f"Safety intervened in {safety['episodes_with_override']}/{safety['episode_count']} episodes "
+            f"for {safety['override_duration_s']:.2f} s total."
         )
     lines.extend(["", "## Failure timelines", ""])
     failures = [item for item in analysis["episodes"] if not item["success"]]
@@ -611,7 +671,11 @@ def _write_markdown(analysis: dict) -> None:
             f"- `{item['episode_id']}` — primary `{item['primary_failure_class']}`; "
             f"secondary {item['secondary_contributors'] or 'none'}; full unsafe {timeline['full_prediction_first_unsafe']}, "
             f"control unsafe {timeline['control_prediction_first_unsafe']}, Safety {timeline['safety_first_intervention']}, "
-            f"collision {timeline['collision']} s."
+            f"progress degradation {timeline['progress_degradation']}, expert-corridor deviation "
+            f"{timeline['expert_corridor_deviation']}, collision {timeline['collision']} s; collision lead "
+            f"from full/control/Safety = {item['collision_lead_time_s']['from_full_prediction_unsafe']}/"
+            f"{item['collision_lead_time_s']['from_control_prediction_unsafe']}/"
+            f"{item['collision_lead_time_s']['from_safety_intervention']} s."
         )
     lines.extend(["", "## Descriptive findings", ""])
     lines.extend(f"- {value}" for value in analysis["findings"])
@@ -622,6 +686,11 @@ def _write_markdown(analysis: dict) -> None:
         "",
         f"Repeatable failure under the declared same-mode/same-tree/±2 s/0.75 m trajectory criteria: "
         f"**{repeat.get('repeatable_failure')}**. {repeat.get('interpretation', '')}",
+        f"Prior/current collision: `{repeat.get('previous', {}).get('collision_tree_id')}` at "
+        f"{repeat.get('previous', {}).get('collision_timestamp_s')} s / "
+        f"`{repeat.get('current', {}).get('collision_tree_id')}` at "
+        f"{repeat.get('current', {}).get('collision_timestamp_s')} s; normalized executed-trajectory "
+        f"mean distance {number(repeat.get('normalized_trajectory_mean_distance_m'))} m.",
         "",
         "## Scope",
         "",
@@ -664,6 +733,9 @@ def analyze_full_validation(full_report: dict, readiness: str) -> dict:
             raise ValueError(f"scene provenance mismatch for {episode_id}")
         if trace["report"].get("test_split_used") or trace["report"].get("mapping_enabled"):
             raise ValueError("test or mapping contamination in full validation trace")
+        history_ready = trace["report"].get("history_ready_time_s")
+        if history_ready is not None and float(history_ready) < 0.0:
+            raise ValueError(f"negative history-ready time indicates cross-episode leakage for {episode_id}")
         episodes.append(_episode_analysis(entry, trace, scene, plan, robot))
 
     failure_classes = Counter(
@@ -701,12 +773,13 @@ def analyze_full_validation(full_report: dict, readiness: str) -> dict:
             "FAIL": _summary([item for item in episodes if not item["success"]]),
         },
         "safety_by_outcome": {
-            "PASS": _summary([item for item in episodes if item["success"]]),
-            "FAIL": _summary([item for item in episodes if not item["success"]]),
+            "PASS": _safety_summary([item for item in episodes if item["success"]]),
+            "FAIL": _safety_summary([item for item in episodes if not item["success"]]),
         },
         "prediction_risk_by_outcome": {
-            "PASS": _summary([item for item in episodes if item["success"]]),
-            "FAIL": _summary([item for item in episodes if not item["success"]]),
+            "ALL": _risk_summary(episodes),
+            "PASS": _risk_summary([item for item in episodes if item["success"]]),
+            "FAIL": _risk_summary([item for item in episodes if not item["success"]]),
         },
         "failure_classes": dict(sorted(failure_classes.items())),
         "camera_perturbation_by_episode": [{
@@ -715,6 +788,10 @@ def analyze_full_validation(full_report: dict, readiness: str) -> dict:
             **item["camera_mount_episode_variation"],
             "extremeness_fraction": item["camera_perturbation_extremeness_fraction"],
         } for item in episodes],
+        "scene_environment": {
+            scene_id: next(item["environment"] for item in episodes if item["scene_id"] == scene_id)
+            for scene_id in sorted({item["scene_id"] for item in episodes})
+        },
         "repeatability_validation_scene_001_episode_004": _repeatability(
             next(item for item in episodes if item["episode_id"] == "validation_scene_001_episode_004"),
             traces["validation_scene_001_episode_004"][0],

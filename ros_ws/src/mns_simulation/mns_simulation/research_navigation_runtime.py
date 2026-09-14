@@ -85,6 +85,8 @@ class RosEndpoint:
         self.safe_stamp = float("-inf")
         self.safe_source = "deadman"
         self.safe_source_stamp = float("-inf")
+        self.current_episode_id: str | None = None
+        self.mismatched_diagnostic_count = 0
         self.planning_diagnostics: list[dict] = []
         self.reset_pub = node.create_publisher(Empty, "mission/reset", 10)
         self.episode_pub = node.create_publisher(String, "mission/episode_id", 10)
@@ -124,6 +126,9 @@ class RosEndpoint:
             value = json.loads(message.data)
         except (TypeError, ValueError):
             value = {"status": "FAIL", "failure_class": "MODEL", "error": "invalid diagnostic JSON"}
+        if self.current_episode_id is None or value.get("episode_id") != self.current_episode_id:
+            self.mismatched_diagnostic_count += 1
+            return
         value["received_sim_time_s"] = self.sim_time
         self.planning_diagnostics.append(value)
 
@@ -134,16 +139,20 @@ class RosEndpoint:
         self.safe_stamp = float("-inf")
         self.safe_source = "deadman"
         self.safe_source_stamp = float("-inf")
+        self.current_episode_id = None
+        self.mismatched_diagnostic_count = 0
         self.planning_diagnostics.clear()
 
     def publish_reset(self) -> None:
         from std_msgs.msg import Empty
 
+        self.current_episode_id = None
         self.reset_pub.publish(Empty())
 
     def publish_episode(self, episode_id: str) -> None:
         from std_msgs.msg import String
 
+        self.current_episode_id = episode_id
         message = String()
         message.data = episode_id
         self.episode_pub.publish(message)
@@ -444,6 +453,11 @@ def main() -> int:
             global_frame += 1
             endpoint.sim_time = global_frame * physics_dt
             publisher.publish_clock(endpoint.sim_time)
+        # Discard commands and diagnostics that were already in flight when
+        # mission/reset was published.  The scene lifecycle is shared, but the
+        # observer and controller inputs must begin at an empty episode
+        # boundary.
+        endpoint.clear_episode()
         endpoint.publish_episode(episode_id)
 
         x, y, _, yaw = (float(value) for value in plan["start_pose_xyzyaw"])
@@ -673,6 +687,7 @@ def main() -> int:
             "minimum_goal_distance_m": minimum_goal_distance,
             "sensor_frames": sensor_frames,
             "moving_stale_rgb_frames": moving_stale_frames,
+            "discarded_mismatched_planning_diagnostics": endpoint.mismatched_diagnostic_count,
             "robot_id": ROBOT_ID,
             "robot_profile": robot["profile_id"],
             "sensor_profile": sensor["profile_id"],
