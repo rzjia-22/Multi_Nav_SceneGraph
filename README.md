@@ -81,15 +81,18 @@ The selected epoch 100 checkpoint has open-loop validation ADE 0.0901 m and
 FDE 0.1696 m. It is available at
 `models/trained/navdiffusion_v0/best.pt` through Git LFS. The ROS node can
 select it with `model_backend=mns_v0`; the legacy checkpoint backend remains
-available. The first matching-domain Isaac closed-loop gate reached two short
-goals without collision, but the representative long mission collided with a
-tree and stopped Gate B; readiness is therefore
-`READY_FOR_REAL_SENSOR_ONLY`, not motion deployment. The test split remains
-sealed. Run the recorded validation path with:
+available. The matching-domain Isaac deployment gate reached two short goals
+without collision, but the representative long mission collided with a tree
+and stopped Gate B. A separate non-fail-fast analysis then executed all ten
+validation missions under the same frozen system: 4/10 reached goal and 6/10
+ended in conservative tree-proxy collisions. Readiness is therefore
+`NOT_READY`; real inference-only or motion deployment is not authorized. The
+test split remains sealed. Use the fail-fast gate and exhaustive analysis as
+distinct workflows:
 
 ```bash
 make navdiffusion-v0-closed-loop-gate
-make navdiffusion-v0-closed-loop-validation  # only proceeds when A and B pass
+make navdiffusion-v0-closed-loop-analysis
 ```
 
 The existing `make phase1-diffusion` remains the Go2/integration regression

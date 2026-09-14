@@ -28,10 +28,12 @@ train/validation-only window pipeline, shared deployment preprocessor,
 ImageNet-pretrained four-channel model, plain-PyTorch trainer and selectable
 ROS backend all pass. Training early-stopped at epoch 120; the selected epoch
 100 checkpoint achieved 0.0901 m validation ADE and 0.1696 m FDE. Test remains
-sealed. Its first matching-domain Isaac closed-loop gate is partial: Gate A and
-one short Gate B mission reached goal without collision, but the long Gate B
-mission collided with a conservative tree proxy. Full validation was therefore
-not run and readiness is `READY_FOR_REAL_SENSOR_ONLY`.
+sealed. Its first matching-domain Isaac deployment gate remains partial: Gate A
+and one short Gate B mission reached goal without collision, but the long Gate
+B mission collided with a conservative tree proxy. The subsequent exhaustive
+analysis executed all 10 validation missions without experiment-level
+fail-fast: 4 reached goal and 6 collided, with no timeout or stall. Current
+readiness is `NOT_READY`.
 
 ## NavDiffusion V0 milestone state
 
@@ -46,7 +48,7 @@ not run and readiness is `READY_FOR_REAL_SENSOR_ONLY`.
 | Validation | PASS, open-loop only | ADE 0.090123 m; FDE 0.169597 m; test not used |
 | Checkpoint | complete, Git LFS | format v1; 142,598,595 bytes; SHA256 `7b3bca67...a68ae0` |
 | Runtime | load/smoke PASS | CPU/CUDA predictor, 32×2 finite path; ROS retains all 32 diagnostic points from the same sample and controls on the first 8 |
-| Isaac closed loop | Gate A PASS; Gate B BLOCKED | 2 short missions succeeded; long validation mission collided with `tree_021`; full validation not run; real-motion readiness denied |
+| Isaac closed loop | exhaustive validation complete; deployment acceptance FAIL | Gate A 1/1; Gate B 1/3 fail-fast; independent full validation 4/10 with 6 collisions, 0 timeout/stall; test sealed, Hydra off, readiness `NOT_READY` |
 
 ## Dataset V0 milestone state
 
@@ -249,11 +251,14 @@ and Hydra saves all artifacts before both containers exit.
 - The full initial-plus-residual Go2 coverage route has not been run to natural
   exhaustion. Initial known-map obstacle avoidance and online sensor coverage
   are validated; unknown-area exploration remains deliberately out of scope.
-- NavDiffusion V0 matching-domain Isaac Gate A passes, but Gate B is blocked by
-  a repeatable model trajectory collision on its representative long mission.
-  The current readiness is `READY_FOR_REAL_SENSOR_ONLY`; full validation,
-  inference-only readiness and real DIABLO motion remain blocked. The held-out
-  test split remains sealed.
+- NavDiffusion V0 matching-domain exhaustive validation completed 10/10
+  experiments but reached only 4 goals and recorded 6 conservative collisions.
+  Failures were concentrated in `validation_scene_001` (4/5), and every failed
+  episode contained unsafe first-eight control predictions; successful
+  episodes contained none. Safety intervened in four failed episodes but did
+  not avert collision. This is descriptive evidence, not a causal diagnosis.
+  Current readiness is `NOT_READY`; inference-only and real DIABLO motion
+  remain blocked. The held-out test split remains sealed and Hydra was not run.
 
 ## Architecture decisions
 

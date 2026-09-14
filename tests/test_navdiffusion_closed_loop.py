@@ -124,7 +124,7 @@ def test_isaac_runtime_keeps_standard_ros_boundary_and_shared_forest_builder():
     assert "build_research_forest" in imported_names
 
 
-def test_recorded_closed_loop_gate_is_fail_fast_and_test_sealed():
+def test_recorded_closed_loop_gates_and_exhaustive_analysis_are_test_sealed():
     path = ROOT / "artifacts/navdiffusion_v0_closed_loop/aggregate_report.json"
     report = json.loads(path.read_text(encoding="utf-8"))
     assert report["test_split_used"] is False
@@ -135,8 +135,33 @@ def test_recorded_closed_loop_gate_is_fail_fast_and_test_sealed():
     assert report["gate_b"]["compose_return_codes"] == [2]
     assert report["gate_b"]["episode_count"] == 2
     assert report["gate_b"]["collision_count"] == 1
-    assert report["full_validation"] is None
-    assert report["readiness"] == "READY_FOR_REAL_SENSOR_ONLY"
+    full = report["full_validation"]
+    assert full["episode_count"] == 10
+    assert full["execution_completed"] is True
+    assert full["not_run_episodes"] == []
+    assert full["test_split_used"] is False
+    assert full["mapping_enabled"] is False
+    assert len(full["route_bucket_summary"]) == 3
+    assert len(full["scene_summary"]) == 2
+    assert len(full["session_summaries"]) == 2
+    assert full["total_wall_duration_s"] > full["total_episode_wall_duration_s"]
+    assert all(item["checkpoint_sha256"] == report["checkpoint_sha256"] for item in full["episodes"])
+    assert all(item["history_ready_time_s"] is None or item["history_ready_time_s"] >= 0.0
+               for item in full["episodes"])
+    assert all(item["discarded_mismatched_planning_diagnostics"] == 0
+               for item in full["episodes"])
+    analysis = json.loads((
+        ROOT / "artifacts/navdiffusion_v0_closed_loop/full_validation_analysis.json"
+    ).read_text(encoding="utf-8"))
+    assert analysis["episode_count"] == 10
+    assert analysis["test_split_used"] is False
+    assert analysis["mapping_enabled"] is False
+    assert analysis["prediction_risk_by_outcome"]["PASS"][
+        "control_prediction_unsafe_event_count"
+    ] == 0
+    assert analysis["repeatability_validation_scene_001_episode_004"][
+        "repeatable_failure"
+    ] is True
     failed = next(item for item in report["gate_b"]["episodes"] if not item["success"])
     assert failed["failure_class"] == "MODEL"
     assert failed["collision_tree_id"] == "tree_021"
