@@ -3,8 +3,9 @@
 Dataset V0 is the complete model-independent pilot corpus for future goal-directed
 local visual navigation by a standing-mode DIABLO carrying an Intel RealSense
 D435i. It validates the research-forest domain, privileged expert, camera
-geometry, storage, and held-out-scene split before bulk collection. It is not a
-final training corpus and no navigation model is trained by this workflow.
+geometry, storage, and held-out-scene split. It remains the model-independent
+raw authority; the separate NavDiffusion V0 workflow now consumes it without
+creating a second monolithic dataset or modifying any episode.
 
 ## Frozen plan
 

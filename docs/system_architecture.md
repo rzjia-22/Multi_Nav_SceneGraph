@@ -23,8 +23,7 @@ robotics image contains ROS 2 Jazzy, Hydra and project nodes. The simulation
 image contains Isaac Sim/Lab and uses Isaac's internal Jazzy ROS bridge to
 exchange standard DDS messages over host networking.
 
-Dataset V0 is a separate offline research-data consumer of Isaac. Its current
-scene-review gate stops before the lower navigation/collection branch:
+Dataset V0 is a separate offline research-data consumer of Isaac:
 
 ```text
 deterministic Research Forest + privileged map
@@ -32,11 +31,11 @@ deterministic Research Forest + privileged map
   └── moving D435i-like rig ─► RGB + raw/registered depth + IMU ─► HDF5
 ```
 
-The Research Forest specification is rendered only by the shared Isaac scene
+The Research Forest specification and full 70-episode collection are validated
+and human-accepted. It is rendered only by the shared Isaac scene
 builder: official TerrainImporter/TerrainGenerator APIs provide terrain,
 NVIDIA USD references provide visible vegetation, MDL provides ground and an
-HDR dome plus sun provide lighting. Until the current scene is human-approved,
-the expert, surrogate and HDF5 path above remains disabled by the Make target.
+HDR dome plus sun provide lighting.
 
 It reuses the simulation image but is not a ROS package and does not make
 Hydra a collection dependency. `research_data/` owns deterministic scene,
@@ -54,8 +53,9 @@ contracts. It has no ROS imports.
 - connected or zigzag coverage route generation with an obstacle-aware A*
   connector and residual-cell hooks;
 - monotonic path progress and pure-pursuit following;
-- original goal-conditioned NavDiffusion inference from five RGB-D frames,
-  followed by the same high-level trajectory follower;
+- legacy goal-conditioned NavDiffusion inference plus project-owned
+  NavDiffusion V0 training/inference from five RGB-D frames, selected by
+  configuration and followed by the same high-level trajectory follower;
 - a namespaced Nav2 lifecycle/action adapter;
 - mapped-depth safety override and bounded stall recovery logic.
 

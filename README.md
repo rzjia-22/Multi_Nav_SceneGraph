@@ -59,6 +59,32 @@ The canonical training-facing index is
 `datasets/dataset_v0/dataset_v0_collection_report.json`.
 See [Dataset V0](docs/dataset_v0.md).
 
+## NavDiffusion V0
+
+The first project-owned NavDiffusion model is trained from the frozen Dataset
+V0 without reading the test split. It uses five 160×90 RGB-D frames, an
+ImageNet-pretrained EfficientNet-B0 with a zero-initialized fourth depth
+channel, the original 4-layer Transformer / Conditional U-Net design, and a
+10-step DDPM to predict 32 local waypoints. Training and ROS inference share
+one preprocessing implementation.
+
+```bash
+make navdiffusion-v0-data
+make navdiffusion-v0-single-batch
+make navdiffusion-v0-overfit
+make navdiffusion-v0-train
+make navdiffusion-v0-smoke
+make navdiffusion-v0-ros-smoke
+```
+
+The selected epoch 100 checkpoint has validation ADE 0.0901 m and FDE
+0.1696 m. It is available at
+`models/trained/navdiffusion_v0/best.pt` through Git LFS. The ROS node can
+select it with `model_backend=mns_v0`; the legacy checkpoint backend remains
+available. Test evaluation and Isaac/DIABLO closed-loop acceptance are the next
+stage, not implied by these open-loop validation metrics. See
+[NavDiffusion V0](docs/navdiffusion_v0.md).
+
 ## CPU-only quick start
 
 The synthetic publisher exercises the complete ROS 2, navigation and Hydra
@@ -100,14 +126,23 @@ MNS_NAVIGATOR=coverage make phase1-synthetic
 MNS_NAVIGATOR=nav2 make phase1-synthetic
 ```
 
-The original audited Diffusion and Go2 actor weights are ignored runtime
-assets. Fetch and verify them, build the optional ML layer, then run Diffusion:
+The original audited Diffusion and Go2 actor weights remain ignored runtime
+assets. Fetch and verify them, build the optional ML layer, then run the legacy
+Diffusion backend:
 
 ```bash
 make models
 make robotics-ml-image
 make test-models
 make phase1-synthetic-diffusion
+```
+
+Select the project-owned model explicitly with:
+
+```bash
+MNS_DIFFUSION_BACKEND=mns_v0 \
+MNS_DIFFUSION_CHECKPOINT=/workspace/models/trained/navdiffusion_v0/best.pt \
+make phase1-diffusion
 ```
 
 `make models` checks both SHA-256 digests. Loading is tensor-only with
@@ -172,7 +207,7 @@ MNS_HYDRA_DIR=runs/<run-id>/<robot>/hydra make inspect-hydra
 ## Verification and observability
 
 ```bash
-make validate       # repository contracts and 17 pure unit tests
+make validate       # repository contracts and 35 pure unit tests
 make build          # all 8 ROS packages and package tests
 make test-models    # real Diffusion and Go2 checkpoint forward passes
 docker compose config --quiet
