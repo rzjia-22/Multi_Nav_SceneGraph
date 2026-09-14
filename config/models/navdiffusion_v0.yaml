@@ -1,0 +1,55 @@
+model_name: mns_navdiffusion_v0
+checkpoint_version: 1
+architecture:
+  visual_encoder:
+    type: torchvision_efficientnet_b0
+    package_version: 0.22.1
+    weights: IMAGENET1K_V1
+    weights_url: https://download.pytorch.org/models/efficientnet_b0_rwightman-7f5810bc.pth
+    input_channels: 4
+    depth_stem_initialization: zeros
+    preserve_batch_norm: true
+    embedding_dim: 256
+  transformer:
+    layers: 4
+    heads: 4
+    feed_forward_factor: 4
+    activation: gelu
+    norm_first: true
+  diffusion:
+    prediction_type: epsilon
+    beta_schedule: squaredcos_cap_v2
+    iterations: 10
+    input_dimension: 2
+    down_dimensions: [64, 128, 256]
+    conditional_predict_scale: false
+  trajectory_points: 32
+training:
+  seed: 42
+  maximum_epochs: 200
+  micro_batch_size: 16
+  gradient_accumulation: 2
+  fallback_micro_batch_size: 8
+  fallback_gradient_accumulation: 4
+  workers: 4
+  optimizer: AdamW
+  encoder_learning_rate: 0.0001
+  other_learning_rate: 0.0003
+  weight_decay: 0.0001
+  gradient_clip_norm: 5.0
+  warmup_epochs: 5
+  schedule: cosine
+  amp_preference: bf16
+  trajectory_validation_interval_epochs: 5
+  early_stopping_patience_epochs: 20
+  validation_seed: 20260914
+  checkpoint_interval_epochs: 1
+sanity:
+  overfit_episode_id: train_scene_000_episode_000
+  overfit_windows: 32
+  overfit_steps: 200
+  required_loss_reduction_fraction: 0.35
+outputs:
+  cache_root: runs/cache/navdiffusion_v0
+  run_root: runs/training/navdiffusion_v0
+  formal_model_directory: models/trained/navdiffusion_v0

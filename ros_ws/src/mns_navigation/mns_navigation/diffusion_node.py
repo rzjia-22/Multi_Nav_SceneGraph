@@ -1,4 +1,4 @@
-"""ROS adapter for RGB-D history, original NavDiffusion, and path following."""
+"""ROS adapter for RGB-D history, selectable NavDiffusion, and path following."""
 
 from __future__ import annotations
 
@@ -18,6 +18,7 @@ from mns_interfaces.msg import MissionStatus
 
 from .coverage import Point2D
 from .diffusion import DiffusionConfig, DiffusionPlanner, OriginalNavDiffusionPredictor, RGBDHistory
+from .navdiffusion_v0.predictor import MNSNavDiffusionConfig, MNSNavDiffusionPredictor
 from .path_follower import PurePursuitFollower
 from .ros_utils import path_message, twist_message, yaw_from_quaternion
 
@@ -28,6 +29,7 @@ class DiffusionNavigatorNode(Node):
         for name, default in (
             ("robot_id", "robot"),
             ("frame_id", "robot/odom"),
+            ("model_backend", "legacy"),
             ("checkpoint", "/workspace/models/navdiffusion.ckpt"),
             ("model_config", "/workspace/config/navigation/diffusion.yaml"),
             ("upstream_source", "/opt/forestnavigation/forest_nav"),
@@ -39,13 +41,26 @@ class DiffusionNavigatorNode(Node):
         self.declare_parameter("goal_tolerance", 0.35)
         self.bridge = CvBridge()
         self.history = RGBDHistory(int(self.get_parameter("history_length").value))
-        config = DiffusionConfig(
-            checkpoint=FilePath(str(self.get_parameter("checkpoint").value)),
-            model_config=FilePath(str(self.get_parameter("model_config").value)),
-            source_path=FilePath(str(self.get_parameter("upstream_source").value)),
-            device=str(self.get_parameter("device").value),
-        )
-        self.planner = DiffusionPlanner(OriginalNavDiffusionPredictor(config), self.history)
+        backend = str(self.get_parameter("model_backend").value)
+        checkpoint = FilePath(str(self.get_parameter("checkpoint").value))
+        device = str(self.get_parameter("device").value)
+        if backend == "legacy":
+            predictor = OriginalNavDiffusionPredictor(DiffusionConfig(
+                checkpoint=checkpoint,
+                model_config=FilePath(str(self.get_parameter("model_config").value)),
+                source_path=FilePath(str(self.get_parameter("upstream_source").value)),
+                device=device,
+            ))
+        elif backend == "mns_v0":
+            predictor = MNSNavDiffusionPredictor(MNSNavDiffusionConfig(
+                checkpoint=checkpoint,
+                device=device,
+                output_waypoints=8,
+            ))
+        else:
+            raise ValueError(f"unsupported diffusion model_backend: {backend}")
+        self.model_backend = backend
+        self.planner = DiffusionPlanner(predictor, self.history)
         self.follower = PurePursuitFollower()
         self.position: Point2D | None = None
         self.yaw = 0.0
@@ -125,7 +140,7 @@ class DiffusionNavigatorNode(Node):
         message = MissionStatus()
         message.header.stamp = self.get_clock().now().to_msg()
         message.robot_id = str(self.get_parameter("robot_id").value)
-        message.navigator = "diffusion"
+        message.navigator = f"diffusion:{self.model_backend}"
         if self.goal is None:
             message.state = "waiting_for_goal"
         elif self._goal_reached():
