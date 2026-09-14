@@ -1,4 +1,4 @@
-"""Offline analysis for exhaustive NavDiffusion V0 validation runs.
+"""Offline analysis primitives for exhaustive NavDiffusion V0 evaluation.
 
 This module consumes only the traces produced by the frozen closed-loop
 runtime.  Expert paths and tree proxies are used after each mission for
@@ -33,25 +33,37 @@ def _write_json(path: Path, value: Any) -> None:
     path.write_text(json.dumps(value, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
-def validation_index_entries(index_path: Path = INDEX_PATH) -> list[dict]:
-    """Return the sealed validation entries after enforcing split cardinality."""
+def dataset_index_entries(split: str, index_path: Path = INDEX_PATH) -> list[dict]:
+    """Return one canonical held-out split after enforcing its cardinality."""
 
+    if split not in {"validation", "test"}:
+        raise ValueError("closed-loop evaluation accepts validation or test only")
     index = json.loads(index_path.read_text(encoding="utf-8"))
-    entries = [item for item in index["episodes"] if item["split"] == "validation"]
+    entries = [item for item in index["episodes"] if item["split"] == split]
     scenes = {item["scene_id"] for item in entries}
     if len(entries) != 10 or len(scenes) != 2:
-        raise ValueError("Dataset V0 closed-loop analysis requires exactly 10 validation episodes in 2 scenes")
+        raise ValueError(
+            f"Dataset V0 closed-loop analysis requires exactly 10 {split} episodes in 2 scenes"
+        )
     if any(item.get("validation_status") != "PASS" for item in entries):
-        raise ValueError("all source validation episodes must pass Dataset V0 validation")
-    if any(not item["episode_id"].startswith("validation_scene_") for item in entries):
-        raise ValueError("non-validation episode found after validation split filtering")
+        raise ValueError(f"all source {split} episodes must pass Dataset V0 validation")
+    if any(not item["episode_id"].startswith(f"{split}_scene_") for item in entries):
+        raise ValueError(f"non-{split} episode found after {split} filtering")
     return entries
 
 
-def _load_trace_map(run_ids: list[str]) -> dict[str, tuple[dict, Path]]:
+def validation_index_entries(index_path: Path = INDEX_PATH) -> list[dict]:
+    """Return the sealed validation entries used by the historical V0 analysis."""
+
+    return dataset_index_entries("validation", index_path)
+
+
+def _load_trace_map(
+    run_ids: list[str], *, run_root: Path = RUN_ROOT, split: str = "validation"
+) -> dict[str, tuple[dict, Path]]:
     traces: dict[str, tuple[dict, Path]] = {}
     for run_id in run_ids:
-        for path in sorted((RUN_ROOT / run_id).glob("validation_scene_*/*/trace.json")):
+        for path in sorted((run_root / run_id).glob(f"{split}_scene_*/*/trace.json")):
             trace = json.loads(path.read_text(encoding="utf-8"))
             traces[trace["report"]["episode_id"]] = (trace, path)
     return traces
@@ -463,17 +475,24 @@ def _repeatability(current: dict, current_trace: dict) -> dict:
     return result
 
 
-def _plot_results(items: list[dict], traces: dict[str, tuple[dict, Path]]) -> None:
+def _plot_results(
+    items: list[dict],
+    traces: dict[str, tuple[dict, Path]],
+    *,
+    artifact_root: Path = ARTIFACT_ROOT,
+    episode_directory: str = "full_validation/episodes",
+    scope_label: str = "validation",
+) -> None:
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
-    output = ARTIFACT_ROOT / "plots"
+    output = artifact_root / "plots"
     output.mkdir(parents=True, exist_ok=True)
     # A fresh exhaustive run replaces the stable failure review set.  Remove
     # plots from failures that did not recur so artifacts cannot imply that a
     # current PASS episode failed.
-    for stale in (ARTIFACT_ROOT / "full_validation/episodes").glob("*/failure_trajectory.png"):
+    for stale in (artifact_root / episode_directory).glob("*/failure_trajectory.png"):
         stale.unlink()
     ordered = sorted(items, key=lambda item: item["planned_expert_length_m"])
     lengths = [item["planned_expert_length_m"] for item in ordered]
@@ -483,7 +502,7 @@ def _plot_results(items: list[dict], traces: dict[str, tuple[dict, Path]]) -> No
     axis.scatter(lengths, [int(item["success"]) for item in ordered], c=colors, s=65)
     axis.set_yticks([0, 1], ["FAIL", "PASS"])
     axis.set_xlabel("planned expert path length [m]")
-    axis.set_title("NavDiffusion V0 closed-loop outcome vs route length")
+    axis.set_title(f"NavDiffusion V0 {scope_label} outcome vs route length")
     axis.grid(alpha=0.2)
     figure.savefig(output / "success_vs_route_length.png", dpi=150)
     plt.close(figure)
@@ -503,7 +522,7 @@ def _plot_results(items: list[dict], traces: dict[str, tuple[dict, Path]]) -> No
     item_colors = ["#2ca02c" if item["success"] else "#d62728" for item in items]
     axis.bar(labels, [item["safety_override_fraction"] for item in items], color=item_colors)
     axis.set_ylabel("Safety override fraction")
-    axis.set_title("Safety intervention by validation episode")
+    axis.set_title(f"Safety intervention by {scope_label} episode")
     axis.tick_params(axis="x", labelrotation=45)
     axis.grid(axis="y", alpha=0.2)
     figure.savefig(output / "safety_override_fraction.png", dpi=150)
@@ -551,7 +570,7 @@ def _plot_results(items: list[dict], traces: dict[str, tuple[dict, Path]]) -> No
         axis.set_ylabel("y [m]")
         axis.grid(alpha=0.15)
         axis.legend(fontsize=7)
-        episode_output = ARTIFACT_ROOT / "full_validation/episodes" / episode_id
+        episode_output = artifact_root / episode_directory / episode_id
         episode_output.mkdir(parents=True, exist_ok=True)
         figure.savefig(episode_output / "failure_trajectory.png", dpi=150)
         plt.close(figure)

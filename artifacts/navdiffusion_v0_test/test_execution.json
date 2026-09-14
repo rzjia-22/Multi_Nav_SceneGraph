@@ -1,0 +1,20 @@
+{
+  "checkpoint_sha256": "7b3bca67af26c2d839555e9b27a7a420762b572fa88664a227986174d9a68ae0",
+  "episode_count": 10,
+  "evaluation_split": "test",
+  "invalid_attempt_history": [
+    {
+      "executed_episode_count": 1,
+      "reason": "runtime did not contain a model-commanded terrain boundary exit; no canonical final-test result was produced",
+      "system_git_commit": "1377dee3de2447dae772f604cd9e00c946f68b6d"
+    }
+  ],
+  "mid_test_tuning": false,
+  "per_episode_reruns": 0,
+  "run_ids": [
+    "test-test_scene_000-20260914T150433Z",
+    "test-test_scene_001-20260914T150939Z"
+  ],
+  "status": "complete",
+  "system_git_commit": "43b8b15526467c5b41b8b7181bfbd56e9381fc73"
+}

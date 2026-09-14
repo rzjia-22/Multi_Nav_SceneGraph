@@ -14,7 +14,11 @@ from typing import Any
 import numpy as np
 
 from .common import ROOT, load_yaml
-from .closed_loop_analysis import analyze_full_validation, validation_index_entries
+from .closed_loop_analysis import (
+    analyze_full_validation,
+    dataset_index_entries,
+    validation_index_entries,
+)
 
 
 CONFIG = ROOT / "config/navigation/navdiffusion_v0_closed_loop.yaml"
@@ -58,9 +62,13 @@ def _compose_session(
     *,
     capture_review: bool,
     fail_on_episode_failure: bool,
+    split: str = "validation",
+    run_root: Path = RUN_ROOT,
 ) -> tuple[int, str]:
+    if split not in {"validation", "test"}:
+        raise ValueError("closed-loop session accepts validation or test only")
     if any(_scene_id(value) != scene_id for value in episode_ids):
-        raise ValueError("a scene-batched session may contain only one validation scene")
+        raise ValueError(f"a scene-batched session may contain only one {split} scene")
     timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     run_id = f"{artifact_group}-{scene_id}-{timestamp}"
     environment = os.environ.copy()
@@ -69,6 +77,8 @@ def _compose_session(
         "MNS_CLOSED_LOOP_EPISODES": ",".join(episode_ids),
         "MNS_CLOSED_LOOP_RUN_ID": run_id,
         "MNS_CLOSED_LOOP_ARTIFACT_GROUP": artifact_group,
+        "MNS_CLOSED_LOOP_SPLIT": split,
+        "MNS_CLOSED_LOOP_RUN_ROOT": "/mns/" + str(run_root.relative_to(ROOT)),
         "MNS_CLOSED_LOOP_CAPTURE_FLAG": "--capture-review" if capture_review else "",
         "MNS_CLOSED_LOOP_FAILURE_FLAG": "--fail-on-episode-failure" if fail_on_episode_failure else "",
     })
@@ -86,7 +96,12 @@ def _compose_session(
         cwd=ROOT, env=environment, check=False,
     )
     return_code = completed.returncode
-    session_report = RUN_ROOT / run_id / scene_id / "session_report.json"
+    session_report = run_root / run_id / scene_id / "session_report.json"
+    if not session_report.is_file():
+        # Isaac Kit can normalize an exception to exit code zero while closing
+        # the application.  A completed scene session must always leave its
+        # atomically-written report; absence is an infrastructure failure.
+        return_code = return_code or 1
     if fail_on_episode_failure and session_report.is_file():
         session = json.loads(session_report.read_text(encoding="utf-8"))
         if not session.get("all_pass", False):
@@ -221,13 +236,23 @@ def _visualize_episode(run_id: str, group: str, scene_id: str, episode_id: str) 
         })
 
 
-def _group_report(group: str, run_ids: list[str], expected_episodes: list[str]) -> dict:
+def _group_report(
+    group: str,
+    run_ids: list[str],
+    expected_episodes: list[str],
+    *,
+    split: str = "validation",
+    run_root: Path = RUN_ROOT,
+    artifact_root: Path = ARTIFACT_ROOT,
+) -> dict:
+    if split not in {"validation", "test"}:
+        raise ValueError("closed-loop report accepts validation or test only")
     reports = []
     inference = []
     sessions = []
     for run_id in run_ids:
-        run_directory = RUN_ROOT / run_id
-        for session_path in sorted(run_directory.glob("validation_scene_*/session_report.json")):
+        run_directory = run_root / run_id
+        for session_path in sorted(run_directory.glob(f"{split}_scene_*/session_report.json")):
             session = json.loads(session_path.read_text(encoding="utf-8"))
             episode_reports = session.get("episodes", [])
             sessions.append({
@@ -239,7 +264,7 @@ def _group_report(group: str, run_ids: list[str], expected_episodes: list[str]) 
                 "scene_load_time_s": session.get("scene_load_time_s"),
                 "total_wall_time_s": session.get("total_wall_time_s"),
             })
-        for trace_path in sorted(run_directory.glob("validation_scene_*/*/trace.json")):
+        for trace_path in sorted(run_directory.glob(f"{split}_scene_*/*/trace.json")):
             trace = json.loads(trace_path.read_text(encoding="utf-8"))
             reports.append(trace["report"])
             inference.extend(
@@ -249,7 +274,7 @@ def _group_report(group: str, run_ids: list[str], expected_episodes: list[str]) 
             )
     by_id = {item["episode_id"]: item for item in reports}
     ordered = [by_id[value] for value in expected_episodes if value in by_id]
-    index_by_id = {item["episode_id"]: item for item in validation_index_entries()}
+    index_by_id = {item["episode_id"]: item for item in dataset_index_entries(split)}
     for item in ordered:
         item.setdefault("route_bucket", index_by_id[item["episode_id"]]["route_bucket"])
     failure_classes: dict[str, int] = defaultdict(int)
@@ -280,6 +305,7 @@ def _group_report(group: str, run_ids: list[str], expected_episodes: list[str]) 
     result = {
         "report_version": 1,
         "group": group,
+        "evaluation_split": split,
         "expected_episodes": expected_episodes,
         "episodes": ordered,
         "episode_count": len(ordered),
@@ -325,18 +351,30 @@ def _group_report(group: str, run_ids: list[str], expected_episodes: list[str]) 
             key: summarize(values) for key, values in sorted(scene_groups.items())
         },
         "run_ids": run_ids,
-        "test_split_used": False,
+        "test_split_used": split == "test",
         "mapping_enabled": False,
     }
-    _write_json(ARTIFACT_ROOT / group / "aggregate_report.json", result)
+    _write_json(artifact_root / group / "aggregate_report.json", result)
     return result
 
 
-def _run_group(group: str, episodes: list[str], *, fail_fast: bool, capture: bool) -> dict:
+def _run_group(
+    group: str,
+    episodes: list[str],
+    *,
+    fail_fast: bool,
+    capture: bool,
+    split: str = "validation",
+    run_root: Path = RUN_ROOT,
+    artifact_root: Path = ARTIFACT_ROOT,
+    stop_on_session_error: bool = False,
+) -> dict:
+    if split not in {"validation", "test"}:
+        raise ValueError("closed-loop execution accepts validation or test only")
     grouped: dict[str, list[str]] = defaultdict(list)
     for episode in episodes:
-        if not episode.startswith("validation_scene_"):
-            raise ValueError("only validation episodes are permitted")
+        if not episode.startswith(f"{split}_scene_"):
+            raise ValueError(f"only {split} episodes are permitted")
         grouped[_scene_id(episode)].append(episode)
     run_ids = []
     return_codes = []
@@ -345,23 +383,28 @@ def _run_group(group: str, episodes: list[str], *, fail_fast: bool, capture: boo
             group, scene_id, scene_episodes,
             capture_review=capture,
             fail_on_episode_failure=fail_fast,
+            split=split,
+            run_root=run_root,
         )
         run_ids.append(run_id)
         return_codes.append(code)
         for episode in scene_episodes:
-            trace = RUN_ROOT / run_id / scene_id / episode / "trace.json"
+            trace = run_root / run_id / scene_id / episode / "trace.json"
             if trace.is_file() and capture:
                 _visualize_episode(run_id, group, scene_id, episode)
-        if fail_fast and code != 0:
+        if code != 0 and (fail_fast or stop_on_session_error):
             break
-    report = _group_report(group, run_ids, episodes)
+    report = _group_report(
+        group, run_ids, episodes,
+        split=split, run_root=run_root, artifact_root=artifact_root,
+    )
     report["compose_return_codes"] = return_codes
     report["execution_completed"] = (
         report["episode_count"] == len(episodes)
         and not report["not_run_episodes"]
         and all(code == 0 for code in return_codes)
     )
-    _write_json(ARTIFACT_ROOT / group / "aggregate_report.json", report)
+    _write_json(artifact_root / group / "aggregate_report.json", report)
     return report
 
 

@@ -4,9 +4,11 @@ NavDiffusion V0 is the first project-owned model trained from the frozen
 Dataset V0. Its purpose is deployment-oriented goal navigation in the accepted
 Isaac Research Forest and, after staged validation, on a standing DIABLO with
 a RealSense D435i. Training is complete. The matching-domain Isaac deployment
-gate and a subsequent exhaustive ten-mission validation analysis are recorded
-below. The observed 4/10 success and six conservative collisions do not
-authorize real inference or motion deployment. The test split remains sealed.
+gate, a subsequent exhaustive ten-mission validation analysis, and the final
+one-pass held-out test are recorded below. Validation reached 4/10 and test
+reached 3/10; each recorded six conservative collisions. These results do not
+authorize real inference or motion deployment. Dataset V0 test has now been
+opened for this final V0 evaluation.
 
 ## Data authority and cache
 
@@ -95,8 +97,10 @@ without a better fixed-seed validation ADE. It took 4,315.1 s and peaked at
 - best observed validation diffusion loss: 0.006512.
 
 These are open-loop metrics on ten validation episodes from two unseen scenes,
-not evidence of closed-loop success. The test split was not loaded for
-statistics, training, selection or evaluation.
+not evidence of closed-loop success. During data statistics, training,
+early-stopping and checkpoint selection, the test split was not loaded. It was
+first opened only after the frozen V0 system and validation analysis were
+complete, for the final closed-loop evaluation documented below.
 
 ## Artifacts and runtime
 
@@ -179,6 +183,48 @@ inference acceptance or motion. Machine-readable results, failure plots and
 the ten-row analysis are under `artifacts/navdiffusion_v0_closed_loop/`;
 high-volume traces remain ignored under `runs/navdiffusion_v0_closed_loop/`.
 
+## Final held-out closed-loop test
+
+The canonical one-pass test used the identical frozen checkpoint,
+preprocessing, 2 Hz planner, 32-point prediction, first-eight-point Pure
+Pursuit control, Safety settings, DIABLO surrogate, D435i cameras and Research
+Forest builder. Hydra remained disabled. All ten missions from the two test
+scenes were executed once in two scene-batched Isaac lifecycles; no train or
+validation mission was executed by the test command, and no mid-test tuning or
+per-episode rerun occurred.
+
+Three missions reached the 0.35 m goal tolerance. Six missions ended in a
+conservative tree-proxy collision, one mission followed the model command out
+of the valid terrain domain, and none timed out or stalled. Bucket success was
+short 1/3, medium 1/4 and long 1/3. The gentle, low-density, grass,
+bright-lighting `test_scene_000` reached 3/5; the moderate, high-density,
+bare-soil, normal-lighting `test_scene_001` reached 0/5 and accounted for five
+collisions. Because these attributes co-vary by scene, this is an association,
+not a causal attribution.
+
+Validation and test are broadly similar: 4/10 versus 3/10 success, with six
+collisions in each. Every test collision was preceded first by an unsafe
+32-point prediction and then by an unsafe first-eight control prediction.
+Across all test planning cycles, successful missions had 2.02% unsafe full
+predictions and 0% unsafe control predictions; failed missions had 33.70% and
+11.60% respectively. Safety intervened in 5/7 failures and 2/3 successes, but
+did not avert a collision. Test failures were not monotonically associated
+with route length: every bucket had exactly one success, and mean planned
+length was 6.547 m for failures versus 6.404 m for successes. They were also
+not concentrated at the most extreme camera perturbations.
+
+The test accumulated 146.00 s of simulated motion over 583.52 s wall time.
+Inference averaged 136.7 ms with 303.3 ms p95; a single 3366.9 ms maximum is
+retained rather than hidden. The final V0 classification remains
+**`NOT_READY`**. The reports and failure overlays are under
+`artifacts/navdiffusion_v0_test/`, while high-volume traces remain ignored
+under `runs/navdiffusion_v0_test/`.
+
+Dataset V0 test was first opened for this NavDiffusion V0 final closed-loop
+evaluation. Any NavDiffusion V1 design informed by these results must use new
+held-out scenes for its own final evaluation; Dataset V0 test can no longer be
+described as untouched for V1.
+
 ```bash
 make navdiffusion-v0-data
 make navdiffusion-v0-single-batch
@@ -188,6 +234,7 @@ make navdiffusion-v0-smoke
 make navdiffusion-v0-ros-smoke
 make navdiffusion-v0-closed-loop-gate
 make navdiffusion-v0-closed-loop-analysis
+make navdiffusion-v0-closed-loop-test
 
 MNS_DIFFUSION_BACKEND=mns_v0 \
 MNS_DIFFUSION_CHECKPOINT=/workspace/models/trained/navdiffusion_v0/best.pt \
@@ -195,6 +242,6 @@ make phase1-diffusion
 ```
 
 The final `phase1-diffusion` command is the older Go2 integration-regression
-path, not the DIABLO Research Forest acceptance path. Test evaluation and real
-DIABLO/D435i inference or motion remain intentionally deferred. Hydra was not
-run during this navigation-only analysis.
+path, not the DIABLO Research Forest acceptance path. Real DIABLO/D435i
+inference or motion remains intentionally deferred. Hydra was not run during
+either closed-loop evaluation.

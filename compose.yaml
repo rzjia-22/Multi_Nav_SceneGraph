@@ -138,9 +138,11 @@ services:
       /mns/containers/simulation/entrypoint.sh
       --research-navigation
       --scene /mns/research_scenes/dataset_v0/${MNS_CLOSED_LOOP_SCENE:-validation_scene_000}/scene.yaml
+      --split ${MNS_CLOSED_LOOP_SPLIT:-validation}
       --episodes ${MNS_CLOSED_LOOP_EPISODES:-validation_scene_000_episode_000}
       --run-id ${MNS_CLOSED_LOOP_RUN_ID:-manual}
       --artifact-group ${MNS_CLOSED_LOOP_ARTIFACT_GROUP:-manual}
+      --run-root ${MNS_CLOSED_LOOP_RUN_ROOT:-/mns/runs/navdiffusion_v0_closed_loop}
       ${MNS_CLOSED_LOOP_CAPTURE_FLAG:-}
       ${MNS_CLOSED_LOOP_FAILURE_FLAG:-}
       --headless --enable_cameras
