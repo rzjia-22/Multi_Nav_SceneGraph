@@ -30,6 +30,7 @@ CONFIG = ROOT / "config/navigation/navdiffusion_v0_test.yaml"
 VALIDATION_ANALYSIS = ROOT / "artifacts/navdiffusion_v0_closed_loop/full_validation_analysis.json"
 TEST_ARTIFACT_ROOT = ROOT / "artifacts/navdiffusion_v0_test"
 TEST_RUN_ROOT = ROOT / "runs/navdiffusion_v0_test"
+ATTEMPT_RECORD = TEST_ARTIFACT_ROOT / "test_execution.json"
 ROBOT_PATH = ROOT / "config/robots/diablo_standing.yaml"
 CHECKPOINT_SHA256 = "7b3bca67af26c2d839555e9b27a7a420762b572fa88664a227986174d9a68ae0"
 
@@ -476,8 +477,13 @@ def _write_summary(report: dict, analysis: dict, comparison: dict) -> None:
 def run_test(config: dict, entries: list[dict]) -> dict:
     if (TEST_ARTIFACT_ROOT / "test_report.json").exists():
         raise RuntimeError("the canonical one-pass Dataset V0 test has already been finalized")
-    TEST_RUN_ROOT.mkdir(parents=True, exist_ok=True)
-    _write_json(TEST_RUN_ROOT / "one_pass_attempt.json", {
+    if ATTEMPT_RECORD.exists():
+        previous = json.loads(ATTEMPT_RECORD.read_text(encoding="utf-8"))
+        if previous.get("status") == "started":
+            raise RuntimeError("an unfinished final-test attempt exists and must be audited first")
+        if previous.get("status") == "invalid" and previous.get("system_git_commit") == _git_commit():
+            raise RuntimeError("this code revision already produced an invalid test attempt")
+    _write_json(ATTEMPT_RECORD, {
         "status": "started",
         "evaluation_split": "test",
         "expected_episode_ids": [item["episode_id"] for item in entries],
@@ -506,7 +512,13 @@ def run_test(config: dict, entries: list[dict]) -> dict:
         "v0_final_status": "NOT_READY",
     })
     if not report["execution_completed"]:
-        _write_json(TEST_RUN_ROOT / "invalid_test_attempt.json", report)
+        _write_json(ATTEMPT_RECORD, {
+            "status": "invalid",
+            "reason": "test infrastructure did not execute all ten missions",
+            "report": report,
+            "system_git_commit": _git_commit(),
+            "checkpoint_sha256": CHECKPOINT_SHA256,
+        })
         raise RuntimeError("test infrastructure did not execute all ten missions; the attempt is invalid")
     analysis = _analyze_test(report)
     report["failure_classes"] = analysis["failure_classes"]
@@ -515,7 +527,7 @@ def run_test(config: dict, entries: list[dict]) -> dict:
     _write_json(TEST_ARTIFACT_ROOT / "test_report.json", report)
     comparison = json.loads((TEST_ARTIFACT_ROOT / "validation_vs_test.json").read_text(encoding="utf-8"))
     _write_summary(report, analysis, comparison)
-    _write_json(TEST_RUN_ROOT / "one_pass_attempt.json", {
+    _write_json(ATTEMPT_RECORD, {
         "status": "complete",
         "evaluation_split": "test",
         "episode_count": 10,
