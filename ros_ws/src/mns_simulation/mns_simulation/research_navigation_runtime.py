@@ -32,7 +32,8 @@ def parse_args():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--scene", type=Path, required=True)
     parser.add_argument("--assets", type=Path, default=project_root / "config/research_forests/assets.yaml")
-    parser.add_argument("--episodes", required=True, help="comma-separated validation episode IDs")
+    parser.add_argument("--split", choices=("validation", "test"), default="validation")
+    parser.add_argument("--episodes", required=True, help="comma-separated held-out episode IDs")
     parser.add_argument("--run-id", required=True)
     parser.add_argument("--artifact-group", required=True)
     parser.add_argument("--run-root", type=Path, default=project_root / "runs/navdiffusion_v0_closed_loop")
@@ -256,23 +257,23 @@ def main() -> int:
     episode_ids = [value.strip() for value in ARGS.episodes.split(",") if value.strip()]
     if not episode_ids or len(episode_ids) != len(set(episode_ids)):
         raise ValueError("episodes must be a non-empty unique comma-separated list")
-    if any(not value.startswith("validation_scene_") for value in episode_ids):
-        raise ValueError("closed-loop runtime accepts validation episodes only")
+    if any(not value.startswith(f"{ARGS.split}_scene_") for value in episode_ids):
+        raise ValueError(f"closed-loop runtime accepts {ARGS.split} episodes only")
 
     scene = load_yaml(ARGS.scene)
     registry = load_yaml(ARGS.assets)
     robot = load_yaml(ROOT / "config/robots/diablo_standing.yaml")
     sensor = load_yaml(ROOT / "config/sensors/d435i_navigation_v0.yaml")
-    if scene["split"] != "validation":
-        raise ValueError("closed-loop scene must belong to the validation split")
+    if scene["split"] != ARGS.split:
+        raise ValueError(f"closed-loop scene must belong to the {ARGS.split} split")
     if any(not value.startswith(scene["scene_id"] + "_episode_") for value in episode_ids):
-        raise ValueError("every episode must belong to the selected validation scene")
+        raise ValueError(f"every episode must belong to the selected {ARGS.split} scene")
     plans = {}
     for episode_id in episode_ids:
-        path = ROOT / "datasets/dataset_v0/validation" / scene["scene_id"] / episode_id / "episode_plan.yaml"
+        path = ROOT / "datasets/dataset_v0" / ARGS.split / scene["scene_id"] / episode_id / "episode_plan.yaml"
         plan = load_yaml(path)
-        if plan["split"] != "validation" or plan["scene_id"] != scene["scene_id"]:
-            raise ValueError(f"invalid validation provenance for {episode_id}")
+        if plan["split"] != ARGS.split or plan["scene_id"] != scene["scene_id"]:
+            raise ValueError(f"invalid {ARGS.split} provenance for {episode_id}")
         validate_plan(scene, plan)
         plans[episode_id] = plan
 
@@ -426,6 +427,7 @@ def main() -> int:
         "robot_id": ROBOT_ID,
         "scene_id": scene["scene_id"],
         "episodes": episode_ids,
+        "evaluation_split": ARGS.split,
         "research_forest_builder": "build_research_forest",
         "scene_load_time_s": scene_load_time,
         "rgb_resolution": rgb_cfg["resolution"],
@@ -696,7 +698,8 @@ def main() -> int:
             "registered_depth_resolution": sensor["application_profile"]["depth_aligned_to_rgb"]["resolution"],
             "depth_registration": sensor["application_profile"]["depth_aligned_to_rgb"]["policy"],
             "mapping_enabled": False,
-            "test_split_used": False,
+            "evaluation_split": ARGS.split,
+            "test_split_used": ARGS.split == "test",
             "expert_path_used_for_control": False,
             "control_waypoints": 8,
             "prediction_waypoints": 32,
@@ -739,6 +742,7 @@ def main() -> int:
         "artifact_group": ARGS.artifact_group,
         "scene_id": scene["scene_id"],
         "scene_hash": scene["content_hash"],
+        "evaluation_split": ARGS.split,
         "episodes": reports,
         "episode_count": len(reports),
         "success_count": sum(item["success"] for item in reports),
@@ -747,7 +751,7 @@ def main() -> int:
         "scene_load_time_s": scene_load_time,
         "total_wall_time_s": time.monotonic() - PROCESS_START,
         "mapping_enabled": False,
-        "test_split_used": False,
+        "test_split_used": ARGS.split == "test",
         "exit_reason": exit_reason,
     }
     _write_json(ARGS.run_root / ARGS.run_id / scene["scene_id"] / "session_report.json", aggregate)

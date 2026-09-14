@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: lint test validate build robotics-image robotics-ml-image simulation-image gpu-preflight isaac-compatibility isaac-minimal model-source models test-models navdiffusion-v0-data navdiffusion-v0-single-batch navdiffusion-v0-overfit navdiffusion-v0-train navdiffusion-v0-smoke navdiffusion-v0-ros-smoke navdiffusion-v0-closed-loop-gate navdiffusion-v0-closed-loop-validation navdiffusion-v0-closed-loop-analysis probe-go2-upstream phase1 phase1-diffusion uav-mapping phase2 phase1-synthetic phase1-synthetic-diffusion phase2-synthetic accept-isaac-sensors accept-go2-motion accept-phase1 accept-uav accept-phase2 inspect-hydra dataset-v0-calibrate-terrain dataset-v0-scene-preview dataset-v0-view-scene dataset-v0-capture-scene-review dataset-v0-regenerate-pilot dataset-v0-batch-gate dataset-v0-plan-preflight dataset-v0-collect dataset-v0-validate
+.PHONY: lint test validate build robotics-image robotics-ml-image simulation-image gpu-preflight isaac-compatibility isaac-minimal model-source models test-models navdiffusion-v0-data navdiffusion-v0-single-batch navdiffusion-v0-overfit navdiffusion-v0-train navdiffusion-v0-smoke navdiffusion-v0-ros-smoke navdiffusion-v0-closed-loop-gate navdiffusion-v0-closed-loop-validation navdiffusion-v0-closed-loop-analysis navdiffusion-v0-closed-loop-test probe-go2-upstream phase1 phase1-diffusion uav-mapping phase2 phase1-synthetic phase1-synthetic-diffusion phase2-synthetic accept-isaac-sensors accept-go2-motion accept-phase1 accept-uav accept-phase2 inspect-hydra dataset-v0-calibrate-terrain dataset-v0-scene-preview dataset-v0-view-scene dataset-v0-capture-scene-review dataset-v0-regenerate-pilot dataset-v0-batch-gate dataset-v0-plan-preflight dataset-v0-collect dataset-v0-validate
 
 lint:
 	python3 -m compileall -q ros_ws/src research_data tools tests
@@ -69,6 +69,9 @@ navdiffusion-v0-closed-loop-validation:
 
 navdiffusion-v0-closed-loop-analysis:
 	python3 -m research_data.closed_loop run-analysis
+
+navdiffusion-v0-closed-loop-test:
+	python3 -m research_data.closed_loop_test run-test
 
 probe-go2-upstream: models
 	docker compose --profile simulation run --rm --entrypoint /workspace/isaaclab/isaaclab.sh simulation \

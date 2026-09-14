@@ -1,0 +1,34 @@
+config_id: navdiffusion_v0_final_test_v1
+scope: test_only
+evaluation_split: test
+one_pass_policy: true
+expected_scene_count: 2
+expected_episode_count: 10
+base_runtime_config: config/navigation/navdiffusion_v0_closed_loop.yaml
+checkpoint: models/trained/navdiffusion_v0/best.pt
+checkpoint_sha256: 7b3bca67af26c2d839555e9b27a7a420762b572fa88664a227986174d9a68ae0
+mapping_enabled: false
+allow_train_split: false
+allow_validation_split: false
+frozen_safety:
+  stop_distance_m: 0.7
+  release_distance_m: 0.9
+  reverse_speed_mps: 0.0
+  turn_speed_radps: 0.5
+frozen_file_sha256:
+  config/navigation/navdiffusion_v0_closed_loop.yaml: bf5658fdabaa382a73356979805309076c806092d2d9efc6b3b04a5d44e5e9a5
+  config/robots/diablo_standing.yaml: 03dac1cb9c079374a26492e32d25af9093e91ddc0c9a6d71bcf55ffb7d27d800
+  config/sensors/d435i_navigation_v0.yaml: ea60478bfe5f9b5f5ec9487217718c60e6a0cc0b0b6abe06f8325061991d081d
+  ros_ws/src/mns_bringup/launch/research_navigation.launch.py: 917a9f9488ed1ce0b3b0906bc13811ce5a584d982edf3fea00a37db81453a6fc
+  ros_ws/src/mns_motion/mns_motion/command_arbiter_node.py: ea87c5bf576e2f95afbf874a33ddf8ff37402f10b9c350b0523a59e729ace91e
+  ros_ws/src/mns_navigation/mns_navigation/diffusion_node.py: 2dae612b320125a13e247be78db84315fdacb9bd1be258cea19a89abf534146b
+  ros_ws/src/mns_navigation/mns_navigation/navdiffusion_v0/predictor.py: f024bee8ab94c9b8ed585dba782e55fcc90cbcb32c881feb472d635452495843
+  ros_ws/src/mns_navigation/mns_navigation/navdiffusion_v0/preprocessing.py: f144b8dd22920e7bc0ef5d4d9bc8a39573c7da603ba99ddbc856fe672ceb8999
+  ros_ws/src/mns_navigation/mns_navigation/path_follower.py: cf8d84a41363a14a5fce0f1982219099322a57081987a714805f55020649cfa7
+  ros_ws/src/mns_navigation/mns_navigation/safety.py: eb1da221de1e78482a91bf97d8ee708bd4caae587860c1afb3b73e150c952e20
+  ros_ws/src/mns_simulation/mns_simulation/research_navigation_runtime.py: 080fcd7c5f58c91a6e30feeb3a811c12516180f0b751a66c91bbaba018290085
+artifact_root: artifacts/navdiffusion_v0_test
+run_root: runs/navdiffusion_v0_test
+data_governance:
+  first_opened_for: NavDiffusion V0 final closed-loop evaluation
+  future_models_require_new_final_test_scenes: true
