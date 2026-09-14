@@ -47,7 +47,7 @@ class MNSNavDiffusionPredictor:
             for key in (
                 "checkpoint_version", "model_name", "dataset_version",
                 "dataset_index_sha256", "git_commit", "training_seed", "epoch",
-                "best_validation_ADE", "validation_FDE",
+                "epoch_index", "best_validation_ADE", "validation_FDE",
             )
         }
 

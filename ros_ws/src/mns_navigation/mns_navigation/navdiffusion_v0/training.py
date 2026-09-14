@@ -146,6 +146,8 @@ def _trajectory_metrics(model, loader, device, amp_dtype, seed: int, bound_m: fl
         "window_count": count,
         "wall_time_s": time.monotonic() - started,
         "seed": seed,
+        "split": "validation",
+        "test_split_used": False,
     }
 
 
@@ -367,7 +369,8 @@ def _checkpoint_payload(
         "dataset_index_sha256": file_sha256(index_path),
         "git_commit": git_commit,
         "training_seed": int(config["training"]["seed"]),
-        "epoch": epoch,
+        "epoch": epoch + 1,
+        "epoch_index": epoch,
         "optimizer_state": optimizer.state_dict(),
         "scheduler_state": scheduler.state_dict(),
         "gradient_scaler_state": scaler.state_dict(),
@@ -422,7 +425,7 @@ def train() -> dict[str, Any]:
         resume = torch.load(last_path, map_location="cpu", weights_only=True)
         model = NavDiffusionV0(config["architecture"], pretrained=False)
         model.load_state_dict(resume["model_state_dict"], strict=True)
-        start_epoch = int(resume["epoch"]) + 1
+        start_epoch = int(resume.get("epoch_index", int(resume["epoch"]) - 1)) + 1
         best_ade = float(resume["best_validation_ADE"])
         best_fde = float(resume["validation_FDE"])
         best_epoch = int(resume.get("best_epoch", start_epoch - 1))
@@ -505,7 +508,7 @@ def train() -> dict[str, Any]:
         ]
         overall_peak_vram_mib = max(overall_peak_vram_mib, float(row[8]))
         with history_path.open("a", encoding="utf-8", newline="") as stream:
-            csv.writer(stream).writerow(row)
+            csv.writer(stream, lineterminator="\n").writerow(row)
         print(json.dumps({
             "epoch": epoch + 1, "train_loss": row[1], "validation_loss": validation_loss,
             "trajectory_metrics": metrics, "best_epoch": best_epoch + 1,
@@ -586,10 +589,18 @@ def inference_smoke() -> dict[str, Any]:
     training_tensor = dataset[0]["images"].numpy()
     consistency_difference = float(np.max(np.abs(runtime_tensor - training_tensor)))
     goal_local = np.asarray(arrays["goal_normalized"][local_index]) * dataset.preprocessor.goal_scale_m
+    runtime_rgb = rgb.astype(np.float32) / 255.0
+    runtime_depth = aligned[..., None]
     cuda = MNSNavDiffusionPredictor(MNSNavDiffusionConfig(checkpoint=checkpoint, device="cuda", output_waypoints=32))
-    cuda_result = cuda(rgb.astype(np.float32) / 255.0, aligned[..., None], goal_local)
+    cuda_result = cuda(runtime_rgb, runtime_depth, goal_local)
+    cuda_cold_ms = cuda.last_inference_ms
+    cuda_result = cuda(runtime_rgb, runtime_depth, goal_local)
+    cuda_warm_ms = cuda.last_inference_ms
     cpu = MNSNavDiffusionPredictor(MNSNavDiffusionConfig(checkpoint=checkpoint, device="cpu", output_waypoints=32))
-    cpu_result = cpu(rgb.astype(np.float32) / 255.0, aligned[..., None], goal_local)
+    cpu_result = cpu(runtime_rgb, runtime_depth, goal_local)
+    cpu_cold_ms = cpu.last_inference_ms
+    cpu_result = cpu(runtime_rgb, runtime_depth, goal_local)
+    cpu_warm_ms = cpu.last_inference_ms
     report = {
         "status": "PASS",
         "episode_id": episode_id,
@@ -597,8 +608,10 @@ def inference_smoke() -> dict[str, Any]:
         "shape": list(cuda_result.shape),
         "cuda_finite": bool(np.isfinite(cuda_result).all()),
         "cpu_finite": bool(np.isfinite(cpu_result).all()),
-        "cuda_inference_ms": cuda.last_inference_ms,
-        "cpu_inference_ms": cpu.last_inference_ms,
+        "cuda_cold_inference_ms": cuda_cold_ms,
+        "cuda_warm_inference_ms": cuda_warm_ms,
+        "cpu_cold_inference_ms": cpu_cold_ms,
+        "cpu_warm_inference_ms": cpu_warm_ms,
         "maximum_absolute_waypoint_m": float(np.max(np.abs(cuda_result))),
         "checkpoint_sha256": file_sha256(checkpoint),
         "test_split_used": False,

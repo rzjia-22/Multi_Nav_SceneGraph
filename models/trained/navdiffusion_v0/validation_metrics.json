@@ -1,0 +1,9 @@
+{
+  "ADE_m": 0.09012338086259684,
+  "FDE_m": 0.16959734722820285,
+  "seed": 20260914,
+  "split": "validation",
+  "test_split_used": false,
+  "wall_time_s": 4.413895075995242,
+  "window_count": 1081
+}
