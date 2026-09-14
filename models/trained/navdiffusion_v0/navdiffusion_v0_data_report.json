@@ -1,0 +1,89 @@
+{
+  "cache": {
+    "contains_test_split": false,
+    "episode_count": 60,
+    "format_version": 1,
+    "root": "runs/cache/navdiffusion_v0",
+    "size_bytes": 1540488499
+  },
+  "dataset_index_sha256": "19327166c4dba4db575150e6864449ab87bbcd969e6f91793bcc68b295a3da0b",
+  "depth": {
+    "frame_count": 5557,
+    "invalid_fraction_after_resize": 0.3933530657029172,
+    "mean": 0.5860419118449148,
+    "sample_count": 80020800,
+    "statistics_split": "train",
+    "std": 0.37282061093321817
+  },
+  "future_padding": {
+    "fully_padded_proportion": 0.009520253873436624,
+    "mean_points_per_window": 4.936531640843755,
+    "sample_ratio": 0.2992346462572335,
+    "total_padding_points": 26445,
+    "total_target_points": 171424
+  },
+  "goal_local_m": {
+    "x": {
+      "maximum": 8.506455421447754,
+      "median": 2.418313503265381,
+      "minimum": -2.2476134300231934,
+      "p1": 0.1719788271188736,
+      "p5": 0.26388864517211913,
+      "p95": 6.452843856811523,
+      "p99": 7.799991893768309
+    },
+    "y": {
+      "maximum": 7.551388740539551,
+      "median": 0.04048692062497139,
+      "minimum": -7.517081260681152,
+      "p1": -5.5391116714477535,
+      "p5": -3.319800662994384,
+      "p95": 2.736822986602782,
+      "p99": 4.6341556167602524
+    }
+  },
+  "history_dropped_anchors": {
+    "train": 200,
+    "validation": 40
+  },
+  "preprocessing_config_sha256": "633a12f9eeae817cb5a05ca335fc07b263401dbdc6fce2604158ffce9cd29cf3",
+  "report_version": 1,
+  "status": "PASS",
+  "train_trajectory_count": 50,
+  "train_window_count": 5357,
+  "trajectory": {
+    "absolute_m": {
+      "maximum": 2.0799999237060547,
+      "median": 0.2153695672750473,
+      "minimum": 0.0,
+      "p1": 2.8724759977194483e-06,
+      "p5": 7.708272823947489e-05,
+      "p95": 1.6779896914958952,
+      "p99": 1.9807624316215475
+    },
+    "default_bound_outlier_count": 0,
+    "labels_clipped": false,
+    "maximum_absolute_m": 2.0799999237060547,
+    "selected_symmetric_bound_m": 2.5,
+    "x_m": {
+      "maximum": 2.0799999237060547,
+      "median": 0.7726768255233765,
+      "minimum": 0.0,
+      "p1": 0.016170814633369446,
+      "p5": 0.06443458050489426,
+      "p95": 1.8451974332332612,
+      "p99": 2.0168277502059917
+    },
+    "y_m": {
+      "maximum": 1.5679229497909546,
+      "median": 4.499479018704733e-06,
+      "minimum": -1.5933430194854736,
+      "p1": -0.8708691215515136,
+      "p5": -0.37378366887569425,
+      "p95": 0.4708032160997392,
+      "p99": 0.9148458623886101
+    }
+  },
+  "validation_trajectory_count": 10,
+  "validation_window_count": 1081
+}

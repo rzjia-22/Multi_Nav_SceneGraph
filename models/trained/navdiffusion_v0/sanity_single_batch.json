@@ -1,0 +1,39 @@
+{
+  "amp_mode": "bf16",
+  "batch_size": 16,
+  "effective_batch_size": 32,
+  "efficientnet_initialization": {
+    "batch_norm_layer_count": 49,
+    "depth_stem_maximum_absolute_weight": 0.0,
+    "normalization_replacement": "none",
+    "pretrained": true,
+    "rgb_stem_maximum_difference": 0.0,
+    "weights": "IMAGENET1K_V1",
+    "weights_sha256": "7f5810bc96def8f7552d5b7e68d53c4786f81167d28291b21c0d90e1fca14934",
+    "weights_url": "https://download.pytorch.org/models/efficientnet_b0_rwightman-7f5810bc.pth"
+  },
+  "goal_shape": [
+    16,
+    2
+  ],
+  "gradient_norm": 7.632834434509277,
+  "input_shape": [
+    16,
+    5,
+    4,
+    90,
+    160
+  ],
+  "loss": 1.183548092842102,
+  "parameter_counts": {
+    "total": 12675270,
+    "trainable": 12675270
+  },
+  "peak_vram_mib": 1140.27685546875,
+  "status": "PASS",
+  "trajectory_shape": [
+    16,
+    32,
+    2
+  ]
+}

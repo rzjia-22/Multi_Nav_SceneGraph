@@ -394,7 +394,9 @@ class NavDiffusionWindowDataset:
         )
         return {
             "images": torch.from_numpy(images),
-            "goal": torch.from_numpy(np.asarray(arrays["goal_normalized"][local_index], dtype=np.float32)),
+            "goal": torch.from_numpy(np.array(
+                arrays["goal_normalized"][local_index], dtype=np.float32, copy=True
+            )),
             "trajectory": torch.from_numpy(trajectory),
             "episode_id": episode_id,
             "anchor_timestamp_s": float(arrays["anchor_timestamp_s"][local_index]),
