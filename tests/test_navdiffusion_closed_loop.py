@@ -7,6 +7,12 @@ import pytest
 import yaml
 
 from mns_simulation.research_robot import episode_mount_variation, research_rig_pose
+from research_data.closed_loop_analysis import (
+    _failure_metrics,
+    _prediction_metrics,
+    _progress_metrics,
+    validation_index_entries,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -53,6 +59,54 @@ def test_d435i_closed_loop_dimensions_keep_distinct_raw_camera_models():
     assert profile["depth_raw"]["resolution"] == [848, 480]
     assert profile["depth_aligned_to_rgb"]["resolution"] == [640, 360]
     assert profile["rgb"]["fov_deg"] != profile["depth_raw"]["fov_deg"]
+
+
+def test_exhaustive_analysis_scope_comes_from_canonical_validation_index():
+    entries = validation_index_entries()
+    assert len(entries) == 10
+    assert {item["scene_id"] for item in entries} == {
+        "validation_scene_000", "validation_scene_001"
+    }
+    assert all(item["split"] == "validation" for item in entries)
+    assert all(item["validation_status"] == "PASS" for item in entries)
+
+
+def test_failure_timeline_uses_all_prediction_and_safety_events():
+    planning = [
+        {"status": "PASS", "timestamp_from_episode_start_s": 1.0,
+         "full_minimum_clearance_m": 0.2, "control_minimum_clearance_m": 0.4},
+        {"status": "PASS", "timestamp_from_episode_start_s": 2.0,
+         "full_minimum_clearance_m": -0.1, "control_minimum_clearance_m": 0.1},
+        {"status": "PASS", "timestamp_from_episode_start_s": 3.0,
+         "full_minimum_clearance_m": -0.2, "control_minimum_clearance_m": -0.1},
+    ]
+    prediction = _prediction_metrics(planning)
+    assert prediction["full_prediction_unsafe_count"] == 2
+    assert prediction["control_prediction_unsafe_count"] == 1
+    commands = np.asarray([[2.5, 0.4, 0, 0, 0, 0, 0.5, 1]], dtype=np.float64)
+    progress = {
+        "progress_degradation_start_s": 1.5,
+    }
+    failure = _failure_metrics(
+        {"success": False, "failure_reason": "collision", "first_collision_timestamp_s": 3.2},
+        commands, prediction, progress, 1.7,
+    )
+    assert failure["primary_failure_class"] == "MODEL"
+    assert failure["timeline_s"]["full_prediction_first_unsafe"] == 2.0
+    assert failure["timeline_s"]["control_prediction_first_unsafe"] == 3.0
+    assert failure["timeline_s"]["safety_first_intervention"] == 2.5
+    assert failure["collision_lead_time_s"]["from_control_prediction_unsafe"] == pytest.approx(0.2)
+
+
+def test_progress_diagnostics_detect_sustained_non_improvement():
+    state = np.zeros((6, 11), dtype=np.float64)
+    state[:, 0] = [0, 1, 2, 3, 4, 5]
+    state[:, 10] = [5.0, 4.8, 4.8, 4.81, 4.82, 4.83]
+    metrics = _progress_metrics(state)
+    assert metrics["initial_goal_distance_m"] == 5.0
+    assert metrics["minimum_goal_distance_m"] == 4.8
+    assert metrics["longest_no_progress_duration_s"] == 4.0
+    assert metrics["progress_degradation_start_s"] == 1.0
 
 
 def test_isaac_runtime_keeps_standard_ros_boundary_and_shared_forest_builder():

@@ -14,6 +14,7 @@ from typing import Any
 import numpy as np
 
 from .common import ROOT, load_yaml
+from .closed_loop_analysis import analyze_full_validation, validation_index_entries
 
 
 CONFIG = ROOT / "config/navigation/navdiffusion_v0_closed_loop.yaml"
@@ -46,6 +47,8 @@ def _validate_scope(config: dict) -> None:
         raise ValueError("full validation must contain ten unique episodes")
     if any(not scene.startswith("validation_scene_") for scene in full):
         raise ValueError("full validation contains a non-validation scene")
+    if set(episodes) != {item["episode_id"] for item in validation_index_entries()}:
+        raise ValueError("full validation must exactly match the canonical Dataset V0 validation split")
 
 
 def _compose_session(
@@ -232,18 +235,44 @@ def _group_report(group: str, run_ids: list[str], expected_episodes: list[str]) 
             )
     by_id = {item["episode_id"]: item for item in reports}
     ordered = [by_id[value] for value in expected_episodes if value in by_id]
+    index_by_id = {item["episode_id"]: item for item in validation_index_entries()}
+    for item in ordered:
+        item.setdefault("route_bucket", index_by_id[item["episode_id"]]["route_bucket"])
     failure_classes: dict[str, int] = defaultdict(int)
     for item in ordered:
         if item.get("failure_class"):
             failure_classes[str(item["failure_class"])] += 1
+
+    def summarize(values: list[dict]) -> dict:
+        return {
+            "episode_count": len(values),
+            "success_count": sum(bool(item["success"]) for item in values),
+            "failure_count": sum(not bool(item["success"]) for item in values),
+            "collision_count": sum(bool(item["collision"]) for item in values),
+            "mean_goal_error_m": float(np.mean([item["goal_error_m"] for item in values])) if values else None,
+            "mean_minimum_clearance_m": (
+                float(np.mean([item["minimum_clearance_m"] for item in values])) if values else None
+            ),
+            "mean_safety_override_fraction": (
+                float(np.mean([item["safety_override_fraction"] for item in values])) if values else None
+            ),
+        }
+
+    route_groups: dict[str, list[dict]] = defaultdict(list)
+    scene_groups: dict[str, list[dict]] = defaultdict(list)
+    for item in ordered:
+        route_groups[item["route_bucket"]].append(item)
+        scene_groups[item["scene_id"]].append(item)
     result = {
         "report_version": 1,
         "group": group,
         "expected_episodes": expected_episodes,
         "episodes": ordered,
         "episode_count": len(ordered),
+        "failure_count": sum(not item["success"] for item in ordered),
         "not_run_episodes": [value for value in expected_episodes if value not in by_id],
         "success_count": sum(item["success"] for item in ordered),
+        "success_rate": sum(item["success"] for item in ordered) / len(ordered) if ordered else None,
         "collision_count": sum(item["collision"] for item in ordered),
         "timeout_count": sum(item["failure_reason"] == "timeout" for item in ordered),
         "stall_count": sum(item["failure_reason"] == "stall" for item in ordered),
@@ -254,9 +283,20 @@ def _group_report(group: str, run_ids: list[str], expected_episodes: list[str]) 
         "inference_ms_p95": float(np.percentile(inference, 95)) if inference else None,
         "inference_ms_max": max(inference, default=None),
         "total_safety_override_count": sum(item["safety_override_count"] for item in ordered),
+        "total_safety_override_duration_s": sum(item["safety_override_duration_s"] for item in ordered),
         "failure_classes": dict(sorted(failure_classes.items())),
         "mean_safety_override_fraction": float(np.mean([item["safety_override_fraction"] for item in ordered])) if ordered else None,
         "all_pass": len(ordered) == len(expected_episodes) and all(item["success"] for item in ordered),
+        "execution_completed": len(ordered) == len(expected_episodes),
+        "total_simulated_duration_s": sum(item["simulated_duration_s"] for item in ordered),
+        "total_episode_wall_duration_s": sum(item["wall_duration_s"] for item in ordered),
+        "total_plan_count": sum(item["plan_count"] for item in ordered),
+        "route_bucket_summary": {
+            key: summarize(values) for key, values in sorted(route_groups.items())
+        },
+        "scene_summary": {
+            key: summarize(values) for key, values in sorted(scene_groups.items())
+        },
         "run_ids": run_ids,
         "test_split_used": False,
         "mapping_enabled": False,
@@ -289,6 +329,11 @@ def _run_group(group: str, episodes: list[str], *, fail_fast: bool, capture: boo
             break
     report = _group_report(group, run_ids, episodes)
     report["compose_return_codes"] = return_codes
+    report["execution_completed"] = (
+        report["episode_count"] == len(episodes)
+        and not report["not_run_episodes"]
+        and all(code == 0 for code in return_codes)
+    )
     _write_json(ARTIFACT_ROOT / group / "aggregate_report.json", report)
     return report
 
@@ -314,22 +359,24 @@ def _existing_gate(name: str, expected: list[str]) -> dict | None:
 def _readiness(gate_a: dict, gate_b: dict | None, full: dict | None, config: dict) -> str:
     if not gate_a.get("all_pass"):
         return "NOT_READY"
+    if full is not None:
+        threshold = config["readiness"]["low_speed_real_closed_loop"]
+        model_failures = sum(item.get("failure_class") == "MODEL" for item in full["episodes"])
+        if (
+            full["success_count"] >= int(threshold["minimum_success_count"])
+            and full["collision_count"] <= int(threshold["maximum_collision_count"])
+            and full["inference_ms_p95"] is not None and full["inference_ms_p95"] < 500.0
+            and full["mean_safety_override_fraction"] <= float(threshold["maximum_mean_safety_override_fraction"])
+            and model_failures == 0
+        ):
+            return "READY_FOR_LOW_SPEED_REAL_CLOSED_LOOP"
+        if full["success_count"] >= 7 and full["collision_count"] == 0:
+            return "READY_FOR_REAL_INFERENCE_ONLY"
+        if full["success_count"] < 5 or full["collision_count"] >= 3:
+            return "NOT_READY"
+        return "READY_FOR_REAL_SENSOR_ONLY"
     if gate_b is None or not gate_b.get("all_pass"):
         return "READY_FOR_REAL_SENSOR_ONLY"
-    if full is None:
-        return "READY_FOR_REAL_SENSOR_ONLY"
-    threshold = config["readiness"]["low_speed_real_closed_loop"]
-    model_failures = sum(item.get("failure_class") == "MODEL" for item in full["episodes"])
-    if (
-        full["success_count"] >= int(threshold["minimum_success_count"])
-        and full["collision_count"] <= int(threshold["maximum_collision_count"])
-        and full["inference_ms_p95"] is not None and full["inference_ms_p95"] < 500.0
-        and full["mean_safety_override_fraction"] <= float(threshold["maximum_mean_safety_override_fraction"])
-        and model_failures == 0
-    ):
-        return "READY_FOR_LOW_SPEED_REAL_CLOSED_LOOP"
-    if full["success_count"] >= 7 and full["collision_count"] == 0:
-        return "READY_FOR_REAL_INFERENCE_ONLY"
     return "READY_FOR_REAL_SENSOR_ONLY"
 
 
@@ -341,6 +388,7 @@ def _write_final_summary(gate_a: dict, gate_b: dict | None, full: dict | None, r
         "gate_b": gate_b,
         "full_validation": full,
         "readiness": readiness,
+        "validation_acceptance_pass": readiness == "READY_FOR_LOW_SPEED_REAL_CLOSED_LOOP",
         "test_split_used": False,
         "mapping_enabled": False,
     }
@@ -374,11 +422,23 @@ def _write_final_summary(gate_a: dict, gate_b: dict | None, full: dict | None, r
             "## Full validation",
             "",
             f"- Full validation: {full['success_count']}/10",
+            f"- All experiments executed: {full['execution_completed']}",
             f"- Conservative collisions: {full['collision_count']}",
+            f"- Timeout/stall: {full['timeout_count']}/{full['stall_count']}",
             f"- Mean goal error: {full['mean_goal_error_m']:.3f} m",
             f"- Mean/p95 inference: {full['inference_ms_mean']:.1f}/{full['inference_ms_p95']:.1f} ms",
             f"- Mean safety override fraction: {full['mean_safety_override_fraction']:.3f}",
         ])
+        lines.extend(
+            f"- {bucket}: {value['success_count']}/{value['episode_count']} success, "
+            f"{value['collision_count']} collision(s)."
+            for bucket, value in full["route_bucket_summary"].items()
+        )
+        lines.extend(
+            f"- `{scene}`: {value['success_count']}/{value['episode_count']} success, "
+            f"{value['collision_count']} collision(s)."
+            for scene, value in full["scene_summary"].items()
+        )
     else:
         lines.extend(["", "Full ten-mission validation was not run because Gate B failed."])
     lines.extend([
@@ -393,7 +453,9 @@ def _write_final_summary(gate_a: dict, gate_b: dict | None, full: dict | None, r
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=("run-gates", "run-validation", "validate-config"))
+    parser.add_argument(
+        "command", choices=("run-gates", "run-validation", "run-analysis", "validate-config")
+    )
     args = parser.parse_args()
     config = load_yaml(CONFIG)
     _validate_scope(config)
@@ -405,6 +467,23 @@ def main() -> int:
     gate_b_expected = config["gates"]["gate_b"]["episodes"]
     gate_a = _existing_gate("gate_a", gate_a_expected)
     gate_b = _existing_gate("gate_b", gate_b_expected)
+    if args.command == "run-analysis":
+        if gate_a is None:
+            raise RuntimeError("historical Gate A evidence is required before exhaustive analysis")
+        full_episodes = [item["episode_id"] for item in validation_index_entries()]
+        full = _run_group("full_validation", full_episodes, fail_fast=False, capture=False)
+        readiness = _readiness(gate_a, gate_b, full, config)
+        analysis = None
+        if full["execution_completed"]:
+            analysis = analyze_full_validation(full, readiness)
+            full["failure_classes"] = analysis["failure_classes"]
+            full["route_bucket_summary"] = analysis["route_bucket_summary"]
+            full["scene_summary"] = analysis["scene_summary"]
+            full["validation_acceptance_pass"] = analysis["validation_acceptance_pass"]
+            _write_json(ARTIFACT_ROOT / "full_validation/aggregate_report.json", full)
+            _write_json(ARTIFACT_ROOT / "full_validation_report.json", full)
+        _write_final_summary(gate_a, gate_b, full, readiness)
+        return 0 if full["execution_completed"] and analysis is not None else 2
     if gate_a is None or not gate_a.get("all_pass") or gate_b is None or not gate_b.get("all_pass"):
         gate_a, gate_b = run_gates(config)
     if not gate_a["all_pass"] or gate_b is None or not gate_b["all_pass"]:

@@ -640,6 +640,7 @@ def main() -> int:
             "report_version": 1,
             "episode_id": episode_id,
             "scene_id": scene["scene_id"],
+            "route_bucket": plan["target_route_length_bucket"],
             "scene_hash": scene["content_hash"],
             "plan_hash": plan["plan_hash"],
             "checkpoint_sha256": CHECKPOINT_SHA256,
