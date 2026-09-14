@@ -1,0 +1,24 @@
+{
+  "checkpoint": "models/trained/navdiffusion_v0/best.pt",
+  "checkpoint_metadata": {
+    "best_validation_ADE": 0.09012338086259684,
+    "checkpoint_version": 1,
+    "dataset_index_sha256": "19327166c4dba4db575150e6864449ab87bbcd969e6f91793bcc68b295a3da0b",
+    "dataset_version": "dataset_v0",
+    "epoch": 100,
+    "epoch_index": 99,
+    "git_commit": "95aa4209669a5cbe8f98a47eeb414c22c6e93531",
+    "model_name": "mns_navdiffusion_v0",
+    "training_seed": 42,
+    "validation_FDE": 0.16959734722820285
+  },
+  "device": "cpu",
+  "history_length": 5,
+  "load_wall_time_s": 2.9166896819951944,
+  "model_backend": "mns_v0",
+  "node": "/diffusion_navigator",
+  "output_waypoints": 8,
+  "predictor": "MNSNavDiffusionPredictor",
+  "status": "PASS",
+  "test_split_used": false
+}

@@ -55,6 +55,7 @@ services:
       <<: *ros-environment
       NVIDIA_VISIBLE_DEVICES: all
       NVIDIA_DRIVER_CAPABILITIES: compute,utility
+      TORCH_HOME: /workspace/runs/cache/torch
     deploy:
       resources:
         reservations:
@@ -69,6 +70,8 @@ services:
     command: >-
       ros2 launch mns_bringup phase1.launch.py
       navigator:=diffusion
+      diffusion_model_backend:=${MNS_DIFFUSION_BACKEND:-legacy}
+      diffusion_checkpoint:=${MNS_DIFFUSION_CHECKPOINT:-/workspace/models/navdiffusion.ckpt}
       run_id:=${MNS_RUN_ID:-diffusion}
 
   simulation:

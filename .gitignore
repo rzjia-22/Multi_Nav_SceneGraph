@@ -11,7 +11,10 @@ __pycache__/
 # Runtime artifacts and large model files
 runs/
 bags/
-/models/
+/models/*
+!/models/trained/
+!/models/trained/navdiffusion_v0/
+!/models/trained/navdiffusion_v0/**
 *.bag
 *.db3
 *.mcap
@@ -19,6 +22,7 @@ bags/
 *.pt
 *.pth
 *.onnx
+!models/trained/navdiffusion_v0/*.pt
 
 # Keep reviewed Dataset V0 evidence, but ignore transient generation output.
 research_data/work/

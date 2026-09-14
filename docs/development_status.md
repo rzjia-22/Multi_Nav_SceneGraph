@@ -1,6 +1,6 @@
 # Development status
 
-This is the sole authoritative status document. Last updated 2026-09-11.
+This is the sole authoritative status document. Last updated 2026-09-14.
 
 ## Current milestone
 
@@ -22,6 +22,27 @@ profile, and scene-level split remained frozen. Planner v2 applies one strict
 no-corner-cut transition contract to A*, LOS smoothing, and final validation.
 All 70 exact plans passed preflight, and all 70 scene-batched RTX episodes pass
 HDF5 v2, provenance, sensor, execution, and aggregate validation.
+
+The project-owned NavDiffusion V0 training milestone is also complete. A
+train/validation-only window pipeline, shared deployment preprocessor,
+ImageNet-pretrained four-channel model, plain-PyTorch trainer and selectable
+ROS backend all pass. Training early-stopped at epoch 120; the selected epoch
+100 checkpoint achieved 0.0901 m validation ADE and 0.1696 m FDE. Test remains
+sealed and no closed-loop claim is made from these open-loop metrics.
+
+## NavDiffusion V0 milestone state
+
+| Capability | State | Evidence |
+| --- | --- | --- |
+| Data windows | validated, test sealed | 50/10 train/validation episodes; 5,357/1,081 windows; 1.54 GB disposable hash-keyed cache |
+| Shared preprocessing | validated | training/runtime tensor maximum difference 0; ImageNet RGB, registered train-normalized depth, 160×90, history 5 |
+| Pretrained initialization | validated | RGB stem copy error 0; depth stem weights 0; 49 EfficientNet BatchNorm layers retained; official weights SHA recorded |
+| Single-batch gate | PASS | finite loss and gradients, optimizer update, bf16, batch 16, 1,140 MiB peak VRAM |
+| Small-overfit gate | PASS | fixed loss −98.33%; ADE 2.681→0.282 m; exact checkpoint reload |
+| Full training | complete | 120 epochs, early stopping, 4,315 s, epoch 100 selected, peak 1,262 MiB |
+| Validation | PASS, open-loop only | ADE 0.090123 m; FDE 0.169597 m; test not used |
+| Checkpoint | complete, Git LFS | format v1; 142,598,595 bytes; SHA256 `7b3bca67...a68ae0` |
+| Runtime | load/smoke PASS | CPU/CUDA predictor, 32×2 finite path, 60.7 ms warm CUDA sample; ROS `mns_v0` backend loads and exposes 8 control waypoints |
 
 ## Dataset V0 milestone state
 
@@ -64,7 +85,8 @@ HDF5 v2, provenance, sensor, execution, and aggregate validation.
 - Replaceable Coverage, Diffusion and Nav2 strategies behind the same mission,
   Twist, safety and motion-backend boundaries.
 - Original audited NavDiffusion and Go2 actor checkpoints with hash verification
-  and tensor-only loading; neither model was retrained.
+  and tensor-only loading; those original weights were not retrained. A separate
+  project-owned NavDiffusion V0 is now trained from Dataset V0.
 - A deterministic collision-enabled semantic forest with ground, trunks and
   foliage. Known-area Coverage uses the same configured tree centres for its
   obstacle-aware A* connectors.
@@ -87,7 +109,16 @@ HDF5 v2, provenance, sensor, execution, and aggregate validation.
 
 - `make build`: all 8 ROS packages built; 10 package tests passed, with zero
   errors, failures or skips.
-- `make validate`: repository validation and 23 pure Python tests passed.
+- `make validate`: repository validation and 35 pure Python tests passed.
+- NavDiffusion V0 data audit: 5,357 train and 1,081 validation windows; train-only
+  depth mean/std 0.586042/0.372821; ±2.5 m trajectory scale with zero clipped
+  labels; the disposable cache contains no test episode.
+- NavDiffusion V0 training: both sanity gates passed, then 120 epochs completed
+  in 4,315 s on the RTX 4060 Laptop with bf16, micro-batch 16 and 1,262 MiB peak
+  allocated VRAM. Epoch 100 is selected at 0.090123 m ADE / 0.169597 m FDE.
+  Final training/runtime preprocessing matched exactly; CUDA/CPU predictor and
+  ROS backend load smokes passed. Checkpoint and complete reports are under
+  `models/trained/navdiffusion_v0/`.
 - Dataset V0 scene capture: Isaac Lab regenerated the 24×24 m terrain, loaded
   the unchanged 23 Blue Berry Elder and 19 Gray Birch placements, resolved the
   Grass MDL and Kloofendal HDR, and reported zero missing assets. The updated
@@ -205,6 +236,9 @@ and Hydra saves all artifacts before both containers exit.
 - The full initial-plus-residual Go2 coverage route has not been run to natural
   exhaustion. Initial known-map obstacle avoidance and online sensor coverage
   are validated; unknown-area exploration remains deliberately out of scope.
+- NavDiffusion V0 has open-loop unseen-scene validation and ROS load evidence,
+  but has not yet run Isaac closed-loop, the held-out test split, or real
+  DIABLO/D435i navigation. Those are intentionally separate next milestones.
 
 ## Architecture decisions
 
@@ -221,12 +255,14 @@ and Hydra saves all artifacts before both containers exit.
 ## ForestNavigation migration state
 
 Migrated and reorganized: Go2 Isaac assets and actor inference, RGB-D history
-and NavDiffusion inference, pure pursuit, zigzag/connected/sensor/residual
+and legacy NavDiffusion inference, pure pursuit, zigzag/connected/sensor/residual
 coverage, A* connectors, mapped-depth safety, stall recovery, Nav2 handoff,
 kinematic UAV behavior and multi-team partitioning.
 
-Intentionally excluded: ROS 1 handoff/conversion/validation, 1000 m reliability
-and static reconstruction benchmarks, training, historical wrappers, duplicate
+The new NavDiffusion V0 trainer is project-owned and uses current PyTorch; it
+does not restore the upstream Lightning/WandB training wrapper or monolithic
+dataset. Intentionally excluded: ROS 1 handoff/conversion/validation, 1000 m
+reliability and static reconstruction benchmarks, upstream training wrappers, duplicate
 renderers/assets, backup/final scripts and conflicting environment freezes.
 Attribution, modifications and model hashes are in
 `docs/forestnavigation_migration.md` and `THIRD_PARTY_NOTICES.md`.

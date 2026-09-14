@@ -35,6 +35,12 @@ The following ideas and behavior were used as migration references:
 - kinematic UAV zigzag collection and 2 Go2 + 2 UAV field partitioning;
 - ROS 2 topic/frame naming lessons from the single- and multi-team collectors.
 
+The project-owned NavDiffusion V0 network retains architectural attribution to
+that audited revision but does not use its Lightning training wrapper. Its
+EfficientNet-B0 initialization uses torchvision 0.22.1's official
+`IMAGENET1K_V1` weights from PyTorch; the source URL and SHA256 are embedded in
+the versioned training evidence and checkpoint metadata.
+
 No ROS 1 handoff, static benchmark framework, historical experiment wrappers,
 bundled RSL-RL source, generated forest assets, or large checkpoints are
 copied into this repository.

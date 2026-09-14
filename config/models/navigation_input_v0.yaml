@@ -1,21 +1,58 @@
-config_id: navigation_input_v0_template
-status: model_agnostic_template
-raw_source: dataset_v0_hdf5
+config_id: navigation_input_v0
+version: 1
+raw_source:
+  dataset_index: datasets/dataset_v0/dataset_index.json
+  episode_schema_version: 2
+  allowed_splits: [train, validation]
+  forbidden_splits: [test]
+cache:
+  root: runs/cache/navdiffusion_v0
+  format_version: 1
+  authority: derived_disposable
 inputs:
-  rgb: {source: sensors/rgb, color_space: RGB, resize: configurable}
-  depth: {source: offline_registered_from_sensors/depth_raw_z16, units: m, clipping: sensor_profile}
-  history_frames: configurable
-  imu: {source: imu, enabled: configurable}
-targets:
-  representation: configurable_local_trajectory
-  horizon: configurable
-normalization:
-  rgb: configurable
-  depth: configurable
-training:
-  architecture: unset
-  optimizer: unset
-  hyperparameters: {}
-notes:
-  - This file defines version-controlled preprocessing responsibilities without selecting a model.
-  - Dataset V0 raw episodes are not fixed to the legacy five-frame/32-waypoint format.
+  history_frames: 5
+  sensor_rate_hz: 10
+  image_size_wh: [160, 90]
+  rgb:
+    color_space: RGB
+    interpolation: bilinear
+    scale: 255.0
+    mean: [0.485, 0.456, 0.406]
+    std: [0.229, 0.224, 0.225]
+  depth:
+    source: offline_registered_from_sensors/depth_raw_z16
+    registration_algorithm: z_buffer_reproject_depth_optical_to_rgb_optical
+    registration_version: 1
+    interpolation: nearest
+    valid_range_m: [0.2, 10.0]
+    maximum_m: 10.0
+    invalid_policy: fill_far
+    invalid_fill_m: 10.0
+    statistics_split: train
+    mean: null
+    std: null
+goal:
+  dimensions: 2
+  coordinate_frame: anchor_robot_body_planar
+  scale_m: 10.0
+target:
+  source: executed_state_interpolated
+  coordinate_frame: anchor_robot_body_planar
+  horizon_points: 32
+  step_s: 0.1
+  tail_policy: repeat_final_executed_pose
+  normalization:
+    default_symmetric_bound_m: 2.5
+    margin_fraction: 0.05
+    increment_m: 0.5
+    clip_labels: false
+augmentation:
+  enabled: false
+  horizontal_flip: false
+  color_jitter: false
+  random_crop: false
+  rgb_noise: false
+  depth_noise: false
+  blur: false
+  gamma: false
+  synthetic_depth_holes: false

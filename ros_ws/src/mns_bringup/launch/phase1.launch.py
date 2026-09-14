@@ -13,6 +13,8 @@ def generate_launch_description():
         DeclareLaunchArgument("enable_mapping", default_value="true"),
         DeclareLaunchArgument("run_id", default_value="current"),
         DeclareLaunchArgument("scene_config", default_value="/workspace/config/simulation/forest.yaml"),
+        DeclareLaunchArgument("diffusion_model_backend", default_value="legacy"),
+        DeclareLaunchArgument("diffusion_checkpoint", default_value="/workspace/models/navdiffusion.ckpt"),
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
                 PathJoinSubstitution([FindPackageShare("mns_bringup"), "launch", "system.launch.py"])
@@ -24,6 +26,8 @@ def generate_launch_description():
                 "enable_mapping": LaunchConfiguration("enable_mapping"),
                 "run_id": LaunchConfiguration("run_id"),
                 "scene_config": LaunchConfiguration("scene_config"),
+                "diffusion_model_backend": LaunchConfiguration("diffusion_model_backend"),
+                "diffusion_checkpoint": LaunchConfiguration("diffusion_checkpoint"),
             }.items(),
         ),
     ])

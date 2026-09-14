@@ -1,0 +1,15 @@
+{
+  "amp_mode": "bf16",
+  "batch_size": 16,
+  "checkpoint_reload_maximum_difference": 0.0,
+  "episode_id": "train_scene_000_episode_000",
+  "final_ADE_m": 0.2823594808578491,
+  "final_fixed_noise_loss": 0.017537681385874748,
+  "initial_ADE_m": 2.6807639598846436,
+  "initial_fixed_noise_loss": 1.0519033670425415,
+  "loss_reduction_fraction": 0.9833276687428214,
+  "status": "PASS",
+  "steps": 200,
+  "wall_time_s": 15.638349129003473,
+  "window_count": 32
+}

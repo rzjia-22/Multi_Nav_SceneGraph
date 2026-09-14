@@ -69,7 +69,13 @@ def _hydra_node(robot, names: RobotNames, hydra_config: str, label_space: str, l
 
 
 def _navigation_nodes(
-    robot, names: RobotNames, navigator: str, mission: dict, obstacles_json: str
+    robot,
+    names: RobotNames,
+    navigator: str,
+    mission: dict,
+    obstacles_json: str,
+    diffusion_model_backend: str,
+    diffusion_checkpoint: str,
 ) -> list:
     common = {"robot_id": robot.robot_id, "frame_id": names.odom_frame, "use_sim_time": True}
     if navigator == "coverage":
@@ -93,7 +99,10 @@ def _navigation_nodes(
             executable="diffusion_navigator",
             namespace=robot.robot_id,
             output="screen",
-            parameters=[common, {"checkpoint": "/workspace/models/navdiffusion.ckpt"}],
+            parameters=[common, {
+                "model_backend": diffusion_model_backend,
+                "checkpoint": diffusion_checkpoint,
+            }],
         )]
     if navigator == "nav2":
         substitutions = {
@@ -189,6 +198,8 @@ def _launch(context):
     hydra_config = LaunchConfiguration("hydra_config").perform(context)
     label_space = LaunchConfiguration("label_space").perform(context)
     scene_config = LaunchConfiguration("scene_config").perform(context)
+    diffusion_model_backend = LaunchConfiguration("diffusion_model_backend").perform(context)
+    diffusion_checkpoint = LaunchConfiguration("diffusion_checkpoint").perform(context)
     with Path(scene_config).open("r", encoding="utf-8") as stream:
         scene_spec = yaml.safe_load(stream)
     obstacles_json = json.dumps([
@@ -220,7 +231,15 @@ def _launch(context):
                     "use_sim_time": False,
                 }],
             ))
-        actions.extend(_navigation_nodes(robot, names, navigator, mission, obstacles_json))
+        actions.extend(_navigation_nodes(
+            robot,
+            names,
+            navigator,
+            mission,
+            obstacles_json,
+            diffusion_model_backend,
+            diffusion_checkpoint,
+        ))
         # The current UAV sensor is nadir-facing mapping RGB-D, not a forward
         # collision sensor.  Feeding it to the planar depth safety controller
         # makes tree canopies look like frontal obstacles and traps the UAV in
@@ -266,6 +285,8 @@ def generate_launch_description():
         DeclareLaunchArgument("hydra_config", default_value="/workspace/config/hydra/isaac_input.yaml"),
         DeclareLaunchArgument("label_space", default_value="/workspace/config/hydra/isaac_forest_label_space.yaml"),
         DeclareLaunchArgument("scene_config", default_value="/workspace/config/simulation/forest.yaml"),
+        DeclareLaunchArgument("diffusion_model_backend", default_value="legacy"),
+        DeclareLaunchArgument("diffusion_checkpoint", default_value="/workspace/models/navdiffusion.ckpt"),
         DeclareLaunchArgument("run_root", default_value="/workspace/runs"),
         DeclareLaunchArgument("run_id", default_value="current"),
         OpaqueFunction(function=_launch),

@@ -8,7 +8,7 @@ The project has three images with one frozen dependency direction:
    ROS 2 Jazzy, Nav2, project nodes and the complete pinned Hydra workspace.
 2. `multi-nav-scenegraph/robotics-ml:jazzy-torch-2.7.1` — optional child of
    the robotics image containing fixed PyTorch/NavDiffusion dependencies and
-   explicit NVIDIA compute/utility passthrough for real GPU inference.
+   explicit NVIDIA compute/utility passthrough for real GPU training and inference.
 3. `multi-nav-scenegraph/simulation:isaac-lab-2.3.1` — official NGC Isaac Lab
    2.3.1 image with Isaac Sim 5.1.0.
 
@@ -62,6 +62,25 @@ and revision, checks fixed SHA-256 digests and creates stable symlinks:
 The full `models/` directory is ignored. The ML Docker build additionally
 verifies the source checkout revision and selected-source cleanliness before
 copying it. PyTorch loaders use `weights_only=True` and strict tensor shapes.
+
+The project-owned NavDiffusion V0 does not depend on the upstream Lightning
+wrapper. Its raw authority remains Dataset V0, while deterministic resized and
+registered tensors live only in ignored `runs/cache/navdiffusion_v0`. Build the
+cache, run both sanity gates, train, and verify the deployable checkpoint with:
+
+```bash
+make navdiffusion-v0-data
+make navdiffusion-v0-single-batch
+make navdiffusion-v0-overfit
+make navdiffusion-v0-train
+make navdiffusion-v0-smoke
+make navdiffusion-v0-ros-smoke
+```
+
+`best.pt` is versioned with Git LFS under
+`models/trained/navdiffusion_v0/`; `last.pt`, pretrained download caches and
+derived tensors stay below ignored `runs/`. The trainer loads only train and
+validation entries and rejects test explicitly.
 
 ## Host GPU checks
 

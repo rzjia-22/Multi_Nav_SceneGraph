@@ -1,0 +1,97 @@
+source:
+  config_id: navigation_input_v0
+  version: 1
+  raw_source:
+    dataset_index: datasets/dataset_v0/dataset_index.json
+    episode_schema_version: 2
+    allowed_splits:
+    - train
+    - validation
+    forbidden_splits:
+    - test
+  cache:
+    root: runs/cache/navdiffusion_v0
+    format_version: 1
+    authority: derived_disposable
+  inputs:
+    history_frames: 5
+    sensor_rate_hz: 10
+    image_size_wh:
+    - 160
+    - 90
+    rgb:
+      color_space: RGB
+      interpolation: bilinear
+      scale: 255.0
+      mean:
+      - 0.485
+      - 0.456
+      - 0.406
+      std:
+      - 0.229
+      - 0.224
+      - 0.225
+    depth:
+      source: offline_registered_from_sensors/depth_raw_z16
+      registration_algorithm: z_buffer_reproject_depth_optical_to_rgb_optical
+      registration_version: 1
+      interpolation: nearest
+      valid_range_m:
+      - 0.2
+      - 10.0
+      maximum_m: 10.0
+      invalid_policy: fill_far
+      invalid_fill_m: 10.0
+      statistics_split: train
+      mean: null
+      std: null
+  goal:
+    dimensions: 2
+    coordinate_frame: anchor_robot_body_planar
+    scale_m: 10.0
+  target:
+    source: executed_state_interpolated
+    coordinate_frame: anchor_robot_body_planar
+    horizon_points: 32
+    step_s: 0.1
+    tail_policy: repeat_final_executed_pose
+    normalization:
+      default_symmetric_bound_m: 2.5
+      margin_fraction: 0.05
+      increment_m: 0.5
+      clip_labels: false
+  augmentation:
+    enabled: false
+    horizontal_flip: false
+    color_jitter: false
+    random_crop: false
+    rgb_noise: false
+    depth_noise: false
+    blur: false
+    gamma: false
+    synthetic_depth_holes: false
+resolved:
+  width: 160
+  height: 90
+  history_length: 5
+  rgb_mean:
+  - 0.485
+  - 0.456
+  - 0.406
+  rgb_std:
+  - 0.229
+  - 0.224
+  - 0.225
+  depth_max_m: 10.0
+  depth_invalid_fill_m: 10.0
+  depth_mean: 0.5860419118449148
+  depth_std: 0.37282061093321817
+  goal_scale_m: 10.0
+  trajectory_bound_m: 2.5
+  depth_invalid_policy: fill_far
+  rgb_interpolation: bilinear
+  depth_interpolation: nearest
+dataset_index_sha256: 19327166c4dba4db575150e6864449ab87bbcd969e6f91793bcc68b295a3da0b
+preprocessing_config_sha256: 633a12f9eeae817cb5a05ca335fc07b263401dbdc6fce2604158ffce9cd29cf3
+statistics_split: train
+test_split_used: false

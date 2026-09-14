@@ -10,7 +10,7 @@ Responsibilities were moved into stable packages instead of copying the old
 | Upstream responsibility | New home | Material change |
 | --- | --- | --- |
 | Go2 Isaac asset and velocity actor | `mns_simulation.isaac_runtime`, `go2_policy` | shared Isaac world; strict safe loader; 48-value observation to 12 joint offsets; Twist boundary |
-| RGB-D history and goal-conditioned diffusion | `mns_navigation.diffusion`, `diffusion_node` | original `navdiffusion` model package retained in optional image; ROS adapter publishes path then follows it |
+| RGB-D history and goal-conditioned diffusion | `mns_navigation.diffusion`, `diffusion_node`, `navdiffusion_v0` | legacy package retained for checkpoint compatibility; project-owned current-PyTorch model/trainer shares preprocessing with the selectable ROS predictor |
 | Pure Pursuit | `mns_navigation.path_follower` | ROS-independent implementation shared by route-producing navigators |
 | Zigzag coverage | `mns_navigation.coverage` | immutable `CoveragePath` and stable route API |
 | Connected Coverage and A* connector | `mns_navigation.coverage` | obstacle-inflated reachable component; no Isaac imports or hard-coded scene path |
@@ -56,6 +56,13 @@ produces eight 2-D waypoints. The Go2 adapter reconstructs the actor-only MLP
 from tensor keys, validates the `48 → 512 → 256 → 128 → 12` layout and never
 loads arbitrary checkpoint Python objects. No retraining or conversion occurs.
 
+The statement above applies to the two original upstream checkpoints. The
+separate project-owned `mns_navdiffusion_v0` model was trained from the frozen
+Dataset V0 using torchvision ImageNet weights and plain PyTorch 2.7.1. It does
+not modify the pinned upstream checkout, restore Lightning 1.8/WandB, or copy
+the upstream monolithic HDF5 workflow. Its architecture attribution and exact
+training evidence are documented in `docs/navdiffusion_v0.md`.
+
 The runtime additionally asserts the upstream joint ordering and default pose.
 A 60-second probe against the original Gym environment and the project's ROS
 motion gate both pass the same low-speed stand/forward/moving-turn/stop profile.
@@ -69,7 +76,7 @@ was introduced.
 
 The following are intentionally absent: ROS 1 handoff and bag conversion, ROS
 1 validation, 1000 m reliability runs, static reconstruction benchmarks,
-training entry points, bundled RSL-RL source, duplicate generated forest
+upstream training entry points, bundled RSL-RL source, duplicate generated forest
 assets, renderer/review tools, backup/final scripts, legacy experiment wrappers
 and conflicting environment freeze files.
 

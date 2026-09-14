@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: lint test validate build robotics-image robotics-ml-image simulation-image gpu-preflight isaac-compatibility isaac-minimal model-source models test-models probe-go2-upstream phase1 phase1-diffusion uav-mapping phase2 phase1-synthetic phase1-synthetic-diffusion phase2-synthetic accept-isaac-sensors accept-go2-motion accept-phase1 accept-uav accept-phase2 inspect-hydra dataset-v0-calibrate-terrain dataset-v0-scene-preview dataset-v0-view-scene dataset-v0-capture-scene-review dataset-v0-regenerate-pilot dataset-v0-batch-gate dataset-v0-plan-preflight dataset-v0-collect dataset-v0-validate
+.PHONY: lint test validate build robotics-image robotics-ml-image simulation-image gpu-preflight isaac-compatibility isaac-minimal model-source models test-models navdiffusion-v0-data navdiffusion-v0-single-batch navdiffusion-v0-overfit navdiffusion-v0-train navdiffusion-v0-smoke navdiffusion-v0-ros-smoke probe-go2-upstream phase1 phase1-diffusion uav-mapping phase2 phase1-synthetic phase1-synthetic-diffusion phase2-synthetic accept-isaac-sensors accept-go2-motion accept-phase1 accept-uav accept-phase2 inspect-hydra dataset-v0-calibrate-terrain dataset-v0-scene-preview dataset-v0-view-scene dataset-v0-capture-scene-review dataset-v0-regenerate-pilot dataset-v0-batch-gate dataset-v0-plan-preflight dataset-v0-collect dataset-v0-validate
 
 lint:
 	python3 -m compileall -q ros_ws/src research_data tools tests
@@ -42,6 +42,24 @@ models:
 
 test-models: model-source
 	docker compose --profile ml run --rm robotics-ml-dev python3 /workspace/tools/smoke_diffusion.py
+
+navdiffusion-v0-data:
+	docker compose --profile ml run --rm robotics-ml-dev bash -lc 'export PYTHONPATH=/workspace:/workspace/ros_ws/src/mns_navigation; python3 -m mns_navigation.navdiffusion_v0.training prepare-data'
+
+navdiffusion-v0-single-batch:
+	docker compose --profile ml run --rm robotics-ml-dev bash -lc 'export PYTHONPATH=/workspace:/workspace/ros_ws/src/mns_navigation; python3 -m mns_navigation.navdiffusion_v0.training single-batch'
+
+navdiffusion-v0-overfit:
+	docker compose --profile ml run --rm robotics-ml-dev bash -lc 'export PYTHONPATH=/workspace:/workspace/ros_ws/src/mns_navigation; python3 -m mns_navigation.navdiffusion_v0.training overfit'
+
+navdiffusion-v0-train:
+	docker compose --profile ml run --rm robotics-ml-dev bash -lc 'export PYTHONPATH=/workspace:/workspace/ros_ws/src/mns_navigation; python3 -m mns_navigation.navdiffusion_v0.training train'
+
+navdiffusion-v0-smoke:
+	docker compose --profile ml run --rm robotics-ml-dev bash -lc 'export PYTHONPATH=/workspace:/workspace/ros_ws/src/mns_navigation; python3 -m mns_navigation.navdiffusion_v0.training inference-smoke'
+
+navdiffusion-v0-ros-smoke:
+	docker compose --profile ml run --rm robotics-ml-dev bash -lc 'source /opt/ros/jazzy/setup.bash && source /workspace/ros_ws/install/setup.bash && export PYTHONPATH=/workspace:/workspace/ros_ws/src/mns_navigation:$${PYTHONPATH}; python3 /workspace/tools/smoke_navdiffusion_v0_ros.py'
 
 probe-go2-upstream: models
 	docker compose --profile simulation run --rm --entrypoint /workspace/isaaclab/isaaclab.sh simulation \

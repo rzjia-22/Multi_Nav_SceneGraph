@@ -1,0 +1,18 @@
+{
+  "checkpoint_sha256": "7b3bca67af26c2d839555e9b27a7a420762b572fa88664a227986174d9a68ae0",
+  "cpu_cold_inference_ms": 257.2323689964833,
+  "cpu_finite": true,
+  "cpu_warm_inference_ms": 127.49524200626183,
+  "cuda_cold_inference_ms": 380.27370399504434,
+  "cuda_finite": true,
+  "cuda_warm_inference_ms": 60.74266500945669,
+  "episode_id": "validation_scene_000_episode_000",
+  "maximum_absolute_waypoint_m": 2.018486499786377,
+  "shape": [
+    32,
+    2
+  ],
+  "status": "PASS",
+  "test_split_used": false,
+  "training_runtime_preprocessing_maximum_difference": 0.0
+}
