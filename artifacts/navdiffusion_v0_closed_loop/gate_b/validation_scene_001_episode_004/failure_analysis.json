@@ -1,0 +1,45 @@
+{
+  "collision_timestamp_s": 9.739999999999998,
+  "collision_tree_id": "tree_021",
+  "episode_id": "validation_scene_001_episode_004",
+  "failure_class": "MODEL",
+  "failure_reason": "collision",
+  "final_prediction_cycles": [
+    {
+      "control_minimum_clearance_m": 0.6582513457214447,
+      "full_minimum_clearance_m": -0.4093285968920493,
+      "goal_distance_m": 4.5662579109249775,
+      "goal_progress_dot": 8.706053733825684,
+      "maximum_consecutive_jump_m": 0.0776306539773941,
+      "timestamp_s": 7.969999999999999
+    },
+    {
+      "control_minimum_clearance_m": 0.33971238430314715,
+      "full_minimum_clearance_m": -0.5741098659454162,
+      "goal_distance_m": 4.305283946557625,
+      "goal_progress_dot": 7.882379055023193,
+      "maximum_consecutive_jump_m": 0.0758054181933403,
+      "timestamp_s": 8.469999999999999
+    },
+    {
+      "control_minimum_clearance_m": 0.03243765161989304,
+      "full_minimum_clearance_m": -0.5276123733717119,
+      "goal_distance_m": 4.064022690850761,
+      "goal_progress_dot": 7.253129005432129,
+      "maximum_consecutive_jump_m": 0.07494240254163742,
+      "timestamp_s": 8.969999999999999
+    },
+    {
+      "control_minimum_clearance_m": -0.2688900187764155,
+      "full_minimum_clearance_m": -0.5054190580955582,
+      "goal_distance_m": 3.805233396657934,
+      "goal_progress_dot": 6.798351287841797,
+      "maximum_consecutive_jump_m": 0.07765110582113266,
+      "timestamp_s": 9.469999999999999
+    }
+  ],
+  "first_control_prediction_collision_s": 9.469999999999999,
+  "first_full_prediction_collision_s": 6.969999999999999,
+  "first_safety_override_s": 9.66,
+  "minimum_executed_clearance_m": -0.0037378224179984154
+}

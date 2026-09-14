@@ -14,10 +14,10 @@
   },
   "device": "cpu",
   "history_length": 5,
-  "load_wall_time_s": 2.9166896819951944,
+  "load_wall_time_s": 2.2520018459908897,
   "model_backend": "mns_v0",
   "node": "/diffusion_navigator",
-  "output_waypoints": 8,
+  "output_waypoints": 32,
   "predictor": "MNSNavDiffusionPredictor",
   "status": "PASS",
   "test_split_used": false

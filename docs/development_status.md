@@ -28,7 +28,12 @@ train/validation-only window pipeline, shared deployment preprocessor,
 ImageNet-pretrained four-channel model, plain-PyTorch trainer and selectable
 ROS backend all pass. Training early-stopped at epoch 120; the selected epoch
 100 checkpoint achieved 0.0901 m validation ADE and 0.1696 m FDE. Test remains
-sealed and no closed-loop claim is made from these open-loop metrics.
+sealed. Its first matching-domain Isaac deployment gate remains partial: Gate A
+and one short Gate B mission reached goal without collision, but the long Gate
+B mission collided with a conservative tree proxy. The subsequent exhaustive
+analysis executed all 10 validation missions without experiment-level
+fail-fast: 4 reached goal and 6 collided, with no timeout or stall. Current
+readiness is `NOT_READY`.
 
 ## NavDiffusion V0 milestone state
 
@@ -42,7 +47,8 @@ sealed and no closed-loop claim is made from these open-loop metrics.
 | Full training | complete | 120 epochs, early stopping, 4,315 s, epoch 100 selected, peak 1,262 MiB |
 | Validation | PASS, open-loop only | ADE 0.090123 m; FDE 0.169597 m; test not used |
 | Checkpoint | complete, Git LFS | format v1; 142,598,595 bytes; SHA256 `7b3bca67...a68ae0` |
-| Runtime | load/smoke PASS | CPU/CUDA predictor, 32×2 finite path, 60.7 ms warm CUDA sample; ROS `mns_v0` backend loads and exposes 8 control waypoints |
+| Runtime | load/smoke PASS | CPU/CUDA predictor, 32×2 finite path; ROS retains all 32 diagnostic points from the same sample and controls on the first 8 |
+| Isaac closed loop | exhaustive validation complete; deployment acceptance FAIL | Gate A 1/1; Gate B 1/3 fail-fast; independent full validation 4/10 with 6 collisions, 0 timeout/stall; test sealed, Hydra off, readiness `NOT_READY` |
 
 ## Dataset V0 milestone state
 
@@ -109,7 +115,16 @@ sealed and no closed-loop claim is made from these open-loop metrics.
 
 - `make build`: all 8 ROS packages built; 10 package tests passed, with zero
   errors, failures or skips.
-- `make validate`: repository validation and 35 pure Python tests passed.
+- `make validate`: repository validation and 42 pure Python tests passed.
+- NavDiffusion V0 matching-domain closed loop uses the accepted Research
+  Forest, actual terrain query, DIABLO standing surrogate and dual D435i camera
+  model through standard ROS 2 boundaries; Hydra is disabled. Gate A passed
+  with 0.348 m goal error and no collision. Gate B stopped after one short
+  success and one repeatable long-task collision at `tree_021`. The 32-point
+  prediction became conservatively unsafe at 6.97 s and its first eight points
+  at 9.47 s, before impact at 9.74 s. Safety was selected for only 0.10 s, so
+  the failure is classified MODEL. Test remains untouched and the 10-mission
+  full validation did not run.
 - NavDiffusion V0 data audit: 5,357 train and 1,081 validation windows; train-only
   depth mean/std 0.586042/0.372821; ±2.5 m trajectory scale with zero clipped
   labels; the disposable cache contains no test episode.
@@ -236,9 +251,14 @@ and Hydra saves all artifacts before both containers exit.
 - The full initial-plus-residual Go2 coverage route has not been run to natural
   exhaustion. Initial known-map obstacle avoidance and online sensor coverage
   are validated; unknown-area exploration remains deliberately out of scope.
-- NavDiffusion V0 has open-loop unseen-scene validation and ROS load evidence,
-  but has not yet run Isaac closed-loop, the held-out test split, or real
-  DIABLO/D435i navigation. Those are intentionally separate next milestones.
+- NavDiffusion V0 matching-domain exhaustive validation completed 10/10
+  experiments but reached only 4 goals and recorded 6 conservative collisions.
+  Failures were concentrated in `validation_scene_001` (4/5), and every failed
+  episode contained unsafe first-eight control predictions; successful
+  episodes contained none. Safety intervened in four failed episodes but did
+  not avert collision. This is descriptive evidence, not a causal diagnosis.
+  Current readiness is `NOT_READY`; inference-only and real DIABLO motion
+  remain blocked. The held-out test split remains sealed and Hydra was not run.
 
 ## Architecture decisions
 

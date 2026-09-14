@@ -6,7 +6,25 @@ from collections import deque
 from dataclasses import dataclass
 import math
 
+import numpy as np
+
 from .path_follower import MotionCommand
+
+
+def depth_sector_distances(depth_m: np.ndarray) -> tuple[float, float, float]:
+    """Return robust left/centre/right ranges while ignoring registration holes."""
+    depth = np.asarray(depth_m, dtype=np.float32)
+    if depth.ndim != 2:
+        raise ValueError("registered depth must be a 2-D image")
+    height = depth.shape[0]
+    band = depth[height // 3 : 2 * height // 3]
+    distances = []
+    for section in np.array_split(band, 3, axis=1):
+        valid = np.isfinite(section) & (section > 0.0)
+        distances.append(
+            float(np.percentile(section[valid], 10)) if np.any(valid) else float("inf")
+        )
+    return tuple(distances)
 
 
 @dataclass(frozen=True)
@@ -30,6 +48,10 @@ class DepthSafetyController:
         self.release_distance = release_distance
         self.reverse_speed = abs(reverse_speed)
         self.turn_speed = abs(turn_speed)
+        self._active = False
+        self._turn_sign = 1.0
+
+    def reset(self) -> None:
         self._active = False
         self._turn_sign = 1.0
 

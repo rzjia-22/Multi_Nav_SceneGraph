@@ -8,7 +8,7 @@ import yaml
 from mns_navigation.coverage import Point2D, ProgressTracker, plan_connected_coverage, plan_zigzag
 from mns_navigation.diffusion import DiffusionPlanner, RGBDHistory
 from mns_navigation.path_follower import PurePursuitFollower
-from mns_navigation.safety import DepthSafetyController, StallRecovery
+from mns_navigation.safety import DepthSafetyController, StallRecovery, depth_sector_distances
 from mns_navigation.sensor_coverage import SensorCoverageGrid, plan_residual_coverage
 
 
@@ -60,6 +60,19 @@ def test_diffusion_is_trajectory_only_and_transforms_local_output():
     points = planner.trajectory(Point2D(3, 4), math.pi / 2, Point2D(3, 8))
     assert points[0].x == pytest.approx(3.0)
     assert points[0].y == pytest.approx(5.0)
+    np.testing.assert_allclose(planner.last_local_trajectory, [[1.0, 0.0], [2.0, 0.0]])
+    planner.reset()
+    assert not history.ready
+    assert planner.last_local_trajectory.shape == (0, 2)
+
+
+def test_registered_depth_safety_ignores_zero_registration_holes():
+    depth = np.full((9, 12), 2.0, dtype=np.float32)
+    depth[3:6, ::2] = 0.0
+    left, centre, right = depth_sector_distances(depth)
+    assert left == pytest.approx(2.0)
+    assert centre == pytest.approx(2.0)
+    assert right == pytest.approx(2.0)
 
 
 def test_safety_hysteresis_and_stall_recovery():

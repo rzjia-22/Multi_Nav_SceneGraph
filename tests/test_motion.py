@@ -13,8 +13,15 @@ def test_priority_timeout_and_bounds():
     assert arbiter.select(2.0) == ("deadman", Command.zero())
 
 
+def test_arbiter_reset_forgets_previous_episode_commands():
+    arbiter = CommandArbiter()
+    arbiter.update("navigation", Command(0.5, 0.0, 0.2), 1.0)
+    assert arbiter.select(1.1)[0] == "navigation"
+    arbiter.reset()
+    assert arbiter.select(1.1) == ("deadman", Command.zero())
+
+
 def test_go2_gait_adapter():
     command = adapt_go2_command(Command(0.01, 0.0, 1.0), minimum_gait_speed=0.1, minimum_turn_radius=0.5)
     assert command.x == pytest.approx(0.1)
     assert command.yaw == pytest.approx(0.2)
-

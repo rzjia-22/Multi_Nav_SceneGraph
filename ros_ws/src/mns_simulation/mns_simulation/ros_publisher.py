@@ -236,3 +236,153 @@ class StandardRobotPublisher:
         info.p = [fx, 0.0, cx, 0.0, 0.0, fy, cy, 0.0, 0.0, 0.0, 1.0, 0.0]
         self.info_pub.publish(info)
         self.depth_info_pub.publish(info)
+
+
+class ResearchRobotPublisher:
+    """ROS contract for the terrain-following DIABLO/D435i research runtime."""
+
+    def __init__(self, node, robot_id: str, rgb_intrinsics: np.ndarray, resolution_wh) -> None:
+        from geometry_msgs.msg import TransformStamped
+        from nav_msgs.msg import Odometry
+        from rclpy.qos import DurabilityPolicy, QoSProfile, ReliabilityPolicy
+        from rosgraph_msgs.msg import Clock
+        from sensor_msgs.msg import CameraInfo, Image
+        from tf2_ros import TransformBroadcaster
+
+        self.robot_id = robot_id
+        self.rgb_intrinsics = np.asarray(rgb_intrinsics, dtype=np.float64)
+        self.width, self.height = (int(value) for value in resolution_wh)
+        self.Image, self.CameraInfo = Image, CameraInfo
+        self.Odometry, self.TransformStamped, self.Clock = Odometry, TransformStamped, Clock
+        image_qos = QoSProfile(
+            depth=10,
+            reliability=ReliabilityPolicy.RELIABLE,
+            durability=DurabilityPolicy.VOLATILE,
+        )
+        self.color_pub = node.create_publisher(Image, "camera/color/image_raw", image_qos)
+        self.depth_pub = node.create_publisher(Image, "camera/depth/image_rect", image_qos)
+        self.color_info_pub = node.create_publisher(
+            CameraInfo, "camera/color/camera_info", image_qos
+        )
+        self.depth_info_pub = node.create_publisher(
+            CameraInfo, "camera/depth/camera_info", image_qos
+        )
+        self.odom_pub = node.create_publisher(Odometry, "odom", 20)
+        self.clock_pub = node.create_publisher(Clock, "/clock", 100)
+        self.tf = TransformBroadcaster(node)
+
+    @property
+    def odom_frame(self) -> str:
+        return f"{self.robot_id}/odom"
+
+    @property
+    def base_frame(self) -> str:
+        return f"{self.robot_id}/base_link"
+
+    @property
+    def optical_frame(self) -> str:
+        return f"{self.robot_id}/camera_optical_frame"
+
+    def publish_clock(self, sim_time: float) -> None:
+        message = self.Clock()
+        message.clock = time_message(sim_time)
+        self.clock_pub.publish(message)
+
+    def publish_pose(
+        self,
+        sim_time: float,
+        position_xyz,
+        body_xyzw,
+        linear_velocity_body,
+        angular_velocity_body,
+        body_to_optical_translation,
+        body_to_optical_xyzw,
+    ) -> None:
+        stamp = time_message(sim_time)
+        odom = self.Odometry()
+        odom.header.stamp = stamp
+        odom.header.frame_id = self.odom_frame
+        odom.child_frame_id = self.base_frame
+        odom.pose.pose.position.x, odom.pose.pose.position.y, odom.pose.pose.position.z = (
+            float(value) for value in position_xyz
+        )
+        (
+            odom.pose.pose.orientation.x,
+            odom.pose.pose.orientation.y,
+            odom.pose.pose.orientation.z,
+            odom.pose.pose.orientation.w,
+        ) = (float(value) for value in body_xyzw)
+        (
+            odom.twist.twist.linear.x,
+            odom.twist.twist.linear.y,
+            odom.twist.twist.linear.z,
+        ) = (float(value) for value in linear_velocity_body)
+        (
+            odom.twist.twist.angular.x,
+            odom.twist.twist.angular.y,
+            odom.twist.twist.angular.z,
+        ) = (float(value) for value in angular_velocity_body)
+        self.odom_pub.publish(odom)
+
+        base = self.TransformStamped()
+        base.header = odom.header
+        base.child_frame_id = self.base_frame
+        base.transform.translation.x = odom.pose.pose.position.x
+        base.transform.translation.y = odom.pose.pose.position.y
+        base.transform.translation.z = odom.pose.pose.position.z
+        base.transform.rotation = odom.pose.pose.orientation
+        camera = self.TransformStamped()
+        camera.header.stamp = stamp
+        camera.header.frame_id = self.base_frame
+        camera.child_frame_id = self.optical_frame
+        (
+            camera.transform.translation.x,
+            camera.transform.translation.y,
+            camera.transform.translation.z,
+        ) = (float(value) for value in body_to_optical_translation)
+        (
+            camera.transform.rotation.x,
+            camera.transform.rotation.y,
+            camera.transform.rotation.z,
+            camera.transform.rotation.w,
+        ) = (float(value) for value in body_to_optical_xyzw)
+        self.tf.sendTransform([base, camera])
+
+    def _camera_info(self, stamp):
+        info = self.CameraInfo()
+        info.header.stamp = stamp
+        info.header.frame_id = self.optical_frame
+        info.width, info.height = self.width, self.height
+        fx, fy = float(self.rgb_intrinsics[0, 0]), float(self.rgb_intrinsics[1, 1])
+        cx, cy = float(self.rgb_intrinsics[0, 2]), float(self.rgb_intrinsics[1, 2])
+        info.distortion_model = "plumb_bob"
+        info.d = [0.0] * 5
+        info.k = [fx, 0.0, cx, 0.0, fy, cy, 0.0, 0.0, 1.0]
+        info.r = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
+        info.p = [fx, 0.0, cx, 0.0, 0.0, fy, cy, 0.0, 0.0, 0.0, 1.0, 0.0]
+        return info
+
+    def publish_images(self, sim_time: float, rgb: np.ndarray, registered_depth_m: np.ndarray) -> None:
+        rgb = np.ascontiguousarray(np.asarray(rgb)[..., :3].astype(np.uint8))
+        depth = np.ascontiguousarray(np.asarray(registered_depth_m).astype(np.float32))
+        if rgb.shape != (self.height, self.width, 3):
+            raise ValueError(f"Research RGB shape mismatch: {rgb.shape}")
+        if depth.shape != (self.height, self.width):
+            raise ValueError(f"Research registered depth shape mismatch: {depth.shape}")
+        stamp = time_message(sim_time)
+        for publisher, array, encoding, step in (
+            (self.color_pub, rgb, "rgb8", self.width * 3),
+            (self.depth_pub, depth, "32FC1", self.width * 4),
+        ):
+            message = self.Image()
+            message.header.stamp = stamp
+            message.header.frame_id = self.optical_frame
+            message.height, message.width = self.height, self.width
+            message.encoding = encoding
+            message.is_bigendian = False
+            message.step = step
+            message.data = array.tobytes()
+            publisher.publish(message)
+        info = self._camera_info(stamp)
+        self.color_info_pub.publish(info)
+        self.depth_info_pub.publish(info)

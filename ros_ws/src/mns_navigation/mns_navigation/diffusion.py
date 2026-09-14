@@ -45,6 +45,10 @@ class RGBDHistory:
     def ready(self) -> bool:
         return len(self._rgb) == self.length
 
+    def clear(self) -> None:
+        self._rgb.clear()
+        self._depth.clear()
+
     def __len__(self) -> int:
         return len(self._rgb)
 
@@ -149,6 +153,13 @@ class DiffusionPlanner:
     def __init__(self, predictor: Callable[[np.ndarray, np.ndarray, np.ndarray], np.ndarray], history: RGBDHistory) -> None:
         self.predictor = predictor
         self.history = history
+        self.last_local_trajectory = np.empty((0, 2), dtype=np.float32)
+        self.last_goal_local = np.empty((0,), dtype=np.float32)
+
+    def reset(self) -> None:
+        self.history.clear()
+        self.last_local_trajectory = np.empty((0, 2), dtype=np.float32)
+        self.last_goal_local = np.empty((0,), dtype=np.float32)
 
     def trajectory(
         self, position: Point2D, yaw: float, goal: Point2D
@@ -160,6 +171,10 @@ class DiffusionPlanner:
         local = np.asarray(self.predictor(rgb, depth, goal_local), dtype=np.float32)
         if local.ndim != 2 or local.shape[1] != 2:
             raise ValueError("diffusion model output must have shape [N,2]")
+        if not np.all(np.isfinite(local)):
+            raise ValueError("diffusion model output contains NaN or Inf")
+        self.last_goal_local = goal_local.astype(np.float32, copy=True)
+        self.last_local_trajectory = local.copy()
         return tuple(
             Point2D(
                 position.x + cosine * float(x) - sine * float(y),

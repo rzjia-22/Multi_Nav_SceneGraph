@@ -1,0 +1,173 @@
+{
+  "all_pass": false,
+  "collision_count": 1,
+  "compose_return_codes": [
+    2
+  ],
+  "episode_count": 2,
+  "episodes": [
+    {
+      "app_startup_time_s": 56.2506755059876,
+      "camera_mount_episode_variation": {
+        "height_offset_m": -0.004367849919240226,
+        "pitch_offset_deg": -0.5017849515193025,
+        "roll_offset_deg": 0.24740903113817825
+      },
+      "checkpoint_sha256": "7b3bca67af26c2d839555e9b27a7a420762b572fa88664a227986174d9a68ae0",
+      "collision": false,
+      "collision_tree_id": null,
+      "control_waypoints": 8,
+      "depth_raw_resolution": [
+        848,
+        480
+      ],
+      "depth_registration": "z_buffer_reproject_depth_optical_to_rgb_optical",
+      "episode_id": "validation_scene_001_episode_001",
+      "executed_length_m": 4.753736315846791,
+      "expert_path_used_for_control": false,
+      "failure_class": null,
+      "failure_reason": null,
+      "final_goal_distance_m": 0.3497023873648138,
+      "first_collision_timestamp_s": null,
+      "full_and_control_same_sample": true,
+      "goal_error_m": 0.3497023873648138,
+      "history_ready_time_s": 1.09,
+      "inference_ms_max": 860.0437419954687,
+      "inference_ms_mean": 137.07275680817907,
+      "inference_ms_p95": 135.5651189951459,
+      "mapping_enabled": false,
+      "minimum_clearance_m": 0.2144845052484558,
+      "minimum_goal_distance_m": 0.3497023873648138,
+      "moving_stale_rgb_frames": 0,
+      "path_efficiency": 0.8072336673803165,
+      "plan_count": 21,
+      "plan_hash": "7160f9c4f7010e0b3d08161eae0c7e76400f37d0005cb3ba811b8e02127217a2",
+      "planned_expert_length_m": 3.837376,
+      "planning_rate_hz": 1.9038984587488665,
+      "prediction_waypoints": 32,
+      "registered_depth_resolution": [
+        640,
+        360
+      ],
+      "report_version": 1,
+      "rgb_resolution": [
+        640,
+        360
+      ],
+      "robot_id": "diablo_1",
+      "robot_profile": "diablo_standing_v0",
+      "runtime_wall_start_unix_s": 1789390576.1345747,
+      "safety_override_count": 0,
+      "safety_override_duration_s": 0.0,
+      "safety_override_fraction": 0.0,
+      "safety_stop_override_duration_s": 0.0,
+      "safety_turn_override_duration_s": 0.0,
+      "scene_hash": "ec8f27bc8fd927bc02a00ff1e52d471ec8146a69625c171471a76cbbc03d95f0",
+      "scene_id": "validation_scene_001",
+      "scene_load_time_s": 12.319672854006058,
+      "sensor_frames": 111,
+      "sensor_profile": "d435i_navigation_v0",
+      "simulated_duration_s": 11.030000000000001,
+      "success": true,
+      "system_success_model_risk": false,
+      "test_split_used": false,
+      "wall_duration_s": 25.2140893600008
+    },
+    {
+      "app_startup_time_s": 56.2506755059876,
+      "camera_mount_episode_variation": {
+        "height_offset_m": 0.02368123065151688,
+        "pitch_offset_deg": 0.7534727831757366,
+        "roll_offset_deg": -0.9810083725075367
+      },
+      "checkpoint_sha256": "7b3bca67af26c2d839555e9b27a7a420762b572fa88664a227986174d9a68ae0",
+      "collision": true,
+      "collision_tree_id": "tree_021",
+      "control_waypoints": 8,
+      "depth_raw_resolution": [
+        848,
+        480
+      ],
+      "depth_registration": "z_buffer_reproject_depth_optical_to_rgb_optical",
+      "episode_id": "validation_scene_001_episode_004",
+      "executed_length_m": 5.178826582738051,
+      "expert_path_used_for_control": false,
+      "failure_class": "MODEL",
+      "failure_reason": "collision",
+      "final_goal_distance_m": 3.6379159984187575,
+      "first_collision_timestamp_s": 9.739999999999998,
+      "full_and_control_same_sample": true,
+      "goal_error_m": 3.6379159984187575,
+      "history_ready_time_s": 0.9700000000000006,
+      "inference_ms_max": 137.26924199727364,
+      "inference_ms_mean": 85.45976216636417,
+      "inference_ms_p95": 134.9292140941543,
+      "mapping_enabled": false,
+      "minimum_clearance_m": -0.0037378224179984154,
+      "minimum_goal_distance_m": 3.6379159984187575,
+      "moving_stale_rgb_frames": 0,
+      "path_efficiency": 1.6975725793374532,
+      "plan_count": 18,
+      "plan_hash": "35d618314b8414a2dc1e9bb2e1e43ab74fb1ea68602eb08a1a869b2b27f1d080",
+      "planned_expert_length_m": 8.791434,
+      "planning_rate_hz": 1.8480492813141687,
+      "prediction_waypoints": 32,
+      "registered_depth_resolution": [
+        640,
+        360
+      ],
+      "report_version": 1,
+      "rgb_resolution": [
+        640,
+        360
+      ],
+      "robot_id": "diablo_1",
+      "robot_profile": "diablo_standing_v0",
+      "runtime_wall_start_unix_s": 1789390601.6458519,
+      "safety_override_count": 1,
+      "safety_override_duration_s": 0.1,
+      "safety_override_fraction": 0.010245901639344262,
+      "safety_stop_override_duration_s": 0.1,
+      "safety_turn_override_duration_s": 0.1,
+      "scene_hash": "ec8f27bc8fd927bc02a00ff1e52d471ec8146a69625c171471a76cbbc03d95f0",
+      "scene_id": "validation_scene_001",
+      "scene_load_time_s": 12.319672854006058,
+      "sensor_frames": 98,
+      "sensor_profile": "d435i_navigation_v0",
+      "simulated_duration_s": 9.739999999999998,
+      "success": false,
+      "system_success_model_risk": false,
+      "test_split_used": false,
+      "wall_duration_s": 25.16037673399842
+    }
+  ],
+  "expected_episodes": [
+    "validation_scene_001_episode_001",
+    "validation_scene_000_episode_002",
+    "validation_scene_001_episode_004"
+  ],
+  "failure_classes": {
+    "MODEL": 1
+  },
+  "group": "gate_b",
+  "inference_ms_max": 860.0437419954687,
+  "inference_ms_mean": 113.25137466580297,
+  "inference_ms_p95": 135.73553129535867,
+  "mapping_enabled": false,
+  "mean_goal_error_m": 1.9938091928917856,
+  "mean_path_efficiency": 1.2524031233588848,
+  "mean_safety_override_fraction": 0.005122950819672131,
+  "minimum_clearance_m": -0.0037378224179984154,
+  "not_run_episodes": [
+    "validation_scene_000_episode_002"
+  ],
+  "report_version": 1,
+  "run_ids": [
+    "gate_b-validation_scene_001-20260914T125458Z"
+  ],
+  "stall_count": 0,
+  "success_count": 1,
+  "test_split_used": false,
+  "timeout_count": 0,
+  "total_safety_override_count": 1
+}

@@ -1,0 +1,54 @@
+config_id: navdiffusion_v0_closed_loop_v1
+scope: validation_only
+robot_id: diablo_1
+robot_profile: config/robots/diablo_standing.yaml
+sensor_profile: config/sensors/d435i_navigation_v0.yaml
+checkpoint: models/trained/navdiffusion_v0/best.pt
+checkpoint_sha256: 7b3bca67af26c2d839555e9b27a7a420762b572fa88664a227986174d9a68ae0
+mapping_enabled: false
+test_split_allowed: false
+navigation:
+  model_backend: mns_v0
+  history_length: 5
+  planning_rate_hz: 2.0
+  prediction_waypoints: 32
+  control_waypoints: 8
+  goal_tolerance_m: 0.35
+  diffusion_seed: 20260914
+runtime:
+  physics_rate_hz: 100
+  state_rate_hz: 50
+  maximum_episode_duration_s: 60
+  command_timeout_s: 0.30
+  stall_window_s: 8.0
+gates:
+  gate_a:
+    description: shortest simple short mission on the flat medium-density validation scene
+    episodes:
+      - validation_scene_000_episode_000
+  gate_b:
+    description: short, medium and long coverage across both validation scenes
+    episodes:
+      - validation_scene_001_episode_001
+      - validation_scene_000_episode_002
+      - validation_scene_001_episode_004
+  full_validation:
+    scenes:
+      validation_scene_000:
+        - validation_scene_000_episode_000
+        - validation_scene_000_episode_001
+        - validation_scene_000_episode_002
+        - validation_scene_000_episode_003
+        - validation_scene_000_episode_004
+      validation_scene_001:
+        - validation_scene_001_episode_000
+        - validation_scene_001_episode_001
+        - validation_scene_001_episode_002
+        - validation_scene_001_episode_003
+        - validation_scene_001_episode_004
+readiness:
+  low_speed_real_closed_loop:
+    minimum_success_count: 9
+    maximum_collision_count: 0
+    inference_p95_below_planning_period: true
+    maximum_mean_safety_override_fraction: 0.25

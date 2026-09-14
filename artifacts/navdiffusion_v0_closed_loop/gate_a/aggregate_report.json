@@ -1,0 +1,100 @@
+{
+  "all_pass": true,
+  "collision_count": 0,
+  "compose_return_codes": [
+    0
+  ],
+  "episode_count": 1,
+  "episodes": [
+    {
+      "app_startup_time_s": 28.381141987003502,
+      "camera_mount_episode_variation": {
+        "height_offset_m": 0.007527302027888302,
+        "pitch_offset_deg": 1.3763016358407758,
+        "roll_offset_deg": 0.038120041180849995
+      },
+      "checkpoint_sha256": "7b3bca67af26c2d839555e9b27a7a420762b572fa88664a227986174d9a68ae0",
+      "collision": false,
+      "collision_tree_id": null,
+      "control_waypoints": 8,
+      "depth_raw_resolution": [
+        848,
+        480
+      ],
+      "depth_registration": "z_buffer_reproject_depth_optical_to_rgb_optical",
+      "episode_id": "validation_scene_000_episode_000",
+      "executed_length_m": 4.921897092583814,
+      "expert_path_used_for_control": false,
+      "failure_class": null,
+      "failure_reason": null,
+      "final_goal_distance_m": 0.34751288779995027,
+      "first_collision_timestamp_s": null,
+      "full_and_control_same_sample": true,
+      "goal_error_m": 0.34751288779995027,
+      "history_ready_time_s": 1.06,
+      "inference_ms_max": 848.7636790086981,
+      "inference_ms_mean": 125.96117219142062,
+      "inference_ms_p95": 151.1578939971514,
+      "mapping_enabled": false,
+      "minimum_clearance_m": 0.18689983282558326,
+      "minimum_goal_distance_m": 0.3501043083954471,
+      "moving_stale_rgb_frames": 0,
+      "path_efficiency": 0.8466465108095997,
+      "plan_count": 21,
+      "plan_hash": "6689ffcdd4f48312c407b3951f8d1c24f626730cfd494501630a87a519ad5313",
+      "planned_expert_length_m": 4.167107,
+      "planning_rate_hz": 1.8699910952804986,
+      "prediction_waypoints": 32,
+      "registered_depth_resolution": [
+        640,
+        360
+      ],
+      "report_version": 1,
+      "rgb_resolution": [
+        640,
+        360
+      ],
+      "robot_id": "diablo_1",
+      "robot_profile": "diablo_standing_v0",
+      "runtime_wall_start_unix_s": 1789390459.0057585,
+      "safety_override_count": 1,
+      "safety_override_duration_s": 0.18,
+      "safety_override_fraction": 0.01601423487544484,
+      "safety_stop_override_duration_s": 0.18,
+      "safety_turn_override_duration_s": 0.18,
+      "scene_hash": "56cabbb07ce916d478d6a1a70210e53ef69d1a1bc135f240c63eeaa1da2fecc0",
+      "scene_id": "validation_scene_000",
+      "scene_load_time_s": 12.785129284995492,
+      "sensor_frames": 113,
+      "sensor_profile": "d435i_navigation_v0",
+      "simulated_duration_s": 11.23,
+      "success": true,
+      "system_success_model_risk": false,
+      "test_split_used": false,
+      "wall_duration_s": 28.88297712399799
+    }
+  ],
+  "expected_episodes": [
+    "validation_scene_000_episode_000"
+  ],
+  "failure_classes": {},
+  "group": "gate_a",
+  "inference_ms_max": 848.7636790086981,
+  "inference_ms_mean": 125.96117219142062,
+  "inference_ms_p95": 151.1578939971514,
+  "mapping_enabled": false,
+  "mean_goal_error_m": 0.34751288779995027,
+  "mean_path_efficiency": 0.8466465108095997,
+  "mean_safety_override_fraction": 0.01601423487544484,
+  "minimum_clearance_m": 0.18689983282558326,
+  "not_run_episodes": [],
+  "report_version": 1,
+  "run_ids": [
+    "gate_a-validation_scene_000-20260914T125327Z"
+  ],
+  "stall_count": 0,
+  "success_count": 1,
+  "test_split_used": false,
+  "timeout_count": 0,
+  "total_safety_override_count": 1
+}
