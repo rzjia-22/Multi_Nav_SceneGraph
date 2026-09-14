@@ -36,7 +36,6 @@ def parse_args():
     parser.add_argument("--run-id", required=True)
     parser.add_argument("--artifact-group", required=True)
     parser.add_argument("--run-root", type=Path, default=project_root / "runs/navdiffusion_v0_closed_loop")
-    parser.add_argument("--artifact-root", type=Path, default=project_root / "artifacts/navdiffusion_v0_closed_loop")
     parser.add_argument("--physics-rate", type=float, default=100.0)
     parser.add_argument("--maximum-duration", type=float, default=60.0)
     parser.add_argument("--command-timeout", type=float, default=0.30)
@@ -74,7 +73,6 @@ class RosEndpoint:
 
     def __init__(self, node, publisher) -> None:
         from geometry_msgs.msg import PoseStamped, Twist
-        from mns_interfaces.msg import MissionStatus
         from rclpy.qos import DurabilityPolicy, QoSProfile, ReliabilityPolicy
         from std_msgs.msg import Empty, String
 
@@ -85,8 +83,8 @@ class RosEndpoint:
         self.safe_command = [0.0, 0.0, 0.0]
         self.navigation_stamp = float("-inf")
         self.safe_stamp = float("-inf")
-        self.status = "starting"
-        self.status_detail = ""
+        self.safe_source = "deadman"
+        self.safe_source_stamp = float("-inf")
         self.planning_diagnostics: list[dict] = []
         self.reset_pub = node.create_publisher(Empty, "mission/reset", 10)
         self.episode_pub = node.create_publisher(String, "mission/episode_id", 10)
@@ -99,7 +97,7 @@ class RosEndpoint:
         self.subscriptions = [
             node.create_subscription(Twist, "cmd_vel/navigation", self._navigation, 20),
             node.create_subscription(Twist, "cmd_vel_safe", self._safe, 20),
-            node.create_subscription(MissionStatus, "mission/status", self._status, 10),
+            node.create_subscription(String, "cmd_vel_safe/diagnostics", self._safe_diagnostic, 20),
             node.create_subscription(String, "mission/planning_diagnostics", self._diagnostic, 20),
         ]
 
@@ -111,9 +109,15 @@ class RosEndpoint:
         self.safe_command = _command(message)
         self.safe_stamp = self.sim_time
 
-    def _status(self, message) -> None:
-        self.status = message.state
-        self.status_detail = message.detail
+    def _safe_diagnostic(self, message) -> None:
+        try:
+            value = json.loads(message.data)
+            source = str(value["source"])
+        except (KeyError, TypeError, ValueError):
+            return
+        if source in {"navigation", "safety", "deadman"}:
+            self.safe_source = source
+            self.safe_source_stamp = self.sim_time
 
     def _diagnostic(self, message) -> None:
         try:
@@ -128,8 +132,8 @@ class RosEndpoint:
         self.safe_command = [0.0, 0.0, 0.0]
         self.navigation_stamp = float("-inf")
         self.safe_stamp = float("-inf")
-        self.status = "resetting"
-        self.status_detail = ""
+        self.safe_source = "deadman"
+        self.safe_source_stamp = float("-inf")
         self.planning_diagnostics.clear()
 
     def publish_reset(self) -> None:
@@ -428,7 +432,6 @@ def main() -> int:
             break
         plan = plans[episode_id]
         run_directory = ARGS.run_root / ARGS.run_id / scene["scene_id"] / episode_id
-        artifact_directory = ARGS.artifact_root / ARGS.artifact_group / episode_id
         run_directory.mkdir(parents=True, exist_ok=True)
         endpoint.clear_episode()
         endpoint.publish_reset()
@@ -512,7 +515,14 @@ def main() -> int:
                 )
                 navigation = endpoint.navigation_command if endpoint.sim_time - endpoint.navigation_stamp <= ARGS.command_timeout else [0.0, 0.0, 0.0]
                 safe = endpoint.safe_command if endpoint.sim_time - endpoint.safe_stamp <= ARGS.command_timeout else [0.0, 0.0, 0.0]
-                altered = bool(np.linalg.norm(np.asarray(navigation) - np.asarray(safe)) > 1.0e-3)
+                # The arbiter also applies the frozen DIABLO velocity bounds.
+                # Count only an explicitly selected safety source as an
+                # override; command-value comparison would misclassify normal
+                # 0.70 -> 0.65 m/s platform limiting and timer phase lag.
+                altered = bool(
+                    endpoint.safe_source == "safety"
+                    and endpoint.sim_time - endpoint.safe_source_stamp <= ARGS.command_timeout
+                )
                 if altered and not previous_override:
                     override_count += 1
                 override_samples += int(altered)
@@ -694,7 +704,6 @@ def main() -> int:
             "planning": endpoint.planning_diagnostics,
         }
         _write_json(run_directory / "trace.json", raw_trace)
-        _write_json(artifact_directory / "report.json", report)
         if ARGS.capture_review and review_frames:
             names = [name for name in ("start", "middle", "final") if name in review_frames]
             np.savez_compressed(
@@ -726,7 +735,6 @@ def main() -> int:
         "exit_reason": exit_reason,
     }
     _write_json(ARGS.run_root / ARGS.run_id / scene["scene_id"] / "session_report.json", aggregate)
-    _write_json(ARGS.artifact_root / ARGS.artifact_group / f"{scene['scene_id']}_session.json", aggregate)
     print("MNS_RESEARCH_NAVIGATION_RESULT=" + json.dumps(aggregate, sort_keys=True), flush=True)
 
     if rclpy.ok():
@@ -746,5 +754,8 @@ if __name__ == "__main__":
     except BaseException:
         traceback.print_exc()
     finally:
-        APP.close(wait_for_replicator=False, skip_cleanup=True)
+        try:
+            APP.close(wait_for_replicator=False, skip_cleanup=True)
+        except SystemExit:
+            pass
     sys.exit(exit_code)

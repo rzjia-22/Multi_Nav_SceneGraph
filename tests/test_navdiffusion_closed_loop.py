@@ -1,4 +1,6 @@
 from pathlib import Path
+import ast
+import json
 
 import numpy as np
 import pytest
@@ -51,3 +53,36 @@ def test_d435i_closed_loop_dimensions_keep_distinct_raw_camera_models():
     assert profile["depth_raw"]["resolution"] == [848, 480]
     assert profile["depth_aligned_to_rgb"]["resolution"] == [640, 360]
     assert profile["rgb"]["fov_deg"] != profile["depth_raw"]["fov_deg"]
+
+
+def test_isaac_runtime_keeps_standard_ros_boundary_and_shared_forest_builder():
+    runtime = ROOT / "ros_ws/src/mns_simulation/mns_simulation/research_navigation_runtime.py"
+    tree = ast.parse(runtime.read_text(encoding="utf-8"))
+    imports = set()
+    imported_names = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            imports.update(alias.name for alias in node.names)
+        elif isinstance(node, ast.ImportFrom):
+            imports.add(node.module or "")
+            imported_names.update(alias.name for alias in node.names)
+    assert not any(name.startswith("mns_interfaces") for name in imports)
+    assert "build_research_forest" in imported_names
+
+
+def test_recorded_closed_loop_gate_is_fail_fast_and_test_sealed():
+    path = ROOT / "artifacts/navdiffusion_v0_closed_loop/aggregate_report.json"
+    report = json.loads(path.read_text(encoding="utf-8"))
+    assert report["test_split_used"] is False
+    assert report["mapping_enabled"] is False
+    assert report["gate_a"]["all_pass"] is True
+    assert report["gate_a"]["success_count"] == 1
+    assert report["gate_b"]["all_pass"] is False
+    assert report["gate_b"]["compose_return_codes"] == [2]
+    assert report["gate_b"]["episode_count"] == 2
+    assert report["gate_b"]["collision_count"] == 1
+    assert report["full_validation"] is None
+    assert report["readiness"] == "READY_FOR_REAL_SENSOR_ONLY"
+    failed = next(item for item in report["gate_b"]["episodes"] if not item["success"])
+    assert failed["failure_class"] == "MODEL"
+    assert failed["collision_tree_id"] == "tree_021"
