@@ -8,6 +8,7 @@ def test_all_launch_files_are_valid_python():
     assert {path.name for path in launch_files} == {
         "phase1.launch.py",
         "phase2.launch.py",
+        "research_navigation.launch.py",
         "system.launch.py",
     }
     for path in launch_files:

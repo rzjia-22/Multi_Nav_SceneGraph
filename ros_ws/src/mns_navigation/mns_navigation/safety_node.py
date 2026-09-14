@@ -8,9 +8,10 @@ from cv_bridge import CvBridge
 from geometry_msgs.msg import Twist
 from rclpy.node import Node
 from sensor_msgs.msg import Image
+from std_msgs.msg import Empty
 
 from .ros_utils import twist_message
-from .safety import DepthSafetyController
+from .safety import DepthSafetyController, depth_sector_distances
 
 
 class SafetyMonitorNode(Node):
@@ -20,18 +21,14 @@ class SafetyMonitorNode(Node):
         self.bridge = CvBridge()
         self.publisher = self.create_publisher(Twist, "cmd_vel/safety", 10)
         self.create_subscription(Image, "camera/depth/image_rect", self._depth, 10)
+        self.create_subscription(Empty, "mission/reset", self._reset, 10)
+
+    def _reset(self, _message: Empty) -> None:
+        self.controller.reset()
 
     def _depth(self, message: Image) -> None:
         depth = np.asarray(self.bridge.imgmsg_to_cv2(message, desired_encoding="32FC1"))
-        height, width = depth.shape[:2]
-        band = depth[height // 3 : 2 * height // 3]
-        thirds = np.array_split(band, 3, axis=1)
-        distances = [
-            float(np.nanpercentile(section[np.isfinite(section)], 10))
-            if np.any(np.isfinite(section)) else float("inf")
-            for section in thirds
-        ]
-        decision = self.controller.decide(*distances)
+        decision = self.controller.decide(*depth_sector_distances(depth))
         if decision.command is not None:
             self.publisher.publish(twist_message(decision.command))
 

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path as FilePath
+import json
 import math
 import time
 
@@ -14,6 +15,7 @@ from nav_msgs.msg import Odometry, Path
 from rclpy.node import Node
 from rclpy.qos import DurabilityPolicy, QoSProfile, ReliabilityPolicy
 from sensor_msgs.msg import Image
+from std_msgs.msg import Empty, String
 from mns_interfaces.msg import MissionStatus
 
 from .coverage import Point2D
@@ -39,6 +41,7 @@ class DiffusionNavigatorNode(Node):
         self.declare_parameter("history_length", 5)
         self.declare_parameter("planning_rate_hz", 2.0)
         self.declare_parameter("goal_tolerance", 0.35)
+        self.declare_parameter("control_waypoints", 8)
         self.bridge = CvBridge()
         self.history = RGBDHistory(int(self.get_parameter("history_length").value))
         backend = str(self.get_parameter("model_backend").value)
@@ -55,11 +58,12 @@ class DiffusionNavigatorNode(Node):
             predictor = MNSNavDiffusionPredictor(MNSNavDiffusionConfig(
                 checkpoint=checkpoint,
                 device=device,
-                output_waypoints=8,
+                output_waypoints=32,
             ))
         else:
             raise ValueError(f"unsupported diffusion model_backend: {backend}")
         self.model_backend = backend
+        self.predictor = predictor
         self.planner = DiffusionPlanner(predictor, self.history)
         self.follower = PurePursuitFollower()
         self.position: Point2D | None = None
@@ -67,10 +71,15 @@ class DiffusionNavigatorNode(Node):
         self.goal: Point2D | None = None
         self.latest_rgb: np.ndarray | None = None
         self.trajectory: tuple[Point2D, ...] = ()
+        self.full_trajectory: tuple[Point2D, ...] = ()
+        self.episode_id = ""
+        self.planning_error = ""
         self.plan_count = 0
         self.last_planning_ms = 0.0
         self.cmd_pub = self.create_publisher(Twist, "cmd_vel/navigation", 10)
         self.path_pub = self.create_publisher(Path, "mission/path", 1)
+        self.full_path_pub = self.create_publisher(Path, "mission/predicted_path_full", 1)
+        self.diagnostic_pub = self.create_publisher(String, "mission/planning_diagnostics", 10)
         self.status_pub = self.create_publisher(MissionStatus, "mission/status", 10)
         self.create_subscription(Image, "camera/color/image_raw", self._rgb, 10)
         self.create_subscription(Image, "camera/depth/image_rect", self._depth, 10)
@@ -81,6 +90,8 @@ class DiffusionNavigatorNode(Node):
             durability=DurabilityPolicy.TRANSIENT_LOCAL,
         )
         self.create_subscription(PoseStamped, "mission/goal", self._goal, goal_qos)
+        self.create_subscription(Empty, "mission/reset", self._reset, 10)
+        self.create_subscription(String, "mission/episode_id", self._episode, 10)
         self.create_timer(1.0 / float(self.get_parameter("planning_rate_hz").value), self._plan)
         self.create_timer(0.05, self._control)
         self.create_timer(1.0, self._status)
@@ -102,6 +113,20 @@ class DiffusionNavigatorNode(Node):
     def _goal(self, message: PoseStamped) -> None:
         self.goal = Point2D(message.pose.position.x, message.pose.position.y)
 
+    def _episode(self, message: String) -> None:
+        self.episode_id = message.data
+
+    def _reset(self, _message: Empty) -> None:
+        self.planner.reset()
+        self.position = None
+        self.goal = None
+        self.latest_rgb = None
+        self.trajectory = ()
+        self.full_trajectory = ()
+        self.plan_count = 0
+        self.last_planning_ms = 0.0
+        self.planning_error = ""
+
     def _plan(self) -> None:
         if (
             self.position is None
@@ -111,10 +136,63 @@ class DiffusionNavigatorNode(Node):
         ):
             return
         start = time.perf_counter()
-        self.trajectory = self.planner.trajectory(self.position, self.yaw, self.goal)
-        self.last_planning_ms = (time.perf_counter() - start) * 1000.0
-        self.plan_count += 1
-        self.path_pub.publish(path_message(self, self.trajectory, str(self.get_parameter("frame_id").value)))
+        try:
+            full = self.planner.trajectory(self.position, self.yaw, self.goal)
+            control_count = int(self.get_parameter("control_waypoints").value)
+            if control_count <= 1 or len(full) < control_count:
+                raise ValueError(
+                    f"diffusion trajectory has {len(full)} points, needs at least {control_count}"
+                )
+            self.full_trajectory = full
+            self.trajectory = full[:control_count]
+            self.last_planning_ms = (time.perf_counter() - start) * 1000.0
+            self.plan_count += 1
+            self.planning_error = ""
+            frame_id = str(self.get_parameter("frame_id").value)
+            self.path_pub.publish(path_message(self, self.trajectory, frame_id))
+            self.full_path_pub.publish(path_message(self, self.full_trajectory, frame_id))
+            local = self.planner.last_local_trajectory
+            jumps = np.linalg.norm(np.diff(local, axis=0), axis=1)
+            goal_local = self.planner.last_goal_local
+            final = local[-1]
+            diagnostic = {
+                "status": "PASS",
+                "episode_id": self.episode_id,
+                "timestamp_s": self.get_clock().now().nanoseconds * 1.0e-9,
+                "robot_pose_xyyaw": [self.position.x, self.position.y, self.yaw],
+                "mission_goal_xy": [self.goal.x, self.goal.y],
+                "goal_distance_m": math.hypot(
+                    self.goal.x - self.position.x, self.goal.y - self.position.y
+                ),
+                "history_length": len(self.history),
+                "history_ready": self.history.ready,
+                "full_local_points": local.tolist(),
+                "full_world_points": [[point.x, point.y] for point in self.full_trajectory],
+                "control_world_points": [[point.x, point.y] for point in self.trajectory],
+                "inference_ms": float(getattr(self.predictor, "last_inference_ms", self.last_planning_ms)),
+                "planner_wall_ms": self.last_planning_ms,
+                "maximum_consecutive_jump_m": float(jumps.max()) if jumps.size else 0.0,
+                "predicted_final_displacement_m": float(np.linalg.norm(final)),
+                "goal_progress_dot": float(np.dot(final, goal_local)),
+            }
+            message = String()
+            message.data = json.dumps(diagnostic, separators=(",", ":"), sort_keys=True)
+            self.diagnostic_pub.publish(message)
+        except Exception as error:
+            self.trajectory = ()
+            self.full_trajectory = ()
+            self.last_planning_ms = (time.perf_counter() - start) * 1000.0
+            self.planning_error = f"{type(error).__name__}: {error}"
+            message = String()
+            message.data = json.dumps({
+                "status": "FAIL",
+                "episode_id": self.episode_id,
+                "timestamp_s": self.get_clock().now().nanoseconds * 1.0e-9,
+                "failure_class": "MODEL",
+                "error": self.planning_error,
+            }, separators=(",", ":"), sort_keys=True)
+            self.diagnostic_pub.publish(message)
+            self.get_logger().error(self.planning_error)
 
     def _control(self) -> None:
         if self.position is None:
@@ -147,6 +225,8 @@ class DiffusionNavigatorNode(Node):
             message.state = "complete"
         elif not self.history.ready:
             message.state = "waiting_for_history"
+        elif self.planning_error:
+            message.state = "failed_model"
         elif len(self.trajectory) < 2:
             message.state = "planning"
         else:
@@ -155,6 +235,7 @@ class DiffusionNavigatorNode(Node):
         message.detail = (
             f"history={len(self.history)}/{self.history.length}"
             f" plans={self.plan_count} planning_ms={self.last_planning_ms:.1f}"
+            + (f" error={self.planning_error}" if self.planning_error else "")
         )
         self.status_pub.publish(message)
 

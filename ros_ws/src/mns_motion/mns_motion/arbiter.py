@@ -53,6 +53,10 @@ class CommandArbiter:
         else:
             raise ValueError(f"unknown command source: {source}")
 
+    def reset(self) -> None:
+        self._navigation = None
+        self._safety = None
+
     def select(self, now: float) -> tuple[str, Command]:
         if self._safety is not None and now - self._safety.stamp <= self.safety_timeout:
             return "safety", self._bounded(self._safety.command)
@@ -68,4 +72,3 @@ class CommandArbiter:
             command.y * scale,
             max(-self.max_angular_speed, min(self.max_angular_speed, command.yaw)),
         )
-

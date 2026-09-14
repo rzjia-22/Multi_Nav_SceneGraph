@@ -112,64 +112,6 @@ class ResourceMonitor:
             self.snapshot()
 
 
-def rotation_matrix_to_xyzw(matrix):
-    import numpy as np
-
-    matrix = np.asarray(matrix, dtype=np.float64)
-    trace = float(np.trace(matrix))
-    if trace > 0.0:
-        scale = math.sqrt(trace + 1.0) * 2.0
-        w, x = 0.25 * scale, (matrix[2, 1] - matrix[1, 2]) / scale
-        y, z = (matrix[0, 2] - matrix[2, 0]) / scale, (matrix[1, 0] - matrix[0, 1]) / scale
-    else:
-        axis = int(np.argmax(np.diag(matrix)))
-        if axis == 0:
-            scale = math.sqrt(1.0 + matrix[0, 0] - matrix[1, 1] - matrix[2, 2]) * 2.0
-            w = (matrix[2, 1] - matrix[1, 2]) / scale
-            x, y, z = 0.25 * scale, (matrix[0, 1] + matrix[1, 0]) / scale, (matrix[0, 2] + matrix[2, 0]) / scale
-        elif axis == 1:
-            scale = math.sqrt(1.0 + matrix[1, 1] - matrix[0, 0] - matrix[2, 2]) * 2.0
-            w = (matrix[0, 2] - matrix[2, 0]) / scale
-            x, y, z = (matrix[0, 1] + matrix[1, 0]) / scale, 0.25 * scale, (matrix[1, 2] + matrix[2, 1]) / scale
-        else:
-            scale = math.sqrt(1.0 + matrix[2, 2] - matrix[0, 0] - matrix[1, 1]) * 2.0
-            w = (matrix[1, 0] - matrix[0, 1]) / scale
-            x, y, z = (matrix[0, 2] + matrix[2, 0]) / scale, (matrix[1, 2] + matrix[2, 1]) / scale, 0.25 * scale
-    quaternion = np.asarray([x, y, z, w], dtype=np.float64)
-    return quaternion / np.linalg.norm(quaternion)
-
-
-def surface_frame(surface, x: float, y: float, yaw: float):
-    """Return ground height and body x-forward/y-left/z-normal frame."""
-    import numpy as np
-
-    height, normal = surface.height_and_normal(x, y)
-    normal = np.asarray(normal, dtype=np.float64)
-    normal /= np.linalg.norm(normal)
-    heading = np.asarray([math.cos(yaw), math.sin(yaw), 0.0], dtype=np.float64)
-    forward = heading - normal * float(np.dot(heading, normal))
-    forward /= np.linalg.norm(forward)
-    left = np.cross(normal, forward)
-    left /= np.linalg.norm(left)
-    forward = np.cross(left, normal)
-    return height, np.column_stack((forward, left, normal))
-
-
-def make_camera(sim_utils, Camera, CameraCfg, path: str, cfg: dict, sensor_rate: float, data_types: list[str]):
-    width, height = (int(value) for value in cfg["resolution"])
-    focal = 18.0
-    horizontal_aperture = 2.0 * focal * math.tan(math.radians(float(cfg["fov_deg"]["horizontal"])) / 2.0)
-    vertical_aperture = 2.0 * focal * math.tan(math.radians(float(cfg["fov_deg"]["vertical"])) / 2.0)
-    clipping = cfg.get("clipping_range_m", cfg.get("valid_range_m"))
-    return Camera(CameraCfg(
-        prim_path=path, update_period=1.0 / sensor_rate, height=height, width=width, data_types=data_types,
-        spawn=sim_utils.PinholeCameraCfg(
-            focal_length=focal, horizontal_aperture=horizontal_aperture,
-            vertical_aperture=vertical_aperture, clipping_range=(float(clipping[0]), float(clipping[1])),
-        ),
-    ))
-
-
 def run_episode(simulation, stage, built, scene, robot, sensor, rgb_camera, depth_camera,
                 rgb_intrinsics, depth_intrinsics, episode_id: str, output_directory: Path) -> dict:
     import h5py
@@ -182,6 +124,11 @@ def run_episode(simulation, stage, built, scene, robot, sensor, rgb_camera, dept
     from research_data.episode import COLLECTOR_VERSION, EPISODE_SCHEMA_VERSION, write_episode
     from research_data.expert import PLANNER_VERSION, validate_plan
     from research_data.validation import validate_episode, write_report
+    from mns_simulation.research_robot import (
+        episode_mount_variation,
+        research_rig_pose,
+        surface_frame,
+    )
 
     episode_directory = output_directory / episode_id
     episode_directory.mkdir(parents=True, exist_ok=True)
@@ -239,15 +186,7 @@ def run_episode(simulation, stage, built, scene, robot, sensor, rgb_camera, dept
     command_v = command_w = previous_v = 0.0
     body_xform = UsdGeom.Xformable(stage.GetPrimAtPath("/World/DiabloSurrogate"))
     body_translate, body_orient = body_xform.GetOrderedXformOps()
-    mount = robot["camera_mount"]
-    rng = np.random.Generator(np.random.PCG64(int(scene["scene_seed"]) + int(episode_id.rsplit("_", 1)[-1]) + 700_001))
-    variation = mount["episode_variation"]
-    episode_mount = {
-        "height_offset_m": float(rng.uniform(*variation["height_m"])),
-        "pitch_offset_deg": float(rng.uniform(*variation["pitch_deg"])),
-        "roll_offset_deg": float(rng.uniform(*variation["roll_deg"])),
-    }
-    correlation = mount["correlated_motion"]
+    episode_mount = episode_mount_variation(robot, int(scene["scene_seed"]), episode_id)
     payload = {name: [] for name in (
         "timestamp_s", "position_xyz", "orientation_xyzw", "linear_velocity_xyz", "angular_velocity_xyz", "command_vw",
         "imu_timestamp_s", "imu_linear_acceleration_xyz", "imu_angular_velocity_xyz", "sensor_timestamp_s",
@@ -303,31 +242,25 @@ def run_episode(simulation, stage, built, scene, robot, sensor, rgb_camera, dept
             x += command_v * float(current_frame[0, 0]) * physics_dt
             y += command_v * float(current_frame[1, 0]) * physics_dt
 
-        ground_z, body_rotation = surface_frame(built.surface, x, y, yaw)
-        body_xyzw = rotation_matrix_to_xyzw(body_rotation)
+        rig = research_rig_pose(
+            built.surface, x, y, yaw, sim_time, robot, sensor, episode_mount
+        )
+        ground_z, body_rotation, body_xyzw = rig.ground_z, rig.body_rotation, rig.body_xyzw
         body_translate.Set(Gf.Vec3d(x, y, ground_z))
         body_orient.Set(Gf.Quatf(float(body_xyzw[3]), Gf.Vec3f(*[float(value) for value in body_xyzw[:3]])))
-        oscillation = math.sin(2.0 * math.pi * float(correlation["frequency_hz"]) * sim_time) if correlation["enabled"] else 0.0
-        camera_height = float(mount["nominal_height_m"]) + episode_mount["height_offset_m"] + float(correlation["vertical_amplitude_m"]) * oscillation
-        pitch = math.radians(float(mount["nominal_pitch_deg"]) + episode_mount["pitch_offset_deg"] + float(correlation["pitch_amplitude_deg"]) * oscillation)
-        roll = math.radians(float(mount["nominal_roll_deg"]) + episode_mount["roll_offset_deg"] + float(correlation["roll_amplitude_deg"]) * oscillation)
-        body_forward, body_left, body_up = body_rotation.T
-        optical_forward = math.cos(pitch) * body_forward + math.sin(pitch) * body_up
-        optical_right_zero = -body_left
-        optical_down_zero = np.cross(optical_forward, optical_right_zero)
-        optical_down_zero /= np.linalg.norm(optical_down_zero)
-        optical_right = math.cos(roll) * optical_right_zero + math.sin(roll) * optical_down_zero
-        optical_down = -math.sin(roll) * optical_right_zero + math.cos(roll) * optical_down_zero
-        optical_rotation = np.column_stack((optical_right, optical_down, optical_forward))
-        optical_xyzw = rotation_matrix_to_xyzw(optical_rotation)
-        optical_wxyz = np.asarray([optical_xyzw[3], *optical_xyzw[:3]])
-        rgb_eye = np.asarray([x, y, ground_z]) + body_rotation @ np.asarray([
-            float(mount["forward_offset_m"]), float(mount["lateral_offset_m"]), camera_height,
-        ])
-        depth_eye = rgb_eye - optical_rotation @ depth_to_rgb_t
-        camera_orientation = torch.as_tensor(np.stack([optical_wxyz]), dtype=torch.float32, device=simulation.device)
-        rgb_camera.set_world_poses(torch.as_tensor(np.stack([rgb_eye]), dtype=torch.float32, device=simulation.device), camera_orientation, convention="ros")
-        depth_camera.set_world_poses(torch.as_tensor(np.stack([depth_eye]), dtype=torch.float32, device=simulation.device), camera_orientation, convention="ros")
+        camera_orientation = torch.as_tensor(
+            np.stack([rig.optical_wxyz]), dtype=torch.float32, device=simulation.device
+        )
+        rgb_camera.set_world_poses(
+            torch.as_tensor(np.stack([rig.rgb_position]), dtype=torch.float32, device=simulation.device),
+            camera_orientation,
+            convention="ros",
+        )
+        depth_camera.set_world_poses(
+            torch.as_tensor(np.stack([rig.depth_position]), dtype=torch.float32, device=simulation.device),
+            camera_orientation,
+            convention="ros",
+        )
         render_frame = (frame + 1) % sensor_interval == 0
         simulation.step(render=render_frame)
         rgb_camera.update(physics_dt)
@@ -357,7 +290,7 @@ def run_episode(simulation, stage, built, scene, robot, sensor, rgb_camera, dept
             payload["sensor_timestamp_s"].append(timestamp)
             payload["rgb"].append(rgb)
             payload["depth_raw_z16"].append(encoded)
-            payload["camera_pose"].append([*rgb_eye, *optical_xyzw])
+            payload["camera_pose"].append([*rig.rgb_position, *rig.optical_xyzw])
             online_aligned_reference.append(aligned)
         if success and len(payload["sensor_timestamp_s"]) >= 3:
             break
@@ -469,6 +402,7 @@ def main() -> int:
     from research_data.expert import PLANNER_VERSION, sample_episode_plan, validate_plan
     from research_data.validation import write_report
     from mns_simulation.research_forest_scene import build_research_forest, export_stage_snapshot
+    from mns_simulation.research_robot import make_camera
 
     scene, registry = load_yaml(ARGS.scene), load_yaml(ARGS.assets)
     robot = load_yaml(ROOT / "config/robots/diablo_standing.yaml")

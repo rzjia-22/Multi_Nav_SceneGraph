@@ -5,6 +5,7 @@ from __future__ import annotations
 import rclpy
 from geometry_msgs.msg import Twist
 from rclpy.node import Node
+from std_msgs.msg import Empty
 
 from .arbiter import Command, CommandArbiter
 
@@ -25,7 +26,11 @@ class CommandArbiterNode(Node):
         self.publisher = self.create_publisher(Twist, "cmd_vel_safe", 10)
         self.create_subscription(Twist, "cmd_vel/navigation", lambda msg: self._update("navigation", msg), 10)
         self.create_subscription(Twist, "cmd_vel/safety", lambda msg: self._update("safety", msg), 10)
+        self.create_subscription(Empty, "mission/reset", self._reset, 10)
         self.create_timer(0.02, self._publish)
+
+    def _reset(self, _message: Empty) -> None:
+        self.arbiter.reset()
 
     def _seconds(self) -> float:
         return self.get_clock().now().nanoseconds * 1e-9

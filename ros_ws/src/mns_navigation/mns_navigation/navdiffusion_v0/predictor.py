@@ -42,6 +42,7 @@ class MNSNavDiffusionPredictor:
         self.output_waypoints = int(config.output_waypoints)
         self.seed = int(config.seed)
         self.last_inference_ms = 0.0
+        self.last_full_prediction = np.empty((0, 2), dtype=np.float32)
         self.checkpoint_metadata = {
             key: checkpoint.get(key)
             for key in (
@@ -63,4 +64,5 @@ class MNSNavDiffusionPredictor:
             torch.cuda.synchronize(self.device)
         self.last_inference_ms = (time.perf_counter() - started) * 1000.0
         trajectory = self.preprocessor.inverse_trajectory(normalized.float().cpu().numpy())
+        self.last_full_prediction = np.asarray(trajectory, dtype=np.float32).copy()
         return trajectory[: self.output_waypoints]
