@@ -2,10 +2,11 @@
 
 NavDiffusion V0 is the first project-owned model trained from the frozen
 Dataset V0. Its purpose is deployment-oriented goal navigation in the accepted
-Isaac Research Forest and, after later closed-loop validation, on a standing
-DIABLO with a RealSense D435i. This milestone covers data windows, training,
-checkpointing and ROS loading. It deliberately does not report test-split or
-closed-loop results.
+Isaac Research Forest and, after staged validation, on a standing DIABLO with
+a RealSense D435i. Training is complete. The first matching-domain Isaac
+closed-loop gate is now recorded below; it found a repeatable long-mission
+collision and therefore does not authorize real motion deployment. The test
+split remains sealed.
 
 ## Data authority and cache
 
@@ -110,9 +111,47 @@ The final predictor smoke test reproduced the cached training input exactly,
 loaded on CPU and CUDA, and returned a finite `[32,2]` trajectory. Warm
 10-step sampling measured 60.7 ms on CUDA and 127.5 ms on CPU in the recorded
 run. The real `DiffusionNavigatorNode` loaded `model_backend=mns_v0`, the
-checkpoint, five-frame history and eight-waypoint control output successfully.
-Legacy ForestNavigation checkpoint loading remains available as
-`model_backend=legacy`.
+checkpoint and five-frame history successfully. It now retains and publishes
+all 32 points from one sample for diagnostics while the unchanged controller
+uses the first eight. Legacy ForestNavigation checkpoint loading remains
+available as `model_backend=legacy`.
+
+## First matching-domain closed loop
+
+The dedicated `/diablo_1` runtime uses the same `build_research_forest(...)`,
+actual `TerrainSurfaceQuery`, kinematic DIABLO standing profile and two-camera
+D435i simulation as Dataset V0. Raw 848×480 depth is registered into the
+640×360 RGB frame by the shared `research_data.depth` implementation before
+ROS publication. Isaac publishes only standard ROS 2 RGB, depth, CameraInfo,
+odom, TF and clock messages. Navigation, Safety and arbitration remain in the
+robotics-ML container; mapping/Hydra is disabled.
+
+Gate A (`validation_scene_000_episode_000`) passed: 4.922 m executed, 0.348 m
+goal error, 0.187 m minimum conservative clearance and no collision. Planning
+ran at 1.87 Hz with 151.2 ms p95 inference. The arbiter selected the Safety
+source for 0.18 s (1.60%). A short representative Gate B mission
+(`validation_scene_001_episode_001`) also passed with 0.350 m goal error,
+0.214 m clearance and no Safety override.
+
+Gate B then failed fast on the long mission
+`validation_scene_001_episode_004`: the surrogate intersected the conservative
+proxy of `tree_021` at 9.74 s, after 5.179 m of motion, while still 3.638 m from
+the goal. The full 32-point prediction first intersected a tree proxy at
+6.97 s; at 9.47 s the eight control points also intersected it. Safety first
+intervened at 9.66 s for 0.10 s, too late to avoid the collision. The final
+RGB/depth frame visibly contains the near-field trunk and the recorded path
+ends at that proxy. This is classified `MODEL`, rather than sensor,
+controller, Safety or simulator failure: frames were fresh, trajectories were
+finite and continuous, control and diagnostic paths came from the same sample,
+and the control trajectory itself became unsafe before impact.
+
+Gate B stopped at 1/3 as required, so full ten-mission validation did not run.
+The resulting readiness classification is
+**`READY_FOR_REAL_SENSOR_ONLY`**. Sensor-only work may compare real D435i data
+without commanding the robot; inference-only or low-speed real closed-loop is
+not yet authorized. Machine-readable results and review plots are under
+`artifacts/navdiffusion_v0_closed_loop/`; high-volume traces remain ignored
+under `runs/navdiffusion_v0_closed_loop/`.
 
 ```bash
 make navdiffusion-v0-data
@@ -121,12 +160,15 @@ make navdiffusion-v0-overfit
 make navdiffusion-v0-train
 make navdiffusion-v0-smoke
 make navdiffusion-v0-ros-smoke
+make navdiffusion-v0-closed-loop-gate
+make navdiffusion-v0-closed-loop-validation
 
 MNS_DIFFUSION_BACKEND=mns_v0 \
 MNS_DIFFUSION_CHECKPOINT=/workspace/models/trained/navdiffusion_v0/best.pt \
 make phase1-diffusion
 ```
 
-The final command is the next-stage closed-loop entry point; it was not run as
-part of this training milestone. Test evaluation, Isaac closed-loop acceptance
-and real DIABLO/D435i trials remain intentionally deferred.
+The final `phase1-diffusion` command is the older Go2 integration-regression
+path, not the DIABLO Research Forest acceptance path. Test evaluation, full
+validation, and real DIABLO/D435i motion remain intentionally deferred after
+the Gate B collision.

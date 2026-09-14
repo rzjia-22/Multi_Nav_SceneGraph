@@ -38,6 +38,9 @@ source does not change the topic contract.
 | `cmd_vel/navigation` | `geometry_msgs/Twist` | selected navigator → command arbiter |
 | `cmd_vel/safety` | `geometry_msgs/Twist` | safety/recovery → command arbiter |
 | `cmd_vel_safe` | `geometry_msgs/Twist` | command arbiter → robot motion backend |
+| `cmd_vel_safe/diagnostics` | `std_msgs/String` JSON | arbiter → closed-loop observer; selected source and bounded command |
+| `mission/predicted_path_full` | `nav_msgs/Path` | Diffusion → observer; all 32 points from the control sample |
+| `mission/planning_diagnostics` | `std_msgs/String` JSON | Diffusion → observer; prediction geometry and inference timing |
 
 Nav2 additionally derives `camera/depth/points` (`sensor_msgs/PointCloud2`)
 from registered depth plus `camera/depth/camera_info`. Local and global costmap
@@ -54,6 +57,13 @@ publisher cannot leave a latched locomotion command active.
 `MissionStatus` contains `robot_id`, `navigator`, lifecycle `state`, progress
 and a human-readable detail. Coverage reports route progress, Diffusion reports
 RGB-D history readiness, and Nav2 reflects action acceptance/completion.
+
+The dedicated NavDiffusion V0 Research Navigation graph uses robot namespace
+`/diablo_1`. Its simulator side consumes only standard ROS 2 messages and does
+not import `mns_interfaces` or navigation code. `mission/reset` (`std_msgs/Empty`)
+and `mission/episode_id` (`std_msgs/String`) clear state between validation
+missions. The JSON diagnostics are observability side channels; they do not
+alter commands or replace the typed sensor/motion interfaces.
 
 ## Mapping outputs and health
 
