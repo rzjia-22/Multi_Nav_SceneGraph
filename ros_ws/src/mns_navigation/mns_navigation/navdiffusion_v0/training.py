@@ -337,7 +337,7 @@ def overfit_sanity() -> dict[str, Any]:
 
 def _checkpoint_payload(
     model, optimizer, scheduler, scaler, config, preprocessor, epoch, best_ade,
-    best_fde, amp_mode, pretrained_initialization,
+    best_fde, validation_loss, amp_mode, pretrained_initialization,
 ) -> dict[str, Any]:
     index_path = PROJECT_ROOT / load_yaml(PREPROCESSING_CONFIG)["raw_source"]["dataset_index"]
     try:
@@ -373,6 +373,7 @@ def _checkpoint_payload(
         "gradient_scaler_state": scaler.state_dict(),
         "best_validation_ADE": best_ade,
         "validation_FDE": best_fde,
+        "validation_diffusion_loss": validation_loss,
         "amp_mode": amp_mode,
         "efficientnet_pretrained": pretrained_initialization,
     }
@@ -448,6 +449,7 @@ def train() -> dict[str, Any]:
     validation_interval = int(training["trajectory_validation_interval_epochs"])
     patience = int(training["early_stopping_patience_epochs"])
     overall_started = time.monotonic()
+    overall_peak_vram_mib = 0.0
     stop_reason = "maximum_epochs"
     for epoch in range(start_epoch, maximum_epochs):
         epoch_started = time.monotonic()
@@ -457,10 +459,12 @@ def train() -> dict[str, Any]:
         losses = []
         for batch_index, batch in enumerate(train_loader):
             images, goals, trajectory = _move(batch, device)
+            remaining_batches = len(train_loader) - batch_index
+            group_divisor = min(accumulation, remaining_batches)
             with _autocast(device, amp_dtype):
-                loss = model.diffusion_loss(images, goals, trajectory) / accumulation
+                loss = model.diffusion_loss(images, goals, trajectory) / group_divisor
             scaler.scale(loss).backward()
-            losses.append(float(loss) * accumulation)
+            losses.append(float(loss) * group_divisor)
             if (batch_index + 1) % accumulation == 0 or batch_index + 1 == len(train_loader):
                 scaler.unscale_(optimizer)
                 torch.nn.utils.clip_grad_norm_(model.parameters(), float(training["gradient_clip_norm"]))
@@ -483,7 +487,7 @@ def train() -> dict[str, Any]:
         scheduler.step()
         payload = _checkpoint_payload(
             model, optimizer, scheduler, scaler, config, preprocessor, epoch,
-            best_ade, best_fde, amp_name, pretrained_initialization,
+            best_ade, best_fde, validation_loss, amp_name, pretrained_initialization,
         )
         payload["best_epoch"] = best_epoch
         _atomic_torch_save(payload, last_path)
@@ -499,6 +503,7 @@ def train() -> dict[str, Any]:
             torch.cuda.max_memory_allocated(device) / 2**20,
             checkpoint_status,
         ]
+        overall_peak_vram_mib = max(overall_peak_vram_mib, float(row[8]))
         with history_path.open("a", encoding="utf-8", newline="") as stream:
             csv.writer(stream).writerow(row)
         print(json.dumps({
@@ -509,6 +514,10 @@ def train() -> dict[str, Any]:
         if best_epoch >= 0 and epoch - best_epoch >= patience:
             stop_reason = "early_stopping_validation_ADE"
             break
+    with history_path.open(encoding="utf-8", newline="") as stream:
+        history_rows = list(csv.DictReader(stream))
+    total_epoch_wall_time = sum(float(item["epoch_wall_time_s"]) for item in history_rows)
+    best_validation_loss = min(float(item["validation_loss"]) for item in history_rows)
     summary = {
         "status": "PASS",
         "model_name": config["model_name"],
@@ -521,7 +530,17 @@ def train() -> dict[str, Any]:
         "best_validation_ADE_m": best_ade,
         "best_validation_FDE_m": best_fde,
         "stop_reason": stop_reason,
-        "wall_time_s": time.monotonic() - overall_started,
+        "latest_invocation_wall_time_s": time.monotonic() - overall_started,
+        "total_epoch_wall_time_s": total_epoch_wall_time,
+        "best_validation_diffusion_loss": best_validation_loss,
+        "peak_vram_mib": max(
+            overall_peak_vram_mib,
+            max(float(item["peak_vram_mib"]) for item in history_rows),
+        ),
+        "gpu": torch.cuda.get_device_name(device),
+        "torch_version": torch.__version__,
+        "train_window_count": len(train_dataset),
+        "validation_window_count": len(validation_dataset),
         "optimizer": "AdamW",
         "encoder_learning_rate": training["encoder_learning_rate"],
         "other_learning_rate": training["other_learning_rate"],
