@@ -205,6 +205,23 @@ def _comparison_payload(validation: dict, test: dict) -> dict:
         item["timeline_s"]["control_prediction_first_unsafe"] is not None
         for item in collision_failures
     )
+    test_pass = test["outcome_summary"]["PASS"]
+    test_fail = test["outcome_summary"]["FAIL"]
+    difficult_validation_scene = min(
+        validation["scene_summary"],
+        key=lambda key: validation["scene_summary"][key]["success_rate"],
+    )
+    difficult_test_scene = min(
+        test["scene_summary"],
+        key=lambda key: test["scene_summary"][key]["success_rate"],
+    )
+    difficult_validation_environment = validation["scene_environment"][difficult_validation_scene]
+    difficult_test_environment = test["scene_environment"][difficult_test_scene]
+    shared_difficult_attributes = sorted(
+        key
+        for key in ("terrain", "tree_density", "ground", "lighting")
+        if difficult_validation_environment.get(key) == difficult_test_environment.get(key)
+    )
     return {
         "comparison_version": 1,
         "validation": {
@@ -249,6 +266,60 @@ def _comparison_payload(validation: dict, test: dict) -> dict:
             and full_before_collision == len(collision_failures)
             and control_before_collision == len(collision_failures)
         ),
+        "core_questions": {
+            "q1_validation_success_reproduced_on_test": {
+                "answer": generalization == "similar",
+                "interpretation": (
+                    f"Validation reached {validation['success_count']}/10 and final test reached "
+                    f"{test['success_count']}/10; both recorded {validation['collision_count']} and "
+                    f"{test['collision_count']} conservative collisions respectively."
+                ),
+            },
+            "q2_unsafe_prediction_signature_reproduced": {
+                "answer": bool(
+                    collision_failures
+                    and full_before_collision == len(collision_failures)
+                    and control_before_collision == len(collision_failures)
+                ),
+                "interpretation": (
+                    f"All {len(collision_failures)} test collisions were preceded by both a full-horizon "
+                    "unsafe prediction and an unsafe first-eight control prediction."
+                ),
+            },
+            "q3_scene_geometry_association_continued": {
+                "answer": bool(shared_difficult_attributes),
+                "interpretation": (
+                    f"Failures were concentrated in {difficult_validation_scene} during validation and "
+                    f"{difficult_test_scene} during test. Their shared factors were "
+                    f"{', '.join(shared_difficult_attributes) or 'none'}; this is descriptive and the "
+                    "co-varying scene factors do not establish causality."
+                ),
+            },
+        },
+        "descriptive_patterns": {
+            "route_length": (
+                f"Test mean planned length was "
+                f"{test['descriptive_findings']['planned_length_mean_pass_m']:.3f} m for PASS and "
+                f"{test['descriptive_findings']['planned_length_mean_fail_m']:.3f} m for FAIL; each route bucket had "
+                "exactly one success, so this sample does not show a monotonic length trend."
+            ),
+            "expert_clearance": (
+                f"Mean expert planning clearance was {test_pass['mean_expert_planning_clearance_m']:.3f} m "
+                f"for PASS and {test_fail['mean_expert_planning_clearance_m']:.3f} m for FAIL, a small "
+                "difference in this ten-mission sample."
+            ),
+            "camera_perturbation": (
+                f"Mean normalized camera-perturbation extremeness was "
+                f"{test_pass['mean_camera_perturbation_extremeness_fraction']:.3f} for PASS and "
+                f"{test_fail['mean_camera_perturbation_extremeness_fraction']:.3f} for FAIL; failures "
+                "were not concentrated at the more extreme settings."
+            ),
+            "duration": (
+                f"Mean simulated duration was {test_pass['mean_simulated_duration_s']:.3f} s for PASS and "
+                f"{test_fail['mean_simulated_duration_s']:.3f} s for FAIL, so failures were not confined "
+                "to longer rollouts."
+            ),
+        },
         "test_split_first_opened_for": "NavDiffusion V0 final closed-loop evaluation",
         "future_v1_requires_new_final_test_scenes": True,
         "descriptive_only": True,
@@ -332,6 +403,24 @@ def _write_comparison_markdown(comparison: dict) -> None:
         f"- Validation unsafe-trajectory failure signature reproduced: "
         f"**{comparison['unsafe_prediction_failure_signature_reproduced']}**",
         "",
+        "## Answers to the final-evaluation questions",
+        "",
+    ])
+    for key in (
+        "q1_validation_success_reproduced_on_test",
+        "q2_unsafe_prediction_signature_reproduced",
+        "q3_scene_geometry_association_continued",
+    ):
+        item = comparison["core_questions"][key]
+        lines.append(f"- **{'YES' if item['answer'] else 'NO'}** — {item['interpretation']}")
+    lines.extend([
+        "",
+        "## Descriptive patterns",
+        "",
+    ])
+    lines.extend(f"- {text}" for text in comparison["descriptive_patterns"].values())
+    lines.extend([
+        "",
         "## Held-out scene governance",
         "",
         "Dataset V0 test was first opened for this NavDiffusion V0 final closed-loop evaluation. "
@@ -392,6 +481,9 @@ def _analyze_test(report: dict) -> dict:
         "success_count": sum(item["success"] for item in episodes),
         "failure_count": sum(not item["success"] for item in episodes),
         "collision_count": sum(item["collision"] for item in episodes),
+        "terrain_exit_count": sum(
+            item["failure_reason"] == "model_terrain_exit" for item in episodes
+        ),
         "timeout_count": sum(item["failure_reason"] == "timeout" for item in episodes),
         "stall_count": sum(item["failure_reason"] == "stall" for item in episodes),
         "test_split_used": True,

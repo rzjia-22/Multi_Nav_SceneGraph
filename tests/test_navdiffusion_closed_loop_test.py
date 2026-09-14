@@ -1,5 +1,6 @@
 from pathlib import Path
 import ast
+import json
 import inspect
 
 import pytest
@@ -120,3 +121,51 @@ def test_validation_evidence_remains_sealed_after_generic_runner_refactor():
     assert report["test_split_used"] is False
     assert report["full_validation"]["test_split_used"] is False
     assert report["full_validation"]["episode_count"] == 10
+
+
+def test_final_test_evidence_is_complete_frozen_and_one_pass():
+    artifact_root = ROOT / "artifacts/navdiffusion_v0_test"
+    report = json.loads((artifact_root / "test_report.json").read_text(encoding="utf-8"))
+    analysis = json.loads((artifact_root / "test_analysis.json").read_text(encoding="utf-8"))
+    execution = json.loads((artifact_root / "test_execution.json").read_text(encoding="utf-8"))
+
+    assert report["execution_completed"] is True
+    assert report["evaluation_split"] == "test"
+    assert report["test_split_used"] is True
+    assert report["train_split_executed"] is False
+    assert report["validation_split_executed"] is False
+    assert report["mapping_enabled"] is False
+    assert report["checkpoint_sha256"] == CHECKPOINT_SHA256
+    assert report["episode_count"] == 10
+    assert report["success_count"] == 3
+    assert report["collision_count"] == 6
+    assert report["timeout_count"] == 0
+    assert report["stall_count"] == 0
+    assert report["not_run_episodes"] == []
+    assert report["compose_return_codes"] == [0, 0]
+
+    assert analysis["scope"] == "test_only_final_one_pass"
+    assert analysis["terrain_exit_count"] == 1
+    assert analysis["failure_classes"] == {"MODEL": 7}
+    assert all(item["checkpoint_sha256"] == CHECKPOINT_SHA256 for item in analysis["episodes"])
+    assert all(item["moving_stale_rgb_frames"] == 0 for item in analysis["episodes"])
+    assert all(item["full_and_control_same_sample"] for item in analysis["episodes"])
+    assert execution["status"] == "complete"
+    assert execution["episode_count"] == 10
+    assert execution["mid_test_tuning"] is False
+    assert execution["per_episode_reruns"] == 0
+
+
+def test_validation_test_comparison_preserves_governance_and_failure_signature():
+    comparison = json.loads((
+        ROOT / "artifacts/navdiffusion_v0_test/validation_vs_test.json"
+    ).read_text(encoding="utf-8"))
+    assert comparison["validation"]["success_count"] == 4
+    assert comparison["validation"]["collision_count"] == 6
+    assert comparison["test"]["success_count"] == 3
+    assert comparison["test"]["collision_count"] == 6
+    assert comparison["held_out_generalization_classification"] == "similar"
+    assert comparison["test_collisions_with_prior_full_unsafe_prediction"] == 6
+    assert comparison["test_collisions_with_prior_control_unsafe_prediction"] == 6
+    assert comparison["unsafe_prediction_failure_signature_reproduced"] is True
+    assert comparison["future_v1_requires_new_final_test_scenes"] is True

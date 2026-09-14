@@ -1,0 +1,716 @@
+{
+  "comparison_version": 1,
+  "core_questions": {
+    "q1_validation_success_reproduced_on_test": {
+      "answer": true,
+      "interpretation": "Validation reached 4/10 and final test reached 3/10; both recorded 6 and 6 conservative collisions respectively."
+    },
+    "q2_unsafe_prediction_signature_reproduced": {
+      "answer": true,
+      "interpretation": "All 6 test collisions were preceded by both a full-horizon unsafe prediction and an unsafe first-eight control prediction."
+    },
+    "q3_scene_geometry_association_continued": {
+      "answer": true,
+      "interpretation": "Failures were concentrated in validation_scene_001 during validation and test_scene_001 during test. Their shared factors were ground, terrain, tree_density; this is descriptive and the co-varying scene factors do not establish causality."
+    }
+  },
+  "descriptive_only": true,
+  "descriptive_patterns": {
+    "camera_perturbation": "Mean normalized camera-perturbation extremeness was 0.855 for PASS and 0.748 for FAIL; failures were not concentrated at the more extreme settings.",
+    "duration": "Mean simulated duration was 17.110 s for PASS and 13.524 s for FAIL, so failures were not confined to longer rollouts.",
+    "expert_clearance": "Mean expert planning clearance was 0.046 m for PASS and 0.042 m for FAIL, a small difference in this ten-mission sample.",
+    "route_length": "Test mean planned length was 6.404 m for PASS and 6.547 m for FAIL; each route bucket had exactly one success, so this sample does not show a monotonic length trend."
+  },
+  "future_v1_requires_new_final_test_scenes": true,
+  "held_out_generalization_classification": "similar",
+  "test": {
+    "collision_count": 6,
+    "environment_summary": {
+      "density": {
+        "high": {
+          "collision_count": 5,
+          "episode_count": 5,
+          "failure_count": 5,
+          "mean_camera_perturbation_extremeness_fraction": 0.695759228385513,
+          "mean_control_prediction_unsafe_fraction": 0.13895755407383312,
+          "mean_expert_cross_track_error_m": 0.4430993533529817,
+          "mean_expert_planning_clearance_m": 0.041003881748754537,
+          "mean_expert_turn_burden_rad_per_m": 0.25363404494516867,
+          "mean_full_prediction_unsafe_fraction": 0.41926239135541465,
+          "mean_goal_error_m": 1.6622830649254343,
+          "mean_longest_no_progress_duration_s": 2.0360000000000005,
+          "mean_minimum_clearance_m": -0.0012068186758441568,
+          "mean_monotonic_progress_fraction": 1.0,
+          "mean_plan_count": 26.8,
+          "mean_safety_override_fraction": 0.08031081538476129,
+          "mean_simulated_duration_s": 14.074000000000002,
+          "success_count": 0,
+          "success_rate": 0.0
+        },
+        "low": {
+          "collision_count": 1,
+          "episode_count": 5,
+          "failure_count": 2,
+          "mean_camera_perturbation_extremeness_fraction": 0.8640325221956104,
+          "mean_control_prediction_unsafe_fraction": 0.016666666666666666,
+          "mean_expert_cross_track_error_m": 0.8882071124584971,
+          "mean_expert_planning_clearance_m": 0.04503752578845148,
+          "mean_expert_turn_burden_rad_per_m": 0.21611809897443707,
+          "mean_full_prediction_unsafe_fraction": 0.11770562770562772,
+          "mean_goal_error_m": 1.8878409954852213,
+          "mean_longest_no_progress_duration_s": 0.6280000000000001,
+          "mean_minimum_clearance_m": 0.12410973230736921,
+          "mean_monotonic_progress_fraction": 1.0,
+          "mean_plan_count": 29.2,
+          "mean_safety_override_fraction": 0.023771315293502848,
+          "mean_simulated_duration_s": 15.126,
+          "success_count": 3,
+          "success_rate": 0.6
+        }
+      },
+      "ground": {
+        "bare_soil": {
+          "collision_count": 5,
+          "episode_count": 5,
+          "failure_count": 5,
+          "mean_camera_perturbation_extremeness_fraction": 0.695759228385513,
+          "mean_control_prediction_unsafe_fraction": 0.13895755407383312,
+          "mean_expert_cross_track_error_m": 0.4430993533529817,
+          "mean_expert_planning_clearance_m": 0.041003881748754537,
+          "mean_expert_turn_burden_rad_per_m": 0.25363404494516867,
+          "mean_full_prediction_unsafe_fraction": 0.41926239135541465,
+          "mean_goal_error_m": 1.6622830649254343,
+          "mean_longest_no_progress_duration_s": 2.0360000000000005,
+          "mean_minimum_clearance_m": -0.0012068186758441568,
+          "mean_monotonic_progress_fraction": 1.0,
+          "mean_plan_count": 26.8,
+          "mean_safety_override_fraction": 0.08031081538476129,
+          "mean_simulated_duration_s": 14.074000000000002,
+          "success_count": 0,
+          "success_rate": 0.0
+        },
+        "grass": {
+          "collision_count": 1,
+          "episode_count": 5,
+          "failure_count": 2,
+          "mean_camera_perturbation_extremeness_fraction": 0.8640325221956104,
+          "mean_control_prediction_unsafe_fraction": 0.016666666666666666,
+          "mean_expert_cross_track_error_m": 0.8882071124584971,
+          "mean_expert_planning_clearance_m": 0.04503752578845148,
+          "mean_expert_turn_burden_rad_per_m": 0.21611809897443707,
+          "mean_full_prediction_unsafe_fraction": 0.11770562770562772,
+          "mean_goal_error_m": 1.8878409954852213,
+          "mean_longest_no_progress_duration_s": 0.6280000000000001,
+          "mean_minimum_clearance_m": 0.12410973230736921,
+          "mean_monotonic_progress_fraction": 1.0,
+          "mean_plan_count": 29.2,
+          "mean_safety_override_fraction": 0.023771315293502848,
+          "mean_simulated_duration_s": 15.126,
+          "success_count": 3,
+          "success_rate": 0.6
+        }
+      },
+      "lighting": {
+        "bright": {
+          "collision_count": 1,
+          "episode_count": 5,
+          "failure_count": 2,
+          "mean_camera_perturbation_extremeness_fraction": 0.8640325221956104,
+          "mean_control_prediction_unsafe_fraction": 0.016666666666666666,
+          "mean_expert_cross_track_error_m": 0.8882071124584971,
+          "mean_expert_planning_clearance_m": 0.04503752578845148,
+          "mean_expert_turn_burden_rad_per_m": 0.21611809897443707,
+          "mean_full_prediction_unsafe_fraction": 0.11770562770562772,
+          "mean_goal_error_m": 1.8878409954852213,
+          "mean_longest_no_progress_duration_s": 0.6280000000000001,
+          "mean_minimum_clearance_m": 0.12410973230736921,
+          "mean_monotonic_progress_fraction": 1.0,
+          "mean_plan_count": 29.2,
+          "mean_safety_override_fraction": 0.023771315293502848,
+          "mean_simulated_duration_s": 15.126,
+          "success_count": 3,
+          "success_rate": 0.6
+        },
+        "normal": {
+          "collision_count": 5,
+          "episode_count": 5,
+          "failure_count": 5,
+          "mean_camera_perturbation_extremeness_fraction": 0.695759228385513,
+          "mean_control_prediction_unsafe_fraction": 0.13895755407383312,
+          "mean_expert_cross_track_error_m": 0.4430993533529817,
+          "mean_expert_planning_clearance_m": 0.041003881748754537,
+          "mean_expert_turn_burden_rad_per_m": 0.25363404494516867,
+          "mean_full_prediction_unsafe_fraction": 0.41926239135541465,
+          "mean_goal_error_m": 1.6622830649254343,
+          "mean_longest_no_progress_duration_s": 2.0360000000000005,
+          "mean_minimum_clearance_m": -0.0012068186758441568,
+          "mean_monotonic_progress_fraction": 1.0,
+          "mean_plan_count": 26.8,
+          "mean_safety_override_fraction": 0.08031081538476129,
+          "mean_simulated_duration_s": 14.074000000000002,
+          "success_count": 0,
+          "success_rate": 0.0
+        }
+      },
+      "terrain": {
+        "gentle": {
+          "collision_count": 1,
+          "episode_count": 5,
+          "failure_count": 2,
+          "mean_camera_perturbation_extremeness_fraction": 0.8640325221956104,
+          "mean_control_prediction_unsafe_fraction": 0.016666666666666666,
+          "mean_expert_cross_track_error_m": 0.8882071124584971,
+          "mean_expert_planning_clearance_m": 0.04503752578845148,
+          "mean_expert_turn_burden_rad_per_m": 0.21611809897443707,
+          "mean_full_prediction_unsafe_fraction": 0.11770562770562772,
+          "mean_goal_error_m": 1.8878409954852213,
+          "mean_longest_no_progress_duration_s": 0.6280000000000001,
+          "mean_minimum_clearance_m": 0.12410973230736921,
+          "mean_monotonic_progress_fraction": 1.0,
+          "mean_plan_count": 29.2,
+          "mean_safety_override_fraction": 0.023771315293502848,
+          "mean_simulated_duration_s": 15.126,
+          "success_count": 3,
+          "success_rate": 0.6
+        },
+        "moderate": {
+          "collision_count": 5,
+          "episode_count": 5,
+          "failure_count": 5,
+          "mean_camera_perturbation_extremeness_fraction": 0.695759228385513,
+          "mean_control_prediction_unsafe_fraction": 0.13895755407383312,
+          "mean_expert_cross_track_error_m": 0.4430993533529817,
+          "mean_expert_planning_clearance_m": 0.041003881748754537,
+          "mean_expert_turn_burden_rad_per_m": 0.25363404494516867,
+          "mean_full_prediction_unsafe_fraction": 0.41926239135541465,
+          "mean_goal_error_m": 1.6622830649254343,
+          "mean_longest_no_progress_duration_s": 2.0360000000000005,
+          "mean_minimum_clearance_m": -0.0012068186758441568,
+          "mean_monotonic_progress_fraction": 1.0,
+          "mean_plan_count": 26.8,
+          "mean_safety_override_fraction": 0.08031081538476129,
+          "mean_simulated_duration_s": 14.074000000000002,
+          "success_count": 0,
+          "success_rate": 0.0
+        }
+      }
+    },
+    "episode_count": 10,
+    "prediction_risk_by_outcome": {
+      "ALL": {
+        "control_prediction_unsafe_event_count": 21,
+        "control_prediction_unsafe_fraction": 0.075,
+        "full_prediction_unsafe_event_count": 63,
+        "full_prediction_unsafe_fraction": 0.225,
+        "planning_cycle_count": 280
+      },
+      "FAIL": {
+        "control_prediction_unsafe_event_count": 21,
+        "control_prediction_unsafe_fraction": 0.11602209944751381,
+        "full_prediction_unsafe_event_count": 61,
+        "full_prediction_unsafe_fraction": 0.3370165745856354,
+        "planning_cycle_count": 181
+      },
+      "PASS": {
+        "control_prediction_unsafe_event_count": 0,
+        "control_prediction_unsafe_fraction": 0.0,
+        "full_prediction_unsafe_event_count": 2,
+        "full_prediction_unsafe_fraction": 0.020202020202020204,
+        "planning_cycle_count": 99
+      }
+    },
+    "route_bucket_summary": {
+      "long": {
+        "collision_count": 2,
+        "episode_count": 3,
+        "failure_count": 2,
+        "mean_camera_perturbation_extremeness_fraction": 0.8069595382592639,
+        "mean_control_prediction_unsafe_fraction": 0.053418803418803416,
+        "mean_expert_cross_track_error_m": 1.4524511403690024,
+        "mean_expert_planning_clearance_m": 0.024043454441143235,
+        "mean_expert_turn_burden_rad_per_m": 0.22610593015763877,
+        "mean_full_prediction_unsafe_fraction": 0.25606060606060604,
+        "mean_goal_error_m": 2.4682252120424337,
+        "mean_longest_no_progress_duration_s": 0.6666666666666666,
+        "mean_minimum_clearance_m": 0.01259136387637346,
+        "mean_monotonic_progress_fraction": 1.0,
+        "mean_plan_count": 39.0,
+        "mean_safety_override_fraction": 0.0374925818617907,
+        "mean_simulated_duration_s": 20.116666666666664,
+        "success_count": 1,
+        "success_rate": 0.3333333333333333
+      },
+      "medium": {
+        "collision_count": 2,
+        "episode_count": 4,
+        "failure_count": 3,
+        "mean_camera_perturbation_extremeness_fraction": 0.8120782367945111,
+        "mean_control_prediction_unsafe_fraction": 0.0625,
+        "mean_expert_cross_track_error_m": 0.215345844607193,
+        "mean_expert_planning_clearance_m": 0.048810121054132904,
+        "mean_expert_turn_burden_rad_per_m": 0.149166862913939,
+        "mean_full_prediction_unsafe_fraction": 0.22095959595959594,
+        "mean_goal_error_m": 1.862007685690049,
+        "mean_longest_no_progress_duration_s": 1.52,
+        "mean_minimum_clearance_m": 0.09558430038038335,
+        "mean_monotonic_progress_fraction": 1.0,
+        "mean_plan_count": 22.0,
+        "mean_safety_override_fraction": 0.0742309333735055,
+        "mean_simulated_duration_s": 11.567499999999999,
+        "success_count": 1,
+        "success_rate": 0.25
+      },
+      "short": {
+        "collision_count": 2,
+        "episode_count": 3,
+        "failure_count": 2,
+        "mean_camera_perturbation_extremeness_fraction": 0.7099223969832603,
+        "mean_control_prediction_unsafe_fraction": 0.1226215644820296,
+        "mean_expert_cross_track_error_m": 0.4792651765072052,
+        "mean_expert_planning_clearance_m": 0.054278730048689584,
+        "mean_expert_turn_burden_rad_per_m": 0.3579251591564521,
+        "mean_full_prediction_unsafe_fraction": 0.3442732977616698,
+        "mean_goal_error_m": 0.9659713077219271,
+        "mean_longest_no_progress_duration_s": 1.746666666666668,
+        "mean_minimum_clearance_m": 0.06480109166899051,
+        "mean_monotonic_progress_fraction": 1.0,
+        "mean_plan_count": 25.0,
+        "mean_safety_override_fraction": 0.037003058103975535,
+        "mean_simulated_duration_s": 13.126666666666665,
+        "success_count": 1,
+        "success_rate": 0.3333333333333333
+      }
+    },
+    "safety_by_outcome": {
+      "FAIL": {
+        "episode_count": 7,
+        "episodes_with_override": 5,
+        "mean_first_intervention_s": 13.862,
+        "mean_override_fraction": 0.06215769435337,
+        "override_duration_s": 7.34,
+        "override_event_count": 7
+      },
+      "PASS": {
+        "episode_count": 3,
+        "episodes_with_override": 2,
+        "mean_first_intervention_s": 18.055,
+        "mean_override_fraction": 0.028435597639243564,
+        "override_duration_s": 1.6,
+        "override_event_count": 2
+      }
+    },
+    "scene_environment": {
+      "test_scene_000": {
+        "ground": "grass",
+        "lighting": "bright",
+        "terrain": "gentle",
+        "tree_asset_composition": {
+          "nvidia_blue_berry_elder": 6,
+          "nvidia_gray_birch": 22
+        },
+        "tree_density": "low"
+      },
+      "test_scene_001": {
+        "ground": "bare_soil",
+        "lighting": "normal",
+        "terrain": "moderate",
+        "tree_asset_composition": {
+          "nvidia_blue_berry_elder": 24,
+          "nvidia_gray_birch": 32
+        },
+        "tree_density": "high"
+      }
+    },
+    "scene_summary": {
+      "test_scene_000": {
+        "collision_count": 1,
+        "episode_count": 5,
+        "failure_count": 2,
+        "mean_camera_perturbation_extremeness_fraction": 0.8640325221956104,
+        "mean_control_prediction_unsafe_fraction": 0.016666666666666666,
+        "mean_expert_cross_track_error_m": 0.8882071124584971,
+        "mean_expert_planning_clearance_m": 0.04503752578845148,
+        "mean_expert_turn_burden_rad_per_m": 0.21611809897443707,
+        "mean_full_prediction_unsafe_fraction": 0.11770562770562772,
+        "mean_goal_error_m": 1.8878409954852213,
+        "mean_longest_no_progress_duration_s": 0.6280000000000001,
+        "mean_minimum_clearance_m": 0.12410973230736921,
+        "mean_monotonic_progress_fraction": 1.0,
+        "mean_plan_count": 29.2,
+        "mean_safety_override_fraction": 0.023771315293502848,
+        "mean_simulated_duration_s": 15.126,
+        "success_count": 3,
+        "success_rate": 0.6
+      },
+      "test_scene_001": {
+        "collision_count": 5,
+        "episode_count": 5,
+        "failure_count": 5,
+        "mean_camera_perturbation_extremeness_fraction": 0.695759228385513,
+        "mean_control_prediction_unsafe_fraction": 0.13895755407383312,
+        "mean_expert_cross_track_error_m": 0.4430993533529817,
+        "mean_expert_planning_clearance_m": 0.041003881748754537,
+        "mean_expert_turn_burden_rad_per_m": 0.25363404494516867,
+        "mean_full_prediction_unsafe_fraction": 0.41926239135541465,
+        "mean_goal_error_m": 1.6622830649254343,
+        "mean_longest_no_progress_duration_s": 2.0360000000000005,
+        "mean_minimum_clearance_m": -0.0012068186758441568,
+        "mean_monotonic_progress_fraction": 1.0,
+        "mean_plan_count": 26.8,
+        "mean_safety_override_fraction": 0.08031081538476129,
+        "mean_simulated_duration_s": 14.074000000000002,
+        "success_count": 0,
+        "success_rate": 0.0
+      }
+    },
+    "success_count": 3
+  },
+  "test_collision_failure_count": 6,
+  "test_collisions_with_prior_control_unsafe_prediction": 6,
+  "test_collisions_with_prior_full_unsafe_prediction": 6,
+  "test_minus_validation_success_count": -1,
+  "test_split_first_opened_for": "NavDiffusion V0 final closed-loop evaluation",
+  "unsafe_prediction_failure_signature_reproduced": true,
+  "validation": {
+    "collision_count": 6,
+    "environment_summary": {
+      "density": {
+        "high": {
+          "collision_count": 4,
+          "episode_count": 5,
+          "failure_count": 4,
+          "mean_camera_perturbation_extremeness_fraction": 0.7876617735671912,
+          "mean_control_prediction_unsafe_fraction": 0.13867243867243867,
+          "mean_expert_cross_track_error_m": 0.2192211276095432,
+          "mean_expert_planning_clearance_m": 0.02254148211680318,
+          "mean_expert_turn_burden_rad_per_m": 0.3225946216457699,
+          "mean_full_prediction_unsafe_fraction": 0.3851370851370851,
+          "mean_goal_error_m": 2.6734464747465707,
+          "mean_longest_no_progress_duration_s": 1.2399999999999998,
+          "mean_minimum_clearance_m": 0.0457560618270341,
+          "mean_monotonic_progress_fraction": 1.0,
+          "mean_plan_count": 14.6,
+          "mean_safety_override_fraction": 0.045709455289727724,
+          "mean_simulated_duration_s": 8.002,
+          "success_count": 1,
+          "success_rate": 0.2
+        },
+        "medium": {
+          "collision_count": 2,
+          "episode_count": 5,
+          "failure_count": 2,
+          "mean_camera_perturbation_extremeness_fraction": 0.7348927644981302,
+          "mean_control_prediction_unsafe_fraction": 0.06666666666666667,
+          "mean_expert_cross_track_error_m": 0.3215192738428256,
+          "mean_expert_planning_clearance_m": 0.027881749963027436,
+          "mean_expert_turn_burden_rad_per_m": 0.271178219779736,
+          "mean_full_prediction_unsafe_fraction": 0.29393939393939394,
+          "mean_goal_error_m": 2.39619240223293,
+          "mean_longest_no_progress_duration_s": 0.5919999999999987,
+          "mean_minimum_clearance_m": 0.10732419943292774,
+          "mean_monotonic_progress_fraction": 1.0,
+          "mean_plan_count": 22.6,
+          "mean_safety_override_fraction": 0.011494252873563218,
+          "mean_simulated_duration_s": 12.126000000000001,
+          "success_count": 3,
+          "success_rate": 0.6
+        }
+      },
+      "ground": {
+        "bare_soil": {
+          "collision_count": 4,
+          "episode_count": 5,
+          "failure_count": 4,
+          "mean_camera_perturbation_extremeness_fraction": 0.7876617735671912,
+          "mean_control_prediction_unsafe_fraction": 0.13867243867243867,
+          "mean_expert_cross_track_error_m": 0.2192211276095432,
+          "mean_expert_planning_clearance_m": 0.02254148211680318,
+          "mean_expert_turn_burden_rad_per_m": 0.3225946216457699,
+          "mean_full_prediction_unsafe_fraction": 0.3851370851370851,
+          "mean_goal_error_m": 2.6734464747465707,
+          "mean_longest_no_progress_duration_s": 1.2399999999999998,
+          "mean_minimum_clearance_m": 0.0457560618270341,
+          "mean_monotonic_progress_fraction": 1.0,
+          "mean_plan_count": 14.6,
+          "mean_safety_override_fraction": 0.045709455289727724,
+          "mean_simulated_duration_s": 8.002,
+          "success_count": 1,
+          "success_rate": 0.2
+        },
+        "grass": {
+          "collision_count": 2,
+          "episode_count": 5,
+          "failure_count": 2,
+          "mean_camera_perturbation_extremeness_fraction": 0.7348927644981302,
+          "mean_control_prediction_unsafe_fraction": 0.06666666666666667,
+          "mean_expert_cross_track_error_m": 0.3215192738428256,
+          "mean_expert_planning_clearance_m": 0.027881749963027436,
+          "mean_expert_turn_burden_rad_per_m": 0.271178219779736,
+          "mean_full_prediction_unsafe_fraction": 0.29393939393939394,
+          "mean_goal_error_m": 2.39619240223293,
+          "mean_longest_no_progress_duration_s": 0.5919999999999987,
+          "mean_minimum_clearance_m": 0.10732419943292774,
+          "mean_monotonic_progress_fraction": 1.0,
+          "mean_plan_count": 22.6,
+          "mean_safety_override_fraction": 0.011494252873563218,
+          "mean_simulated_duration_s": 12.126000000000001,
+          "success_count": 3,
+          "success_rate": 0.6
+        }
+      },
+      "lighting": {
+        "bright": {
+          "collision_count": 4,
+          "episode_count": 5,
+          "failure_count": 4,
+          "mean_camera_perturbation_extremeness_fraction": 0.7876617735671912,
+          "mean_control_prediction_unsafe_fraction": 0.13867243867243867,
+          "mean_expert_cross_track_error_m": 0.2192211276095432,
+          "mean_expert_planning_clearance_m": 0.02254148211680318,
+          "mean_expert_turn_burden_rad_per_m": 0.3225946216457699,
+          "mean_full_prediction_unsafe_fraction": 0.3851370851370851,
+          "mean_goal_error_m": 2.6734464747465707,
+          "mean_longest_no_progress_duration_s": 1.2399999999999998,
+          "mean_minimum_clearance_m": 0.0457560618270341,
+          "mean_monotonic_progress_fraction": 1.0,
+          "mean_plan_count": 14.6,
+          "mean_safety_override_fraction": 0.045709455289727724,
+          "mean_simulated_duration_s": 8.002,
+          "success_count": 1,
+          "success_rate": 0.2
+        },
+        "dim": {
+          "collision_count": 2,
+          "episode_count": 5,
+          "failure_count": 2,
+          "mean_camera_perturbation_extremeness_fraction": 0.7348927644981302,
+          "mean_control_prediction_unsafe_fraction": 0.06666666666666667,
+          "mean_expert_cross_track_error_m": 0.3215192738428256,
+          "mean_expert_planning_clearance_m": 0.027881749963027436,
+          "mean_expert_turn_burden_rad_per_m": 0.271178219779736,
+          "mean_full_prediction_unsafe_fraction": 0.29393939393939394,
+          "mean_goal_error_m": 2.39619240223293,
+          "mean_longest_no_progress_duration_s": 0.5919999999999987,
+          "mean_minimum_clearance_m": 0.10732419943292774,
+          "mean_monotonic_progress_fraction": 1.0,
+          "mean_plan_count": 22.6,
+          "mean_safety_override_fraction": 0.011494252873563218,
+          "mean_simulated_duration_s": 12.126000000000001,
+          "success_count": 3,
+          "success_rate": 0.6
+        }
+      },
+      "terrain": {
+        "flat": {
+          "collision_count": 2,
+          "episode_count": 5,
+          "failure_count": 2,
+          "mean_camera_perturbation_extremeness_fraction": 0.7348927644981302,
+          "mean_control_prediction_unsafe_fraction": 0.06666666666666667,
+          "mean_expert_cross_track_error_m": 0.3215192738428256,
+          "mean_expert_planning_clearance_m": 0.027881749963027436,
+          "mean_expert_turn_burden_rad_per_m": 0.271178219779736,
+          "mean_full_prediction_unsafe_fraction": 0.29393939393939394,
+          "mean_goal_error_m": 2.39619240223293,
+          "mean_longest_no_progress_duration_s": 0.5919999999999987,
+          "mean_minimum_clearance_m": 0.10732419943292774,
+          "mean_monotonic_progress_fraction": 1.0,
+          "mean_plan_count": 22.6,
+          "mean_safety_override_fraction": 0.011494252873563218,
+          "mean_simulated_duration_s": 12.126000000000001,
+          "success_count": 3,
+          "success_rate": 0.6
+        },
+        "moderate": {
+          "collision_count": 4,
+          "episode_count": 5,
+          "failure_count": 4,
+          "mean_camera_perturbation_extremeness_fraction": 0.7876617735671912,
+          "mean_control_prediction_unsafe_fraction": 0.13867243867243867,
+          "mean_expert_cross_track_error_m": 0.2192211276095432,
+          "mean_expert_planning_clearance_m": 0.02254148211680318,
+          "mean_expert_turn_burden_rad_per_m": 0.3225946216457699,
+          "mean_full_prediction_unsafe_fraction": 0.3851370851370851,
+          "mean_goal_error_m": 2.6734464747465707,
+          "mean_longest_no_progress_duration_s": 1.2399999999999998,
+          "mean_minimum_clearance_m": 0.0457560618270341,
+          "mean_monotonic_progress_fraction": 1.0,
+          "mean_plan_count": 14.6,
+          "mean_safety_override_fraction": 0.045709455289727724,
+          "mean_simulated_duration_s": 8.002,
+          "success_count": 1,
+          "success_rate": 0.2
+        }
+      }
+    },
+    "episode_count": 10,
+    "prediction_risk_by_outcome": {
+      "ALL": {
+        "control_prediction_unsafe_event_count": 11,
+        "control_prediction_unsafe_fraction": 0.05913978494623656,
+        "full_prediction_unsafe_event_count": 42,
+        "full_prediction_unsafe_fraction": 0.22580645161290322,
+        "planning_cycle_count": 186
+      },
+      "FAIL": {
+        "control_prediction_unsafe_event_count": 11,
+        "control_prediction_unsafe_fraction": 0.1527777777777778,
+        "full_prediction_unsafe_event_count": 36,
+        "full_prediction_unsafe_fraction": 0.5,
+        "planning_cycle_count": 72
+      },
+      "PASS": {
+        "control_prediction_unsafe_event_count": 0,
+        "control_prediction_unsafe_fraction": 0.0,
+        "full_prediction_unsafe_event_count": 6,
+        "full_prediction_unsafe_fraction": 0.05263157894736842,
+        "planning_cycle_count": 114
+      }
+    },
+    "route_bucket_summary": {
+      "long": {
+        "collision_count": 2,
+        "episode_count": 3,
+        "failure_count": 2,
+        "mean_camera_perturbation_extremeness_fraction": 0.694021270614121,
+        "mean_control_prediction_unsafe_fraction": 0.0462962962962963,
+        "mean_expert_cross_track_error_m": 0.29625319827852986,
+        "mean_expert_planning_clearance_m": 0.012323454532508715,
+        "mean_expert_turn_burden_rad_per_m": 0.2472127417479246,
+        "mean_full_prediction_unsafe_fraction": 0.3055555555555556,
+        "mean_goal_error_m": 3.515477679053729,
+        "mean_longest_no_progress_duration_s": 0.6066666666666644,
+        "mean_minimum_clearance_m": 0.06415441604604825,
+        "mean_monotonic_progress_fraction": 1.0,
+        "mean_plan_count": 22.666666666666668,
+        "mean_safety_override_fraction": 0.02050388946940671,
+        "mean_simulated_duration_s": 12.206666666666665,
+        "success_count": 1,
+        "success_rate": 0.3333333333333333
+      },
+      "medium": {
+        "collision_count": 3,
+        "episode_count": 4,
+        "failure_count": 3,
+        "mean_camera_perturbation_extremeness_fraction": 0.854416631262116,
+        "mean_control_prediction_unsafe_fraction": 0.16639610389610388,
+        "mean_expert_cross_track_error_m": 0.23868226331892411,
+        "mean_expert_planning_clearance_m": 0.04585469920040697,
+        "mean_expert_turn_burden_rad_per_m": 0.3111797121772679,
+        "mean_full_prediction_unsafe_fraction": 0.4943181818181818,
+        "mean_goal_error_m": 2.67389080835346,
+        "mean_longest_no_progress_duration_s": 0.5899999999999994,
+        "mean_minimum_clearance_m": 0.048422434079746154,
+        "mean_monotonic_progress_fraction": 1.0,
+        "mean_plan_count": 16.5,
+        "mean_safety_override_fraction": 0.032362459546925564,
+        "mean_simulated_duration_s": 8.934999999999999,
+        "success_count": 1,
+        "success_rate": 0.25
+      },
+      "short": {
+        "collision_count": 1,
+        "episode_count": 3,
+        "failure_count": 1,
+        "mean_camera_perturbation_extremeness_fraction": 0.7043474511452601,
+        "mean_control_prediction_unsafe_fraction": 0.07407407407407407,
+        "mean_expert_cross_track_error_m": 0.28673778638351927,
+        "mean_expert_planning_clearance_m": 0.010575666666666353,
+        "mean_expert_turn_burden_rad_per_m": 0.3275023777248946,
+        "mean_full_prediction_unsafe_fraction": 0.16714766714766713,
+        "mean_goal_error_m": 1.3687327047741595,
+        "mean_longest_no_progress_duration_s": 1.6600000000000004,
+        "mean_minimum_clearance_m": 0.12641610728089328,
+        "mean_monotonic_progress_fraction": 1.0,
+        "mean_plan_count": 17.333333333333332,
+        "mean_safety_override_fraction": 0.03168567807351077,
+        "mean_simulated_duration_s": 9.426666666666668,
+        "success_count": 2,
+        "success_rate": 0.6666666666666666
+      }
+    },
+    "safety_by_outcome": {
+      "FAIL": {
+        "episode_count": 6,
+        "episodes_with_override": 4,
+        "mean_first_intervention_s": 6.299999999999999,
+        "mean_override_fraction": 0.047669756802742456,
+        "override_duration_s": 1.7400000000000002,
+        "override_event_count": 4
+      },
+      "PASS": {
+        "episode_count": 4,
+        "episodes_with_override": 0,
+        "mean_first_intervention_s": null,
+        "mean_override_fraction": 0.0,
+        "override_duration_s": 0.0,
+        "override_event_count": 0
+      }
+    },
+    "scene_environment": {
+      "validation_scene_000": {
+        "ground": "grass",
+        "lighting": "dim",
+        "terrain": "flat",
+        "tree_asset_composition": {
+          "nvidia_blue_berry_elder": 21,
+          "nvidia_gray_birch": 21
+        },
+        "tree_density": "medium"
+      },
+      "validation_scene_001": {
+        "ground": "bare_soil",
+        "lighting": "bright",
+        "terrain": "moderate",
+        "tree_asset_composition": {
+          "nvidia_blue_berry_elder": 26,
+          "nvidia_gray_birch": 30
+        },
+        "tree_density": "high"
+      }
+    },
+    "scene_summary": {
+      "validation_scene_000": {
+        "collision_count": 2,
+        "episode_count": 5,
+        "failure_count": 2,
+        "mean_camera_perturbation_extremeness_fraction": 0.7348927644981302,
+        "mean_control_prediction_unsafe_fraction": 0.06666666666666667,
+        "mean_expert_cross_track_error_m": 0.3215192738428256,
+        "mean_expert_planning_clearance_m": 0.027881749963027436,
+        "mean_expert_turn_burden_rad_per_m": 0.271178219779736,
+        "mean_full_prediction_unsafe_fraction": 0.29393939393939394,
+        "mean_goal_error_m": 2.39619240223293,
+        "mean_longest_no_progress_duration_s": 0.5919999999999987,
+        "mean_minimum_clearance_m": 0.10732419943292774,
+        "mean_monotonic_progress_fraction": 1.0,
+        "mean_plan_count": 22.6,
+        "mean_safety_override_fraction": 0.011494252873563218,
+        "mean_simulated_duration_s": 12.126000000000001,
+        "success_count": 3,
+        "success_rate": 0.6
+      },
+      "validation_scene_001": {
+        "collision_count": 4,
+        "episode_count": 5,
+        "failure_count": 4,
+        "mean_camera_perturbation_extremeness_fraction": 0.7876617735671912,
+        "mean_control_prediction_unsafe_fraction": 0.13867243867243867,
+        "mean_expert_cross_track_error_m": 0.2192211276095432,
+        "mean_expert_planning_clearance_m": 0.02254148211680318,
+        "mean_expert_turn_burden_rad_per_m": 0.3225946216457699,
+        "mean_full_prediction_unsafe_fraction": 0.3851370851370851,
+        "mean_goal_error_m": 2.6734464747465707,
+        "mean_longest_no_progress_duration_s": 1.2399999999999998,
+        "mean_minimum_clearance_m": 0.0457560618270341,
+        "mean_monotonic_progress_fraction": 1.0,
+        "mean_plan_count": 14.6,
+        "mean_safety_override_fraction": 0.045709455289727724,
+        "mean_simulated_duration_s": 8.002,
+        "success_count": 1,
+        "success_rate": 0.2
+      }
+    },
+    "success_count": 4
+  }
+}
