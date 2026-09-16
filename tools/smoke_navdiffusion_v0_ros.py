@@ -15,7 +15,7 @@ from mns_navigation.navdiffusion_v0.predictor import MNSNavDiffusionPredictor
 
 ROOT = Path("/workspace")
 CHECKPOINT = ROOT / "models/trained/navdiffusion_v0/best.pt"
-REPORT = ROOT / "models/trained/navdiffusion_v0/ros_runtime_smoke.json"
+REPORT = ROOT / "runs/navdiffusion_v0_smoke/ros_runtime_smoke.json"
 
 
 def main() -> int:
@@ -45,6 +45,7 @@ def main() -> int:
             "load_wall_time_s": time.perf_counter() - started,
             "test_split_used": False,
         }
+        REPORT.parent.mkdir(parents=True, exist_ok=True)
         REPORT.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         print(json.dumps(report, indent=2, sort_keys=True))
         return 0

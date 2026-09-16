@@ -10,7 +10,6 @@ from .common import ROOT, episode_directory, load_yaml, scene_paths
 from .dataset import build_dataset_index
 from .expert import validate_plan
 from .forest import generate_scene
-from .manifest import create_manifest
 from .validation import validate_episode, validate_manifest, validate_runtime_contract, validate_scene, write_report
 
 
@@ -21,7 +20,6 @@ PREVIEW_EPISODE = "train_scene_000_episode_000"
 def main() -> int:
     parser = argparse.ArgumentParser()
     commands = parser.add_subparsers(dest="command", required=True)
-    commands.add_parser("init-manifest")
     scene_parser = commands.add_parser("generate-scene")
     scene_parser.add_argument("--scene-id", default=PREVIEW_SCENE)
     validate_parser = commands.add_parser("validate")
@@ -33,9 +31,7 @@ def main() -> int:
     visualize_episode_parser = commands.add_parser("visualize-episode")
     visualize_episode_parser.add_argument("--episode-id", default=PREVIEW_EPISODE)
     args = parser.parse_args()
-    if args.command == "init-manifest":
-        create_manifest()
-    elif args.command == "generate-scene":
+    if args.command == "generate-scene":
         generate_scene(args.scene_id)
     elif args.command == "validate":
         report = {

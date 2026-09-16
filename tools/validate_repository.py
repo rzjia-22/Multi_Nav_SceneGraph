@@ -4,6 +4,8 @@
 from __future__ import annotations
 
 import ast
+import hashlib
+import json
 from pathlib import Path
 import sys
 import xml.etree.ElementTree as ET
@@ -103,12 +105,38 @@ def validate_dataset_v0() -> None:
         fail("Dataset V0 binary artifacts are not covered by Git LFS")
 
 
+def validate_navdiffusion_v0_baseline() -> None:
+    path = ROOT / "artifacts/baselines/navdiffusion_v0/results.json"
+    record = json.loads(path.read_text(encoding="utf-8"))
+    required = {
+        "baseline_id", "baseline_schema_version", "dataset_version", "training",
+        "closed_loop_validation", "closed_loop_test", "checkpoint", "data_governance",
+        "final_readiness",
+    }
+    if required - set(record):
+        fail(f"NavDiffusion V0 baseline record lacks {sorted(required - set(record))}")
+    if record["baseline_id"] != "navdiffusion_v0" or record["final_readiness"] != "NOT_READY":
+        fail("unexpected NavDiffusion V0 baseline identity/readiness")
+    checkpoint = ROOT / record["checkpoint"]["path"]
+    if not checkpoint.is_file() or checkpoint.stat().st_size != record["checkpoint"]["size_bytes"]:
+        fail("NavDiffusion V0 checkpoint reference is missing or has the wrong size")
+    digest = hashlib.sha256()
+    with checkpoint.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    if digest.hexdigest() != record["checkpoint"]["sha256"]:
+        fail("NavDiffusion V0 checkpoint SHA256 differs from the frozen baseline")
+    if not record["data_governance"]["test_not_untouched_for_future_v1"]:
+        fail("Dataset V0 test-split governance is not recorded")
+
+
 def main() -> int:
     validate_yaml()
     validate_python()
     validate_packages()
     validate_configs()
     validate_dataset_v0()
+    validate_navdiffusion_v0_baseline()
     print("repository validation passed")
     return 0
 

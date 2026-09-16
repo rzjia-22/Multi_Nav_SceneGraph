@@ -160,17 +160,17 @@ make dataset-v0-calibrate-terrain       # measure all three official profiles
 make dataset-v0-scene-preview           # deterministic YAML + schematic
 make dataset-v0-capture-scene-review    # four fixed RTX views
 make dataset-v0-view-scene              # interactive Isaac, no navigation
-make dataset-v0-regenerate-pilot        # one strict short pilot
-make dataset-v0-batch-gate              # scene 000 episodes 001-004
 make dataset-v0-plan-preflight          # exact strict plans, all 70 tasks
 make dataset-v0-collect                 # resume-safe scene-batched collection
 make dataset-v0-validate                # requires 70/70 and rebuilds index/report
 ```
 
-The collector accepts repeated `--episode-id` arguments within one Isaac scene
-lifecycle and atomically finalizes an episode only after validation. Re-running
-collection skips an existing valid episode and regenerates partial/invalid
-output. Validation checks conservative no-corner-cut planned
+Dataset V0 is frozen; its former pilot and batch-gate authoring entry points
+are intentionally no longer active. The retained collector accepts repeated
+`--episode-id` arguments within one Isaac scene lifecycle and atomically
+finalizes an episode only after validation. Re-running collection skips an
+existing valid episode and regenerates partial/invalid output. Validation
+checks conservative no-corner-cut planned
 segments before accepting HDF5 evidence, in addition to the 14/70 scene-level
 split, manifest bucket, deterministic scene specification, actual terrain,
 hashes, shared builder, HDF5 v2, Z16 calibration, offline registration,
