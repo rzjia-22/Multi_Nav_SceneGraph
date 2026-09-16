@@ -37,6 +37,15 @@ def _paths(model_config: dict[str, Any]) -> tuple[Path, Path]:
     return run, formal
 
 
+def _evidence_directory(model_config: dict[str, Any]) -> Path:
+    """Return the disposable location for sanity and smoke reports."""
+
+    run, _ = _paths(model_config)
+    evidence = run / "evidence"
+    evidence.mkdir(parents=True, exist_ok=True)
+    return evidence
+
+
 def _write_json(path: Path, value: Any) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(value, indent=2, sort_keys=True) + "\n", encoding="utf-8")
@@ -179,7 +188,7 @@ def prepare_data(force: bool = False) -> dict[str, Any]:
 def single_batch() -> dict[str, Any]:
     config = load_yaml(MODEL_CONFIG)
     training = config["training"]
-    _, formal = _paths(config)
+    evidence = _evidence_directory(config)
     _seed(int(training["seed"]))
     device = _device()
     amp_name, amp_dtype = _amp(device, str(training["amp_preference"]))
@@ -234,7 +243,7 @@ def single_batch() -> dict[str, Any]:
                 "parameter_counts": parameter_counts(model),
                 "efficientnet_initialization": initialization,
             }
-            _write_json(formal / "sanity_single_batch.json", report)
+            _write_json(evidence / "sanity_single_batch.json", report)
             print(json.dumps(report, indent=2, sort_keys=True))
             return report
         except torch.cuda.OutOfMemoryError as error:
@@ -255,8 +264,8 @@ def overfit_sanity() -> dict[str, Any]:
     config = load_yaml(MODEL_CONFIG)
     training = config["training"]
     sanity = config["sanity"]
-    _, formal = _paths(config)
-    batch_report = json.loads((formal / "sanity_single_batch.json").read_text(encoding="utf-8"))
+    evidence = _evidence_directory(config)
+    batch_report = json.loads((evidence / "sanity_single_batch.json").read_text(encoding="utf-8"))
     batch_size = min(int(batch_report["batch_size"]), int(sanity["overfit_windows"]))
     dataset = NavDiffusionWindowDataset(
         "train", PREPROCESSING_CONFIG, MODEL_CONFIG,
@@ -330,7 +339,7 @@ def overfit_sanity() -> dict[str, Any]:
         "checkpoint_reload_maximum_difference": reload_difference,
         "wall_time_s": time.monotonic() - started,
     }
-    _write_json(formal / "sanity_overfit.json", report)
+    _write_json(evidence / "sanity_overfit.json", report)
     print(json.dumps(report, indent=2, sort_keys=True))
     if report["status"] != "PASS":
         raise RuntimeError(f"small-overfit sanity failed: {report}")
@@ -393,8 +402,9 @@ def train() -> dict[str, Any]:
     config = load_yaml(MODEL_CONFIG)
     training = config["training"]
     run, formal = _paths(config)
-    single = json.loads((formal / "sanity_single_batch.json").read_text(encoding="utf-8"))
-    overfit = json.loads((formal / "sanity_overfit.json").read_text(encoding="utf-8"))
+    evidence = _evidence_directory(config)
+    single = json.loads((evidence / "sanity_single_batch.json").read_text(encoding="utf-8"))
+    overfit = json.loads((evidence / "sanity_overfit.json").read_text(encoding="utf-8"))
     if single["status"] != "PASS" or overfit["status"] != "PASS":
         raise RuntimeError("both sanity gates must pass before full training")
     micro_batch = int(single["batch_size"])
@@ -566,7 +576,7 @@ def inference_smoke() -> dict[str, Any]:
     from .predictor import MNSNavDiffusionConfig, MNSNavDiffusionPredictor
 
     config = load_yaml(MODEL_CONFIG)
-    _, formal = _paths(config)
+    run, formal = _paths(config)
     checkpoint = formal / "best.pt"
     dataset = NavDiffusionWindowDataset("validation", PREPROCESSING_CONFIG, MODEL_CONFIG, maximum_windows=1)
     episode_id, local_index = dataset.records[0]
@@ -618,7 +628,7 @@ def inference_smoke() -> dict[str, Any]:
     }
     if consistency_difference > 1.0e-6 or report["shape"] != [32, 2] or not report["cuda_finite"] or not report["cpu_finite"]:
         report["status"] = "FAIL"
-    _write_json(formal / "inference_smoke.json", report)
+    _write_json(run / "evidence" / "inference_smoke.json", report)
     print(json.dumps(report, indent=2, sort_keys=True))
     if report["status"] != "PASS":
         raise RuntimeError(f"inference smoke failed: {report}")

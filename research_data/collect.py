@@ -5,7 +5,6 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
-import shutil
 import subprocess
 import time
 
@@ -55,35 +54,6 @@ def _run_tool(*arguments: str) -> None:
     ], cwd=ROOT, check=True)
 
 
-def regenerate_pilot() -> None:
-    scene = _manifest_scenes()[0]
-    assert scene["scene_id"] == "train_scene_000"
-    generate_scene(scene["scene_id"])
-    episode_id = "train_scene_000_episode_000"
-    directory = episode_directory(episode_id)
-    if directory.exists() and (directory / "episode.h5").exists():
-        _run_tool("validate-episode", "--episode-id", episode_id)
-        print(f"MNS_DATASET_RESUME_SKIP={episode_id}", flush=True)
-        return
-    _run_scene(scene, [episode_id], True, "pilot_plan_preflight_session.json")
-    _run_scene(scene, [episode_id], False, "pilot_collection_session.json")
-    _run_tool("validate-episode", "--episode-id", episode_id)
-    _run_tool("visualize-episode", "--episode-id", episode_id)
-    obsolete = ROOT / "artifacts/dataset_v0_preview/train_scene_000_episode_000"
-    if obsolete.exists():
-        shutil.rmtree(obsolete)
-
-
-def batch_gate() -> None:
-    scene = _manifest_scenes()[0]
-    episode_ids = [item["episode_id"] for item in scene["planned_episodes"]][1:]
-    _run_scene(scene, episode_ids, True, "batch_gate_plan_preflight_session.json")
-    _run_scene(scene, episode_ids, False, "batch_gate_collection_session.json")
-    for episode_id in episode_ids:
-        _run_tool("validate-episode", "--episode-id", episode_id)
-    _run_tool("validate")
-
-
 def all_plan_preflight() -> None:
     started = time.monotonic()
     for scene in _manifest_scenes():
@@ -127,17 +97,11 @@ def collect_scenes(scene_ids: list[str] | None = None) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
-    commands.add_parser("regenerate-pilot")
-    commands.add_parser("batch-gate")
     commands.add_parser("plan-preflight")
     collect = commands.add_parser("collect")
     collect.add_argument("--scene-id", action="append")
     args = parser.parse_args()
-    if args.command == "regenerate-pilot":
-        regenerate_pilot()
-    elif args.command == "batch-gate":
-        batch_gate()
-    elif args.command == "plan-preflight":
+    if args.command == "plan-preflight":
         all_plan_preflight()
     elif args.command == "collect":
         collect_scenes(args.scene_id)
