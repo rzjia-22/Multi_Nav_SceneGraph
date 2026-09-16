@@ -1,0 +1,115 @@
+{
+  "baseline_id": "navdiffusion_v0",
+  "baseline_schema_version": 1,
+  "checkpoint": {
+    "path": "models/trained/navdiffusion_v0/best.pt",
+    "sha256": "7b3bca67af26c2d839555e9b27a7a420762b572fa88664a227986174d9a68ae0",
+    "size_bytes": 142598595
+  },
+  "checkpoint_sha256": "7b3bca67af26c2d839555e9b27a7a420762b572fa88664a227986174d9a68ae0",
+  "closed_loop_test": {
+    "collisions": 6,
+    "episodes": 10,
+    "failure_classes": {
+      "MODEL": 7
+    },
+    "route_bucket_summary": {
+      "long": {
+        "collisions": 2,
+        "episodes": 3,
+        "success": 1
+      },
+      "medium": {
+        "collisions": 2,
+        "episodes": 4,
+        "success": 1
+      },
+      "short": {
+        "collisions": 2,
+        "episodes": 3,
+        "success": 1
+      }
+    },
+    "scene_summary": {
+      "test_scene_000": {
+        "collisions": 1,
+        "episodes": 5,
+        "success": 3
+      },
+      "test_scene_001": {
+        "collisions": 5,
+        "episodes": 5,
+        "success": 0
+      }
+    },
+    "success": 3,
+    "terrain_exit_count": 1
+  },
+  "closed_loop_validation": {
+    "collisions": 6,
+    "episodes": 10,
+    "failure_classes": {
+      "MODEL": 6
+    },
+    "route_bucket_summary": {
+      "long": {
+        "collisions": 2,
+        "episodes": 3,
+        "success": 1
+      },
+      "medium": {
+        "collisions": 3,
+        "episodes": 4,
+        "success": 1
+      },
+      "short": {
+        "collisions": 1,
+        "episodes": 3,
+        "success": 2
+      }
+    },
+    "scene_summary": {
+      "validation_scene_000": {
+        "collisions": 2,
+        "episodes": 5,
+        "success": 3
+      },
+      "validation_scene_001": {
+        "collisions": 4,
+        "episodes": 5,
+        "success": 1
+      }
+    },
+    "success": 4
+  },
+  "data_governance": {
+    "test_first_opened_for_v0": true,
+    "test_not_untouched_for_future_v1": true,
+    "test_split_first_opened_for": "NavDiffusion V0 final closed-loop evaluation"
+  },
+  "dataset_version": "dataset_v0",
+  "evidence": {
+    "pre_cleanup_tag": "pre-cleanup-navdiffusion-v0-final",
+    "test_one_pass": true,
+    "test_split_used_for_training": false,
+    "validation_and_test_mapping_enabled": false
+  },
+  "failure_signature": {
+    "test_collisions_with_prior_control_unsafe_prediction": 6,
+    "test_collisions_with_prior_full_unsafe_prediction": 6,
+    "unsafe_prediction_signature_reproduced_on_test": true
+  },
+  "final_readiness": "NOT_READY",
+  "training": {
+    "best_epoch": 100,
+    "best_validation_diffusion_loss": 0.006512382670360453,
+    "open_loop_ADE_m": 0.09012338086259684,
+    "open_loop_FDE_m": 0.16959734722820285,
+    "stop_epoch": 120,
+    "stop_reason": "early_stopping_validation_ADE",
+    "train_episodes": 50,
+    "train_windows": 5357,
+    "validation_episodes": 10,
+    "validation_windows": 1081
+  }
+}
