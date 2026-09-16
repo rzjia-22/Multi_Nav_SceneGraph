@@ -1,4 +1,4 @@
-"""Isaac closed-loop runtime for NavDiffusion V0 on the DIABLO surrogate.
+"""Isaac closed-loop runtime for navigator evaluation on the DIABLO surrogate.
 
 Isaac owns only the accepted Research Forest, D435i-like rendering and
 kinematic robot adapter.  Navigation remains in the robotics-ML container and
@@ -23,10 +23,6 @@ from isaaclab.app import AppLauncher
 
 
 PROCESS_START = time.monotonic()
-CHECKPOINT_SHA256 = "7b3bca67af26c2d839555e9b27a7a420762b572fa88664a227986174d9a68ae0"
-ROBOT_ID = "diablo_1"
-
-
 def parse_args():
     project_root = Path(os.environ.get("MNS_PROJECT_ROOT", "/mns"))
     parser = argparse.ArgumentParser(description=__doc__)
@@ -35,14 +31,19 @@ def parse_args():
     parser.add_argument("--split", choices=("validation", "test"), default="validation")
     parser.add_argument("--episodes", required=True, help="comma-separated held-out episode IDs")
     parser.add_argument("--run-id", required=True)
-    parser.add_argument("--artifact-group", required=True)
-    parser.add_argument("--run-root", type=Path, default=project_root / "runs/navdiffusion_v0_closed_loop")
+    parser.add_argument("--evaluation-id", required=True)
+    parser.add_argument("--run-root", type=Path, default=project_root / "runs/navigation_evaluation")
+    parser.add_argument("--robot-id", default="diablo_1")
+    parser.add_argument("--navigator-id", required=True)
+    parser.add_argument("--model-artifact-sha256", required=True)
+    parser.add_argument("--prediction-waypoints", type=int, default=32)
+    parser.add_argument("--control-waypoints", type=int, default=8)
+    parser.add_argument("--goal-tolerance", type=float, default=0.35)
     parser.add_argument("--physics-rate", type=float, default=100.0)
     parser.add_argument("--maximum-duration", type=float, default=60.0)
     parser.add_argument("--command-timeout", type=float, default=0.30)
     parser.add_argument("--connection-timeout", type=float, default=45.0)
     parser.add_argument("--capture-review", action="store_true")
-    parser.add_argument("--fail-on-episode-failure", action="store_true")
     AppLauncher.add_app_launcher_args(parser)
     return parser.parse_args()
 
@@ -342,8 +343,8 @@ def main() -> int:
         raise RuntimeError("Isaac depth intrinsics differ from d435i_navigation_v0")
 
     rclpy.init(args=None)
-    node = rclpy.create_node("diablo_1_research_simulator", namespace=ROBOT_ID)
-    publisher = ResearchRobotPublisher(node, ROBOT_ID, rgb_intrinsics, rgb_cfg["resolution"])
+    node = rclpy.create_node(f"{ARGS.robot_id}_research_simulator", namespace=ARGS.robot_id)
+    publisher = ResearchRobotPublisher(node, ARGS.robot_id, rgb_intrinsics, rgb_cfg["resolution"])
     endpoint = RosEndpoint(node, publisher)
     stop_requested = False
     exit_reason = "completed"
@@ -424,7 +425,8 @@ def main() -> int:
         raise RuntimeError("robotics closed-loop nodes did not establish the required ROS graph")
 
     print("MNS_RESEARCH_NAVIGATION_READY=" + json.dumps({
-        "robot_id": ROBOT_ID,
+        "robot_id": ARGS.robot_id,
+        "navigator_id": ARGS.navigator_id,
         "scene_id": scene["scene_id"],
         "episodes": episode_ids,
         "evaluation_split": ARGS.split,
@@ -632,7 +634,7 @@ def main() -> int:
             goal_distance = math.hypot(
                 float(plan["goal_pose_xyz"][0]) - x, float(plan["goal_pose_xyz"][1]) - y
             )
-            if goal_distance <= 0.35:
+            if goal_distance <= ARGS.goal_tolerance:
                 break
             if failure_reason:
                 break
@@ -643,7 +645,7 @@ def main() -> int:
         final_goal_distance = math.hypot(
             float(plan["goal_pose_xyz"][0]) - x, float(plan["goal_pose_xyz"][1]) - y
         )
-        success = not failure_reason and final_goal_distance <= 0.35
+        success = not failure_reason and final_goal_distance <= ARGS.goal_tolerance
         state_array = np.asarray(state_trace, dtype=np.float64)
         executed_length = (
             float(np.linalg.norm(np.diff(state_array[:, 1:3], axis=0), axis=1).sum())
@@ -670,7 +672,8 @@ def main() -> int:
             "route_bucket": plan["target_route_length_bucket"],
             "scene_hash": scene["content_hash"],
             "plan_hash": plan["plan_hash"],
-            "checkpoint_sha256": CHECKPOINT_SHA256,
+            "navigator_id": ARGS.navigator_id,
+            "model_artifact_sha256": ARGS.model_artifact_sha256,
             "success": success,
             "failure_reason": failure_reason or None,
             "failure_class": failure_class,
@@ -702,7 +705,7 @@ def main() -> int:
             "sensor_frames": sensor_frames,
             "moving_stale_rgb_frames": moving_stale_frames,
             "discarded_mismatched_planning_diagnostics": endpoint.mismatched_diagnostic_count,
-            "robot_id": ROBOT_ID,
+            "robot_id": ARGS.robot_id,
             "robot_profile": robot["profile_id"],
             "sensor_profile": sensor["profile_id"],
             "rgb_resolution": rgb_cfg["resolution"],
@@ -713,11 +716,11 @@ def main() -> int:
             "evaluation_split": ARGS.split,
             "test_split_used": ARGS.split == "test",
             "expert_path_used_for_control": False,
-            "control_waypoints": 8,
-            "prediction_waypoints": 32,
+            "control_waypoints": ARGS.control_waypoints,
+            "prediction_waypoints": ARGS.prediction_waypoints,
             "full_and_control_same_sample": all(
-                len(item.get("full_world_points", [])) == 32
-                and item.get("control_world_points", []) == item.get("full_world_points", [])[:8]
+                len(item.get("full_world_points", [])) == ARGS.prediction_waypoints
+                and item.get("control_world_points", []) == item.get("full_world_points", [])[:ARGS.control_waypoints]
                 for item in endpoint.planning_diagnostics if item.get("status") == "PASS"
             ),
             "camera_mount_episode_variation": mount_variation,
@@ -751,7 +754,7 @@ def main() -> int:
     aggregate = {
         "report_version": 1,
         "run_id": ARGS.run_id,
-        "artifact_group": ARGS.artifact_group,
+        "evaluation_id": ARGS.evaluation_id,
         "scene_id": scene["scene_id"],
         "scene_hash": scene["content_hash"],
         "evaluation_split": ARGS.split,
@@ -774,8 +777,6 @@ def main() -> int:
     rclpy.try_shutdown()
     if stop_requested:
         return 130
-    if ARGS.fail_on_episode_failure and not aggregate["all_pass"]:
-        return 2
     return 0
 
 

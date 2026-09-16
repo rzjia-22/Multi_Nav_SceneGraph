@@ -1,0 +1,34 @@
+config_version: 1
+config_id: research_navigation_evaluation_v1
+robot_id: diablo_1
+robot_profile: config/robots/diablo_standing.yaml
+sensor_profile: config/sensors/d435i_navigation_v0.yaml
+mapping_enabled: false
+
+navigator:
+  navigator_id: navdiffusion_v0
+  package: mns_navigation
+  executable: diffusion_navigator
+  model_backend: mns_v0
+  checkpoint: models/trained/navdiffusion_v0/best.pt
+  checkpoint_sha256: 7b3bca67af26c2d839555e9b27a7a420762b572fa88664a227986174d9a68ae0
+  device: cuda
+  history_length: 5
+  planning_rate_hz: 2.0
+  prediction_waypoints: 32
+  control_waypoints: 8
+  goal_tolerance_m: 0.35
+
+runtime:
+  physics_rate_hz: 100
+  state_rate_hz: 50
+  maximum_episode_duration_s: 60
+  command_timeout_s: 0.30
+  stall_window_s: 8.0
+
+evaluation:
+  evaluation_id: research_navigation_validation
+  default_split: validation
+  allowed_splits: [validation, test]
+  test_requires_explicit_opt_in: true
+  run_root: runs/navigation_evaluation

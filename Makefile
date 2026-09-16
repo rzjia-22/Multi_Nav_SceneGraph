@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: lint test validate build robotics-image robotics-ml-image simulation-image gpu-preflight isaac-compatibility isaac-minimal model-source models test-models navdiffusion-v0-data navdiffusion-v0-single-batch navdiffusion-v0-overfit navdiffusion-v0-train navdiffusion-v0-smoke navdiffusion-v0-ros-smoke navdiffusion-v0-closed-loop-gate navdiffusion-v0-closed-loop-validation navdiffusion-v0-closed-loop-analysis navdiffusion-v0-closed-loop-test probe-go2-upstream phase1 phase1-diffusion uav-mapping phase2 phase1-synthetic phase1-synthetic-diffusion phase2-synthetic accept-isaac-sensors accept-go2-motion accept-phase1 accept-uav accept-phase2 inspect-hydra dataset-v0-calibrate-terrain dataset-v0-scene-preview dataset-v0-view-scene dataset-v0-capture-scene-review dataset-v0-regenerate-pilot dataset-v0-batch-gate dataset-v0-plan-preflight dataset-v0-collect dataset-v0-validate
+.PHONY: lint test validate build robotics-image robotics-ml-image simulation-image gpu-preflight isaac-compatibility isaac-minimal model-source models test-models navdiffusion-v0-data navdiffusion-v0-single-batch navdiffusion-v0-overfit navdiffusion-v0-train navdiffusion-v0-smoke navdiffusion-v0-ros-smoke navigation-eval navigation-eval-smoke probe-go2-upstream phase1 phase1-diffusion uav-mapping phase2 phase1-synthetic phase1-synthetic-diffusion phase2-synthetic accept-isaac-sensors accept-go2-motion accept-phase1 accept-uav accept-phase2 inspect-hydra dataset-v0-calibrate-terrain dataset-v0-scene-preview dataset-v0-view-scene dataset-v0-capture-scene-review dataset-v0-plan-preflight dataset-v0-collect dataset-v0-validate
 
 lint:
 	python3 -m compileall -q ros_ws/src research_data tools tests
@@ -61,17 +61,11 @@ navdiffusion-v0-smoke:
 navdiffusion-v0-ros-smoke:
 	docker compose --profile ml run --rm robotics-ml-dev bash -lc 'source /opt/ros/jazzy/setup.bash && source /workspace/ros_ws/install/setup.bash && export PYTHONPATH=/workspace:/workspace/ros_ws/src/mns_navigation:$${PYTHONPATH}; python3 /workspace/tools/smoke_navdiffusion_v0_ros.py'
 
-navdiffusion-v0-closed-loop-gate:
-	python3 -m research_data.closed_loop run-gates
+navigation-eval-smoke:
+	python3 -m research_data.evaluation.runner validate-config
 
-navdiffusion-v0-closed-loop-validation:
-	python3 -m research_data.closed_loop run-validation
-
-navdiffusion-v0-closed-loop-analysis:
-	python3 -m research_data.closed_loop run-analysis
-
-navdiffusion-v0-closed-loop-test:
-	python3 -m research_data.closed_loop_test run-test
+navigation-eval:
+	python3 -m research_data.evaluation.runner run --capture-review
 
 probe-go2-upstream: models
 	docker compose --profile simulation run --rm --entrypoint /workspace/isaaclab/isaaclab.sh simulation \
@@ -140,12 +134,6 @@ dataset-v0-calibrate-terrain:
 		--scene /mns/research_scenes/dataset_v0/train_scene_000/scene.yaml \
 		--profiles /mns/config/research_forests/profiles.yaml \
 		--output /mns/config/research_forests/terrain_calibration.yaml --headless
-
-dataset-v0-regenerate-pilot:
-	python3 -m research_data.collect regenerate-pilot
-
-dataset-v0-batch-gate:
-	python3 -m research_data.collect batch-gate
 
 dataset-v0-plan-preflight:
 	python3 -m research_data.collect plan-preflight
