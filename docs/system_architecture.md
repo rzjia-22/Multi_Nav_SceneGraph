@@ -43,6 +43,24 @@ expert, schema, validation and visualization logic; the Isaac camera/surrogate
 runtime stays in `mns_simulation`. The original integration forest remains
 unchanged while `research_scenes/dataset_v0/` stores research realizations.
 
+Research navigation evaluation reuses the same scene and sensor implementation:
+
+```text
+held-out Dataset episode + navigator adapter
+  -> one scene-batched Isaac lifecycle
+  -> DIABLO surrogate + D435i ROS contract
+  -> standard navigator / safety / command-arbiter graph
+  -> ignored raw traces
+  -> generic collision, progress, prediction-risk and timing reports
+```
+
+`research_data/evaluation/` is model-independent: it enforces held-out split
+safety, resets every episode, aggregates scene sessions, computes offline
+metrics and creates compact review figures. Navigator identity and checkpoint
+are configuration, not control flow. Historical NavDiffusion V0 Gate A/B and
+final-test policies are frozen in the baseline record rather than kept as
+active evaluation code.
+
 ## Package responsibilities
 
 `mns_core` owns validated robot descriptions, topic/frame naming and pure data

@@ -1,6 +1,6 @@
 # Development status
 
-This is the sole authoritative status document. Last updated 2026-09-14.
+This is the sole authoritative status document. Last updated 2026-09-16.
 
 ## Current milestone
 
@@ -23,20 +23,25 @@ no-corner-cut transition contract to A*, LOS smoothing, and final validation.
 All 70 exact plans passed preflight, and all 70 scene-batched RTX episodes pass
 HDF5 v2, provenance, sensor, execution, and aggregate validation.
 
-The project-owned NavDiffusion V0 training milestone is also complete. A
+The project-owned NavDiffusion V0 milestone is complete and frozen as a
+reproducible baseline. A
 train/validation-only window pipeline, shared deployment preprocessor,
 ImageNet-pretrained four-channel model, plain-PyTorch trainer and selectable
 ROS backend all pass. Training early-stopped at epoch 120; the selected epoch
-100 checkpoint achieved 0.0901 m validation ADE and 0.1696 m FDE. Its first
-matching-domain Isaac deployment gate remains partial: Gate A
-and one short Gate B mission reached goal without collision, but the long Gate
-B mission collided with a conservative tree proxy. The subsequent exhaustive
-analysis executed all 10 validation missions without experiment-level
-fail-fast: 4 reached goal and 6 collided, with no timeout or stall. The final
-one-pass held-out test then executed 10/10 test missions without tuning: 3
-reached goal, 6 collided, and one left the valid terrain domain under the
-model command. Current readiness remains `NOT_READY`. Dataset V0 test is now
-opened and future V1 work informed by it requires new final-test scenes.
+100 checkpoint achieved 0.0901 m validation ADE and 0.1696 m FDE. Closed-loop
+validation reached 4/10 and the one-pass held-out test reached 3/10; each had
+six conservative collisions and test also had one model-commanded terrain
+exit. Current readiness is `NOT_READY`. Dataset V0 test is opened and future
+V1 work informed by it requires new final-test scenes. The compact authority is
+`artifacts/baselines/navdiffusion_v0/`; complete pre-cleanup evidence remains
+recoverable from tag `pre-cleanup-navdiffusion-v0-final`.
+
+Research navigation evaluation is now model-independent. The active path uses
+the shared Research Forest, DIABLO/D435i runtime and
+`research_data/evaluation/` for split safety, scene batching, reset isolation,
+collision/prediction-risk/progress metrics, atomic reporting and lightweight
+review plots. V0-specific Gate A/B selection, readiness policy and final-test
+lifecycle are no longer active control flow.
 
 ## NavDiffusion V0 milestone state
 
@@ -51,7 +56,7 @@ opened and future V1 work informed by it requires new final-test scenes.
 | Validation | PASS, open-loop only | ADE 0.090123 m; FDE 0.169597 m; test not used |
 | Checkpoint | complete, Git LFS | format v1; 142,598,595 bytes; SHA256 `7b3bca67...a68ae0` |
 | Runtime | load/smoke PASS | CPU/CUDA predictor, 32×2 finite path; ROS retains all 32 diagnostic points from the same sample and controls on the first 8 |
-| Isaac closed loop | final V0 held-out evaluation complete; deployment acceptance FAIL | validation 4/10 with 6 collisions; one-pass test 3/10 with 6 collisions and 1 terrain exit; no timeout/stall; Hydra off, readiness `NOT_READY` |
+| Isaac closed loop | frozen baseline; deployment acceptance FAIL | compact record: validation 4/10 with 6 collisions; one-pass test 3/10 with 6 collisions and 1 terrain exit; Hydra off, readiness `NOT_READY` |
 
 ## Dataset V0 milestone state
 
@@ -116,20 +121,12 @@ opened and future V1 work informed by it requires new final-test scenes.
 
 ## Tests and runtime evidence
 
-- `make build`: all 8 ROS packages built; 10 package tests passed, with zero
-  errors, failures or skips.
-- `make validate`: repository validation and 42 pure Python tests passed.
-- NavDiffusion V0 matching-domain closed loop uses the accepted Research
+- `make build`: all 8 ROS packages build and package tests pass.
+- `make validate`: repository contracts and pure Python tests pass.
+- NavDiffusion V0 matching-domain closed loop used the accepted Research
   Forest, actual terrain query, DIABLO standing surrogate and dual D435i camera
-  model through standard ROS 2 boundaries; Hydra is disabled. Gate A passed
-  with 0.348 m goal error and no collision. Gate B stopped after one short
-  success and one repeatable long-task collision at `tree_021`. The 32-point
-  prediction became conservatively unsafe at 6.97 s and its first eight points
-  at 9.47 s, before impact at 9.74 s. Safety was selected for only 0.10 s, so
-  the failure is classified MODEL. This deployment gate remains preserved as
-  historical fail-fast evidence; it is separate from the completed exhaustive
-  validation and final test runs.
-- NavDiffusion V0 exhaustive validation executed 10/10 missions: 4 reached
+  model through standard ROS 2 boundaries; Hydra was disabled. Exhaustive
+  validation executed 10/10 missions: 4 reached
   goal, 6 collided, and none timed out or stalled. The one-pass final test then
   executed its independent 10/10 missions under the same frozen system: 3
   reached goal, 6 collided, one model command left the valid terrain domain,
@@ -145,8 +142,9 @@ opened and future V1 work informed by it requires new final-test scenes.
   in 4,315 s on the RTX 4060 Laptop with bf16, micro-batch 16 and 1,262 MiB peak
   allocated VRAM. Epoch 100 is selected at 0.090123 m ADE / 0.169597 m FDE.
   Final training/runtime preprocessing matched exactly; CUDA/CPU predictor and
-  ROS backend load smokes passed. Checkpoint and complete reports are under
-  `models/trained/navdiffusion_v0/`.
+  ROS backend load smokes passed. The checkpoint and immutable training
+  summaries remain under `models/trained/navdiffusion_v0/`; mutable smoke
+  outputs go to ignored `runs/`.
 - Dataset V0 scene capture: Isaac Lab regenerated the 24×24 m terrain, loaded
   the unchanged 23 Blue Berry Elder and 19 Gray Birch placements, resolved the
   Grass MDL and Kloofendal HDR, and reported zero missing assets. The updated

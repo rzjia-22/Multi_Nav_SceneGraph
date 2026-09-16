@@ -42,8 +42,6 @@ validated HDF5 schema v2 sensor data.
 make dataset-v0-scene-preview
 make dataset-v0-capture-scene-review
 make dataset-v0-view-scene       # interactive Isaac window; no robot/navigation
-make dataset-v0-regenerate-pilot # regenerate only episode_000
-make dataset-v0-batch-gate       # episodes 001-004 in one scene lifecycle
 make dataset-v0-plan-preflight   # strict plan-only check for all 70 tasks
 make dataset-v0-collect          # resume-safe, one Isaac lifecycle per scene
 make dataset-v0-validate         # requires all 70 finalized episodes
@@ -78,25 +76,23 @@ make navdiffusion-v0-ros-smoke
 ```
 
 The selected epoch 100 checkpoint has open-loop validation ADE 0.0901 m and
-FDE 0.1696 m. It is available at
+FDE 0.1696 m. It is retained as a frozen, reproducible baseline at
 `models/trained/navdiffusion_v0/best.pt` through Git LFS. The ROS node can
 select it with `model_backend=mns_v0`; the legacy checkpoint backend remains
-available. The matching-domain Isaac deployment gate reached two short goals
-without collision, but the representative long mission collided with a tree
-and stopped Gate B. A separate non-fail-fast analysis executed all ten
-validation missions under the same frozen system: 4/10 reached goal and 6/10
-collided. The one-pass final held-out test has now executed all ten test
-missions without tuning: 3/10 reached goal, 6/10 collided, and one
-model-commanded trajectory left the valid terrain domain. All six test
-collisions were preceded by both unsafe full-horizon and unsafe first-eight
-control predictions. Readiness remains `NOT_READY`; real inference-only or
-motion deployment is not authorized. Dataset V0 test is now opened, so a
-future V1 informed by these results requires new held-out final-test scenes.
+available. Frozen matching-domain results are 4/10 validation successes and
+3/10 one-pass held-out-test successes, with six conservative collisions in
+each split and one test terrain exit. Readiness is `NOT_READY`; real motion is
+not authorized. The compact authority is
+`artifacts/baselines/navdiffusion_v0/results.json`; complete historical
+evidence remains recoverable from tag `pre-cleanup-navdiffusion-v0-final`.
+Dataset V0 test is now opened, so a V1 informed by these results requires new
+held-out final-test scenes.
+
+Future navigators use the model-independent Research Forest evaluator:
 
 ```bash
-make navdiffusion-v0-closed-loop-gate
-make navdiffusion-v0-closed-loop-analysis
-make navdiffusion-v0-closed-loop-test  # canonical V0 final test; already finalized
+make navigation-eval-smoke
+make navigation-eval
 ```
 
 The existing `make phase1-diffusion` remains the Go2/integration regression
@@ -225,7 +221,7 @@ MNS_HYDRA_DIR=runs/<run-id>/<robot>/hydra make inspect-hydra
 ## Verification and observability
 
 ```bash
-make validate       # repository contracts and 35 pure unit tests
+make validate       # repository contracts and pure unit tests
 make build          # all 8 ROS packages and package tests
 make test-models    # real Diffusion and Go2 checkpoint forward passes
 docker compose config --quiet
