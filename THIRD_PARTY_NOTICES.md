@@ -44,3 +44,17 @@ the versioned training evidence and checkpoint metadata.
 No ROS 1 handoff, static benchmark framework, historical experiment wrappers,
 bundled RSL-RL source, generated forest assets, or large checkpoints are
 copied into this repository.
+
+## NoMaD reference implementation and checkpoint
+
+Repository: <https://github.com/robodhruv/visualnav-transformer>
+
+Audited revision: `dca79815b704e5aa9c6bdc3082351f9e3b2848c2`.
+
+The upstream repository and NoMaD implementation are MIT licensed, Copyright
+(c) 2023 Dhruv Shah, Ajay Sridhar, Nitish Dashora, Kyle Stachowicz, Kevin Black,
+Noriaki Hirose, and Sergey Levine. The official source checkout and published
+`nomad.pth` are fetched as ignored runtime assets; neither is vendored or
+redistributed in this repository. Project-owned code only provides input,
+inference, geometry-metric and reporting adapters around that frozen upstream
+model.

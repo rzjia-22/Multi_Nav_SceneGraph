@@ -99,6 +99,25 @@ The existing `make phase1-diffusion` remains the Go2/integration regression
 path and is not Dataset V0/DIABLO acceptance. See
 [NavDiffusion V0](docs/navdiffusion_v0.md).
 
+## NoMaD zero-shot offline baseline
+
+The official NoMaD checkpoint can be evaluated without training on all 70
+Dataset V0 expert logs. The adapter uses four RGB frames at 4 Hz, a future
+2-second RGB observation as the primary local visual goal, and the official
+96×96 preprocessing and action normalization. It reports continuous forest
+clearance, local-goal progress, expert-corridor adherence, multimodal sampling
+capacity and ADE/FDE.
+
+```bash
+make nomad-assets
+make nomad-zero-shot-smoke
+make nomad-zero-shot-eval
+```
+
+The resulting route-viability rate is explicitly an offline proxy, not a
+closed-loop task-success rate. See the exact frozen protocol and limitations in
+[NoMaD zero-shot offline baseline](docs/nomad_zero_shot_offline.md).
+
 ## CPU-only quick start
 
 The synthetic publisher exercises the complete ROS 2, navigation and Hydra

@@ -1,0 +1,80 @@
+# NoMaD 在 Dataset V0 上的离线零样本评测配置。
+# 这条评测链路不训练、不微调，也不会用本数据估计模型参数。
+config_id: nomad_zero_shot_offline_v1
+config_version: 1
+
+dataset:
+  index: datasets/dataset_v0/dataset_index.json
+  expected_version: dataset_v0
+  expected_episode_count: 70
+  scene_root: research_scenes/dataset_v0
+  robot_profile: config/robots/diablo_standing.yaml
+
+nomad:
+  # 源码与权重由 tools/fetch_nomad_assets.sh 获取并校验，不纳入 Git。
+  source_root: models/NoMaD
+  source_revision: dca79815b704e5aa9c6bdc3082351f9e3b2848c2
+  checkpoint: models/NoMaD/nomad.pth
+  checkpoint_sha256: 70f79b8262527e20e56ced64a3e3d7ef91855bc9e7c3fa348d78edcb83c6a333
+  checkpoint_size_bytes: 76473631
+  official_config: models/NoMaD/train/config/nomad.yaml
+  expected_parameter_count: 19049675
+  expected_state_tensor_count: 645
+  expected_state_value_count: 19050955
+  # ML 镜像内 Stanford diffusion_policy 兼容实现的逐文件指纹。
+  conditional_unet_source_sha256:
+    conditional_unet1d.py: 61f1a1da451b799382dc71180c9e52a254f3ae7c1bcfc58d56a664bb32820fe2
+    conv1d_components.py: ea2aa10e297cf253bc1a1919ba47fe6ae32049b5eaaab292ed9cc145d8d2adc0
+    positional_embedding.py: 2266c75ecc9c9ac8ca126839d39a7bafbdd7af8800d6de903f66815e64cc366c
+  device: cuda
+  diffusion_steps: 10
+  samples_per_observation: 8
+  seed: 20260921
+
+input_adapter:
+  # NoMaD 官方部署按 4 Hz 工作；Dataset V0 的 RGB 日志为 10 Hz。
+  model_rate_hz: 4.0
+  context_frames: 4
+  evaluation_stride_s: 0.5
+  local_goal_horizon_s: 2.0
+  minimum_remaining_horizon_s: 2.0
+  image_size_wh: [96, 96]
+  center_crop_aspect_ratio: 1.3333333333333333
+  rgb_mean: [0.485, 0.456, 0.406]
+  rgb_std: [0.229, 0.224, 0.225]
+  # 官方部署把归一化动作乘以 max_v / frame_rate；此处使用 DIABLO 上限。
+  action_scale_policy: robot_max_speed_divided_by_model_rate
+  action_delta_min: [-2.5, -4.0]
+  action_delta_max: [5.0, 4.0]
+
+metrics:
+  robot_collision_radius_m: 0.42
+  conservative_clearance_margin_m: 0.15
+  expert_corridor_threshold_m: 0.75
+  expert_corridor_sampling_spacing_m: 0.05
+  minimum_goal_progress_m: 0.05
+  maximum_direction_error_deg: 45.0
+  # 离线日志不能产生真实闭环成功率。以下三档仅是预先冻结的路线可行性代理。
+  route_viability_thresholds:
+    lenient:
+      collision_free_fraction: 0.90
+      goal_progress_fraction: 0.70
+      corridor_adherence_fraction: 0.70
+      accepted_action_fraction: 0.60
+      maximum_consecutive_unsafe: 2
+    nominal:
+      collision_free_fraction: 0.95
+      goal_progress_fraction: 0.80
+      corridor_adherence_fraction: 0.80
+      accepted_action_fraction: 0.70
+      maximum_consecutive_unsafe: 1
+    strict:
+      collision_free_fraction: 1.0
+      goal_progress_fraction: 0.90
+      corridor_adherence_fraction: 0.90
+      accepted_action_fraction: 0.80
+      maximum_consecutive_unsafe: 0
+
+outputs:
+  run_root: runs/nomad_zero_shot_offline
+  formal_report_directory: artifacts/baselines/nomad_zero_shot_offline

@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: lint test validate build robotics-image robotics-ml-image simulation-image gpu-preflight isaac-compatibility isaac-minimal model-source models test-models navdiffusion-v0-data navdiffusion-v0-single-batch navdiffusion-v0-overfit navdiffusion-v0-train navdiffusion-v0-smoke navdiffusion-v0-ros-smoke navigation-eval navigation-eval-smoke probe-go2-upstream phase1 phase1-diffusion uav-mapping phase2 phase1-synthetic phase1-synthetic-diffusion phase2-synthetic accept-isaac-sensors accept-go2-motion accept-phase1 accept-uav accept-phase2 inspect-hydra dataset-v0-calibrate-terrain dataset-v0-scene-preview dataset-v0-view-scene dataset-v0-capture-scene-review dataset-v0-plan-preflight dataset-v0-collect dataset-v0-validate
+.PHONY: lint test validate build robotics-image robotics-ml-image simulation-image gpu-preflight isaac-compatibility isaac-minimal model-source models test-models nomad-assets nomad-zero-shot-smoke nomad-zero-shot-eval navdiffusion-v0-data navdiffusion-v0-single-batch navdiffusion-v0-overfit navdiffusion-v0-train navdiffusion-v0-smoke navdiffusion-v0-ros-smoke navigation-eval navigation-eval-smoke probe-go2-upstream phase1 phase1-diffusion uav-mapping phase2 phase1-synthetic phase1-synthetic-diffusion phase2-synthetic accept-isaac-sensors accept-go2-motion accept-phase1 accept-uav accept-phase2 inspect-hydra dataset-v0-calibrate-terrain dataset-v0-scene-preview dataset-v0-view-scene dataset-v0-capture-scene-review dataset-v0-plan-preflight dataset-v0-collect dataset-v0-validate
 
 lint:
 	python3 -m compileall -q ros_ws/src research_data tools tests
@@ -42,6 +42,15 @@ models:
 
 test-models: model-source
 	docker compose --profile ml run --rm robotics-ml-dev python3 /workspace/tools/smoke_diffusion.py
+
+nomad-assets:
+	bash tools/fetch_nomad_assets.sh
+
+nomad-zero-shot-smoke: nomad-assets
+	docker compose --profile ml run --rm robotics-ml-dev bash -lc 'cd /workspace && python3 -m research_data.nomad_zero_shot.evaluator --maximum-episodes 1 --maximum-anchors-per-episode 2'
+
+nomad-zero-shot-eval: nomad-assets
+	docker compose --profile ml run --rm robotics-ml-dev bash -lc 'cd /workspace && python3 -m research_data.nomad_zero_shot.evaluator --formal-report'
 
 navdiffusion-v0-data:
 	docker compose --profile ml run --rm robotics-ml-dev bash -lc 'export PYTHONPATH=/workspace:/workspace/ros_ws/src/mns_navigation; python3 -m mns_navigation.navdiffusion_v0.training prepare-data'
