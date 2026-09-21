@@ -114,8 +114,11 @@ make nomad-zero-shot-smoke
 make nomad-zero-shot-eval
 ```
 
-The resulting route-viability rate is explicitly an offline proxy, not a
-closed-loop task-success rate. See the exact frozen protocol and limitations in
+The completed run covers 70/70 tasks and 1,197 decision anchors. Its nominal
+offline route-viability proxy is 20/70 overall and 3/20 on validation+test;
+this is explicitly not a closed-loop task-success rate. The frozen result is
+in the [formal NoMaD baseline report](artifacts/baselines/nomad_zero_shot_offline/summary.md).
+See the exact protocol and limitations in
 [NoMaD zero-shot offline baseline](docs/nomad_zero_shot_offline.md).
 
 ## CPU-only quick start

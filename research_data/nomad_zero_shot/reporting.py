@@ -6,6 +6,7 @@ from collections import defaultdict
 import csv
 import io
 import json
+import math
 from pathlib import Path
 from typing import Any, Callable
 
@@ -28,6 +29,25 @@ def mean(items: list[dict], key: str) -> float | None:
     return float(np.mean(values)) if values else None
 
 
+def wilson_interval(successes: int, total: int, z_value: float = 1.96) -> list[float]:
+    """返回二项比例的 Wilson 95% 置信区间。"""
+
+    if total <= 0:
+        raise ValueError("total must be positive")
+    proportion = successes / total
+    denominator = 1.0 + z_value * z_value / total
+    centre = (proportion + z_value * z_value / (2.0 * total)) / denominator
+    margin = (
+        z_value
+        * math.sqrt(
+            proportion * (1.0 - proportion) / total
+            + z_value * z_value / (4.0 * total * total)
+        )
+        / denominator
+    )
+    return [centre - margin, centre + margin]
+
+
 def summarize_episodes(items: list[dict]) -> dict[str, Any]:
     if not items:
         return {"episode_count": 0}
@@ -42,6 +62,10 @@ def summarize_episodes(items: list[dict]) -> dict[str, Any]:
                 "success_rate": sum(
                     bool(item["route_viability_proxy"][level]) for item in items
                 ) / len(items),
+                "wilson_95_interval": wilson_interval(
+                    sum(bool(item["route_viability_proxy"][level]) for item in items),
+                    len(items),
+                ),
             }
             for level in levels
         },
@@ -72,7 +96,30 @@ def group_summary(
     return {key: summarize_episodes(values) for key, values in sorted(groups.items())}
 
 
+def nominal_failure_reasons(episodes: list[dict], thresholds: dict) -> dict[str, int]:
+    """统计未达到标称门槛的原因；同一任务可以同时命中多项。"""
+
+    checks = {
+        "collision_free_fraction": lambda item: item["collision_free_fraction"]
+        < float(thresholds["collision_free_fraction"]),
+        "goal_progress_fraction": lambda item: item["goal_progress_fraction"]
+        < float(thresholds["goal_progress_fraction"]),
+        "corridor_adherence_fraction": lambda item: item["corridor_adherence_fraction"]
+        < float(thresholds["corridor_adherence_fraction"]),
+        "accepted_action_fraction": lambda item: item["accepted_action_fraction"]
+        < float(thresholds["accepted_action_fraction"]),
+        "maximum_consecutive_unsafe": lambda item: item["maximum_consecutive_unsafe"]
+        > int(thresholds["maximum_consecutive_unsafe"]),
+    }
+    return {
+        key: sum(bool(check(item)) for item in episodes)
+        for key, check in checks.items()
+    }
+
+
 def build_report(metadata: dict, episodes: list[dict]) -> dict[str, Any]:
+    held_out = [item for item in episodes if item["split"] in {"validation", "test"}]
+    nominal_thresholds = metadata["metrics"]["route_viability_thresholds"]["nominal"]
     return {
         "report_version": 1,
         "evaluation_id": "nomad_zero_shot_offline_dataset_v0",
@@ -83,10 +130,16 @@ def build_report(metadata: dict, episodes: list[dict]) -> dict[str, Any]:
             "ground_truth_used_to_select_primary_diffusion_sample": False,
             "primary_policy_sample": "deterministic_sample_0",
             "best_of_n_metrics_are_privileged_upper_bounds": True,
+            "aggregate_fractions_are_equal_weight_per_episode": True,
         },
         **metadata,
         "episode_count": len(episodes),
         "summary": summarize_episodes(episodes),
+        "held_out_validation_and_test": summarize_episodes(held_out),
+        "nominal_failure_reason_task_counts": {
+            "all_70": nominal_failure_reasons(episodes, nominal_thresholds),
+            "held_out_20": nominal_failure_reasons(held_out, nominal_thresholds),
+        },
         "by_split": group_summary(episodes, lambda item: item["split"]),
         "by_scene": group_summary(episodes, lambda item: item["scene_id"]),
         "by_route_bucket": group_summary(episodes, lambda item: item["route_bucket"]),
@@ -148,6 +201,7 @@ def _metres(value: float | None) -> str:
 def render_markdown(report: dict[str, Any]) -> str:
     summary = report["summary"]
     viability = summary["route_viability_proxy"]
+    held_out = report["held_out_validation_and_test"]
     lines = [
         "# NoMaD 在 Dataset V0 上的离线 Zero-shot 报告",
         "",
@@ -156,6 +210,7 @@ def render_markdown(report: dict[str, Any]) -> str:
         f"- 有效离线决策锚点：**{report['anchor_count']}**",
         f"- 官方 NoMaD checkpoint SHA256：`{report['nomad']['checkpoint_sha256']}`",
         f"- 官方源码 revision：`{report['nomad']['source_revision']}`",
+        f"- 部署状态：**{report['model_readiness']}**（离线结果不授权闭环或实机部署）",
         "",
         "## 首要结论",
         "",
@@ -163,14 +218,28 @@ def render_markdown(report: dict[str, Any]) -> str:
         "NoMaD 动作造成的新状态。以下“路线可行性成功率”是预先冻结阈值下的离线代理，",
         "用于筛选模型是否值得进入 Isaac 闭环，不能替代闭环成功/碰撞统计。",
         "",
-        "| 代理口径 | 成功任务 | 成功率 |",
-        "|---|---:|---:|",
+        "| 代理口径 | 成功任务 | 成功率 | Wilson 95% CI |",
+        "|---|---:|---:|---:|",
     ]
     for level in ("lenient", "nominal", "strict"):
         item = viability[level]
-        lines.append(f"| {level} | {item['success_count']}/{report['episode_count']} | {_percent(item['success_rate'])} |")
+        interval = item["wilson_95_interval"]
+        lines.append(
+            f"| {level} | {item['success_count']}/{report['episode_count']} | "
+            f"{_percent(item['success_rate'])} | {_percent(interval[0])}–{_percent(interval[1])} |"
+        )
+    lines.append("")
+    if held_out["episode_count"] == 20:
+        held_out_viability = held_out["route_viability_proxy"]
+        lines.extend([
+            "validation+test 20 条同域对比切片中，三档代理分别为 "
+            f"**{held_out_viability['lenient']['success_count']}/20**、"
+            f"**{held_out_viability['nominal']['success_count']}/20**、"
+            f"**{held_out_viability['strict']['success_count']}/20**。"
+            "原始 NoMaD 因而不适合直接替换 V0 或进入实机；下一步若继续，应先做带安全筛选的 Isaac 闭环验证。",
+            "",
+        ])
     lines.extend([
-        "",
         "主策略口径固定使用每个锚点的第 1 条确定性扩散样本，不使用真值选样。",
         f"其预测折线无碰撞比例为 **{_percent(summary['mean_collision_free_fraction'])}**，",
         f"保守净空比例为 **{_percent(summary['mean_conservative_safe_fraction'])}**，",
@@ -180,6 +249,7 @@ def render_markdown(report: dict[str, Any]) -> str:
         f"综合局部动作接受率为 **{_percent(summary['mean_accepted_action_fraction'])}**。",
         f"允许在 8 条样本中事后选择时，上界提高到 **{_percent(summary['mean_any_sample_accepted_fraction'])}**；",
         "该数值使用了特权评估信息，仅表示多模态分布容量。",
+        "所有比例均先在任务内计算，再对任务等权平均，避免长轨迹支配结果。",
         "",
         "## 辅助误差与效率",
         "",
@@ -234,6 +304,28 @@ def render_markdown(report: dict[str, Any]) -> str:
                 f"{_percent(value['mean_collision_free_fraction'])} | "
                 f"{_percent(value['mean_accepted_action_fraction'])} |"
             )
+    if report["episode_count"] == 70:
+        lines.extend([
+            "",
+            "## 标称门槛失败归因",
+            "",
+            "同一任务可以同时违反多项，因此计数之和可以超过失败任务数。",
+            "",
+            "| 条件 | 全部 70 条 | validation+test 20 条 |",
+            "|---|---:|---:|",
+        ])
+        failure_labels = {
+            "collision_free_fraction": "无碰撞比例不足",
+            "goal_progress_fraction": "有效进展比例不足",
+            "corridor_adherence_fraction": "专家走廊比例不足",
+            "accepted_action_fraction": "综合接受率不足",
+            "maximum_consecutive_unsafe": "连续不安全锚点过多",
+        }
+        for key, label in failure_labels.items():
+            lines.append(
+                f"| {label} | {report['nominal_failure_reason_task_counts']['all_70'][key]} | "
+                f"{report['nominal_failure_reason_task_counts']['held_out_20'][key]} |"
+            )
     lines.extend([
         "",
         "## 评测口径",
@@ -252,7 +344,9 @@ def render_markdown(report: dict[str, Any]) -> str:
         "2. 专家日志无法暴露模型动作导致的视觉分布偏移、卡死或恢复行为。",
         "3. Dataset V0 的 50 条 train 轨迹对 NoMaD 是零样本数据，但对本项目 V0 不是 held-out；",
         "   因此与 V0 的正式头对头比较应限制在 validation+test 20 条。",
-        "4. 路线可行性阈值没有在结果上回调；宽松/标称/严格三档用于展示敏感性。",
+        "4. V0 在 validation+test 的闭环成功数为 7/20；NoMaD 的 3/20 是离线标称代理，",
+        "   两者定义不同，不能据此宣称谁的真实闭环成功率更高。",
+        "5. 路线可行性阈值没有在结果上回调；宽松/标称/严格三档用于展示敏感性。",
         "",
         "机器可读明细见 `results.json`，逐任务表见 `episode_metrics.csv`。",
         "",

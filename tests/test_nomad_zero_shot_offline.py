@@ -1,3 +1,5 @@
+from copy import deepcopy
+import json
 from pathlib import Path
 
 import numpy as np
@@ -13,6 +15,7 @@ from research_data.nomad_zero_shot.metrics import (
     trajectory_clearance,
     world_to_local,
 )
+from research_data.nomad_zero_shot.reporting import render_markdown, wilson_interval
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -74,3 +77,21 @@ def test_sequence_and_multimodal_metrics_are_deterministic():
     ])
     expected = (np.sqrt(2.0) + 2.0 + np.sqrt(2.0)) / 3.0
     assert pairwise_endpoint_diversity(trajectories) == pytest.approx(expected)
+
+
+def test_wilson_interval_contains_observed_proxy_rate():
+    lower, upper = wilson_interval(20, 70)
+    assert lower < 20 / 70 < upper
+    assert (lower, upper) == pytest.approx((0.193221, 0.400504), abs=1.0e-6)
+
+
+def test_smoke_report_does_not_require_held_out_slice():
+    formal = json.loads(
+        (ROOT / "artifacts/baselines/nomad_zero_shot_offline/results.json").read_text()
+    )
+    smoke = deepcopy(formal)
+    smoke["episode_count"] = 1
+    smoke["held_out_validation_and_test"] = {"episode_count": 0}
+    rendered = render_markdown(smoke)
+    assert "轨迹任务：**1/70**" in rendered
+    assert "validation+test 20 条同域对比切片" not in rendered

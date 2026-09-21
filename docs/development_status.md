@@ -1,6 +1,6 @@
 # Development status
 
-This is the sole authoritative status document. Last updated 2026-09-16.
+This is the sole authoritative status document. Last updated 2026-09-21.
 
 ## Current milestone
 
@@ -42,6 +42,14 @@ the shared Research Forest, DIABLO/D435i runtime and
 collision/prediction-risk/progress metrics, atomic reporting and lightweight
 review plots. V0-specific Gate A/B selection, readiness policy and final-test
 lifecycle are no longer active control flow.
+
+The official NoMaD checkpoint now has a reproducible zero-shot offline baseline
+on all 70 Dataset V0 tasks (1,197 decision anchors). With a 2-second future RGB
+local goal and fixed sample 0, the task-balanced prediction statistics are
+88.3% collision-free and 76.0% jointly accepted. The predeclared nominal route
+viability proxy passes 20/70 overall but only 3/20 on validation+test. This is
+not a closed-loop success rate; readiness remains `OFFLINE_ONLY`. The compact
+authority is `artifacts/baselines/nomad_zero_shot_offline/`.
 
 ## NavDiffusion V0 milestone state
 

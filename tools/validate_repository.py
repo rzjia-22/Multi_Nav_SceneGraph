@@ -130,6 +130,39 @@ def validate_navdiffusion_v0_baseline() -> None:
         fail("Dataset V0 test-split governance is not recorded")
 
 
+def validate_nomad_zero_shot_baseline() -> None:
+    path = ROOT / "artifacts/baselines/nomad_zero_shot_offline/results.json"
+    record = json.loads(path.read_text(encoding="utf-8"))
+    if record.get("evaluation_id") != "nomad_zero_shot_offline_dataset_v0":
+        fail("unexpected NoMaD offline baseline identity")
+    if record.get("status") != "PASS" or record.get("model_readiness") != "OFFLINE_ONLY":
+        fail("unexpected NoMaD offline status/readiness")
+    episodes = record.get("episodes", [])
+    if len(episodes) != 70 or len({item["episode_id"] for item in episodes}) != 70:
+        fail("NoMaD offline baseline must contain 70 unique tasks")
+    if sum(int(item["anchor_count"]) for item in episodes) != record.get("anchor_count"):
+        fail("NoMaD offline anchor count is inconsistent")
+    split_counts = {
+        split: sum(item["split"] == split for item in episodes)
+        for split in ("train", "validation", "test")
+    }
+    if split_counts != {"train": 50, "validation": 10, "test": 10}:
+        fail("NoMaD offline split counts are inconsistent")
+    if record["interpretation"]["closed_loop_success_rate"] is not None:
+        fail("NoMaD offline result must not claim closed-loop success")
+    if record["summary"]["route_viability_proxy"]["nominal"]["success_count"] != 20:
+        fail("unexpected NoMaD full nominal proxy result")
+    held_out = record["held_out_validation_and_test"]
+    if held_out["episode_count"] != 20:
+        fail("NoMaD held-out comparison slice must contain 20 tasks")
+    if held_out["route_viability_proxy"]["nominal"]["success_count"] != 3:
+        fail("unexpected NoMaD held-out nominal proxy result")
+    config_path = ROOT / record["config_path"]
+    digest = hashlib.sha256(config_path.read_bytes()).hexdigest()
+    if digest != record["config_sha256"]:
+        fail("NoMaD result configuration hash differs")
+
+
 def main() -> int:
     validate_yaml()
     validate_python()
@@ -137,6 +170,7 @@ def main() -> int:
     validate_configs()
     validate_dataset_v0()
     validate_navdiffusion_v0_baseline()
+    validate_nomad_zero_shot_baseline()
     print("repository validation passed")
     return 0
 
